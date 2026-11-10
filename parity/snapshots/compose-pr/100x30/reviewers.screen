@@ -1,0 +1,100 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│C█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+└─█ New Pull Request · parity-bot/pr-details                                                     █─┘
+┌─█                                                                                              █─┐
+│ █ Base        main                         ← Compare  Choose a head ref              Draft [ ] █ │
+│ █ Title       Compose the PR dialogs                                                           █━│
+│ █                                                                                              █ │
+│ █ Description  Write   Preview  ────────────────────────────────────────────────────────────── █ │
+│ █  14                                                                                          █ │
+│ █  15  ## Follow-ups                                                                           █ │
+│ █  16                                                                                          █ │
+│ █  17  - New issue and Edit issue on the same sheet                                            █ │
+│ █  18  - the diff's Add comment                                                                █ │
+│ █  19                                                                                          █─│
+│ █  20  ## Notes                                                                                █ │
+└─█  21                                                                                          █ │
+┌─█  22  The sheet grows with the description up to the screen less the footer and a margin      █ │
+│ █      row, and only then scrolls.                                                             █ │
+│ █  23  Expanded with ctrl+o it takes the whole screen above the footer.                        █ │
+│ █  24                                                                                          █ │
+│ █  25  The last line of the long body.                                                         █ │
+│ █  26  ## Summary                                                                              █ │
+│ █  27                                                                                          █ │
+│ █  28  Template text from pr_template.md.                                                  ▃▃  █ │
+│ █                                                                                              █ │
+│ █ Reviewers   Reviewer to add                                                                  █ │
+│ █            parity-friend ✕                                                                   █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Create  shift+⏎ Create  ^t Preview  ^o Expand  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccba
+aacddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcaa
+eecddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcff
+egcdhhhhdddddddiiiiiiiiiiiiiiiiiiiiiiiiiiiiihhhhhhhhhhhijjjjjjjjjjjjjjjjjiiiiiiiiiiiiddhhhhhhiiidcbf
+ekcdhhhhhddddddiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidclf
+emcddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcbf
+emcdhhhhhhhhhhhdnnnnnnndhhhhhhhhhdoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooodcbf
+emcdpqqqq....................................................................................rrpdcbf
+ebcdpqqqq....................................................................................rrpdcbf
+ebcdpqqqq....................................................................................rrpdcbf
+ebcdpqqqq....................................................................................rrpdcbf
+ebcdpqqqq....................................................................................rrpdcbf
+ebcdpqqqq....................................................................................rrpdcaf
+ebcdpqqqq....................................................................................rrpdcbf
+eecdpqqqq....................................................................................rrpdcbf
+ffcdpqqqq....................................................................................sspdcbf
+ftcdpqqqq....................................................................................sspdcbf
+fucdpqqqq....................................................................................sspdcbf
+fvcdpqqqq....................................................................................sspdcbf
+fvcdpqqqq....................................................................................sspdcbf
+fvcdpwwwwxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxsspdcbf
+fycdpqqqq....................................................................................sspdcbf
+fbcdpqqqq....................................................................................zzpdcbf
+fbcddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcbf
+fbcdAAAAAAAAAddBCDDDDDDDDDDDDDDBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBdcbf
+fbcdddddddddddddddddddddddddhhdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcbf
+fbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbf
+ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+EEEEFFFFFFFEEEEEEEEEFFFFFFFEEEEFFFFFFFFEEEEFFFFFFFEEEEEFFFFFFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+--- legend
+. fg=#f8f8f2 bg=#272822
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#e0e0e0 bg=#4f4f4f
+e fg=#2a5738 bg=#121212
+f fg=#365270 bg=#121212
+g fg=#646464 bg=#1c2024 bold
+h fg=#b8b8b8 bg=#4f4f4f
+i fg=#e0e0e0 bg=#1e1e1e
+j fg=#737373 bg=#1e1e1e
+k fg=#63696e bg=#0b3a5f bold
+l fg=#1a1a1a bg=#121212
+m fg=#646464 bg=#1a1a1a
+n fg=#e0e0e0 bg=#4f4f4f inverse
+o fg=#004578 bg=#4f4f4f
+p bg=#272822
+q fg=#90908a bg=#272822
+r fg=#f8f8f2 bg=#000000
+s fg=#003054 bg=#272822 inverse
+t fg=#646464 bg=#191d21 bold
+u fg=#646464 bg=#13212c
+v fg=#646464 bg=#161616
+w fg=#c2c2bf bg=#3e3d32
+x fg=#f8f8f2 bg=#3e3d32
+y fg=#0a1e2c bg=#161616 inverse
+z fg=#003054 bg=#000000 inverse
+A fg=#ffc473 bg=#4f4f4f
+B fg=#e0e0e0 bg=#272727
+C fg=#121212 bg=#e0e0e0
+D fg=#797979 bg=#272727
+E fg=#ffa62b bg=#242f38 bold
+F fg=#e0e0e0 bg=#242f38
+G bg=#242f38

@@ -8,48 +8,48 @@ cursor 0 0 hidden
 ┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
 │ ★  Owner       Name         Private                          ││ Overview  Diff  Conversation                                                                 │
 │ ☆  parity-bot  pr-details   ✘                                ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
-│ ☆  parity-bot  dotfiles     █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
-│ ☆  parity-bot  hello-world  █                                                                                                  █arity-bot:main               │
-│ ☆  parity-bot  lazy-demo    █                                                                                                  █                             │
+│ ☆  parity-bot  dotfiles     ✘                                ││Open Add a cursor to the diff viewer (#5) by parity-friend                                    │
+│ ☆  parity-bot  hello-world  ✘                                ││3 commits • 5 files changed • +12 • -6 • parity-friend:cursor → parity-bot:main               │
+│ ☆  parity-bot  lazy-demo    ✘                                ││                                                                                              │
+│                                                              ││Opened on Sun Feb  1 08:30:00 2026                                                            │
+│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│                                                              ││  ▶ 👍 2 | 🎉 1 | 👀 4                                                                        │
+│                                                              ││                                                                                              │
+│                                                              ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
+│                                                              ││  ▶ Status checks: ✘ Failed                                                                   │
+│                             █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+│                             █ Editing PR 5 · parity-bot/pr-details                                                             █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
 │                             █                                                                                                  █                             │
-│                             █                                          Editing PR 5                                            █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
-│                             █                                                                                                  █                             │
-│                             █                                                                                                  █                             │
-│                             █     ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎         ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎     ▊▔▔▔▔▔▔▔▔▎             █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
-│                             █ Base▊  main                    ▎← Compare▊  cursor                  ▎Draft▊        ▎             █                             │
-│                             █     ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎         ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎     ▊▁▁▁▁▁▁▁▁▎             █                             │
-│                             █                                                                                                  █▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔│
-│                             █ ──────────────────────────────────────────────────────────────────────────────────────────────   █                             │
-│                             █                                                                                                  █                             │
-│                             █ Title                                                                                            █                             │
-│                             █ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █─────────────────────────────│
-│                             █ ▊  Add a cursor to the diff viewer                                                           ▎   █                             │
-│                             █ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎   █                             │
-│                             █                                                                                                  █                             │
-└─────────────────────────────█ Description                                                                                      █                             │
-┌─ [2] Pull Requests ─────────█ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎   █                             │
-│ #  Status  Author         Ti█ ▊ 1  Adds a cursor to the viewer, as discussed in #3.                                        ▎   █                             │
-│ 5  open    parity-friend  Ad█ ▊ 2                                                               ▌                                                            │
-│ 4  closed  parity-bot     Dr█ ▊ 3  - `j` and `k` move it                                        ▌ Already a reviewer!                                        │
-│ 3  closed  parity-bot     Re█ ▊ 4  - the current line is marked with `>`                        ▌                                                            │
-│ 2  open    parity-friend  Tr█ ▊ 5                                                                                          ▎   █                             │
-│                             █ ▊ 6  Thanks @parity-bot for the first review!                     ▌                                                            │
-│                             █ ▊ 7                                                               ▌ Could not find user nobody-here - are you sure they        │
-│                             █ ▊                                                                 ▌ exist?                                                     │
-│                             █ ▊                                                                 ▌                                                            │
-│                             █ ▊                                                                                            ▎   █                             │
-│                             █ ▊                                                                 ▌                                                            │
-│                             █ ▊                                                                 ▌ Removing parity-reviewer                                   │
-│                             █ ▊                                                                 ▌                                                            │
-│                             █ ▊                                                                                            ▎   █                             │
-│                             █                                                                   ▌                                                            │
-│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌ Updating PR...                                             │
+│                             █ Base        main                           ← Compare  cursor                           Draft [ ] █                             │
+│                             █ Title       Add a cursor to the diff viewer                                                      █                             │
+│                             █                                                                                                  █─────────────────────────────│
+│                             █ Description  Write   Preview  ────────────────────────────────────────────────────────────────── █                             │
+│                             █  1  Adds a cursor to the viewer, as discussed in #3.                                             █                             │
+│                             █  2                                                                                               █                             │
+└─────────────────────────────█  3  - `j` and `k` move it                                                                        █                             │
+┌─ [2] Pull Requests ─────────█  4  - the current line is marked with `>`                                                        █                             │
+│ #  Status  Author         Ti█  5                                                                                               █                             │
+│ 5  open    parity-friend  Ad█  6  Thanks @parity-bot for the first review!                      ▌                                                            │
+│ 4  closed  parity-bot     Dr█  7                                                                ▌ Already a reviewer!                                        │
+│ 3  closed  parity-bot     Re█                                                                   ▌                                                            │
+│ 2  open    parity-friend  Tr█ Reviewers  parity-reviewer, parity-friend  (tab to edit)                                         █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▌                                                            │
+│                                                              ││                                 ▌ Could not find user nobody-here - are you sure they        │
+│                                                              ││                                 ▌ exist?                                                     │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Removing parity-reviewer                                   │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Updating PR...                                             │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                                                                              │
 │                                                              ││                                 ▌                                                            │
 │                                                              ││                                 ▌ Successfully updated PR!                                   │
 └──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
- ^m Merge PR  E Edit PR  R Add reaction  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Keybindings
+ ^s Update  shift+⏎ Update  ^t Preview  ^o Expand  esc Leave
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 a..............bbbbbbbbbbbbbbbbbbbbb...........................................................................................................................a
@@ -57,48 +57,48 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd...........gggg..gggggggggggg.................................................................d
 chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdijjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.............................d
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkklmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmlnnnnnnnnnnnnnn...............d
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkklmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmooml.............................d
-c.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmooml.............................d
-c.............................lmmmppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppmmoomlqqqqqqqqqqqqqqqqqqqqqqqqqqqqqd
-c.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmoomlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
-c.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmoomlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
-c.............................lmmmmmrsssssssssssssssssssssssssstmmmmmmmmmrsssssssssssssssssssssssssstmmmmmrsssssssstmmmmmmmmmmoomlqqqqqqqqqqqqqqqqqqqqqqqqqqqqqd
-c.............................lmuuuurvvvvvvvvvvvvvvvvvvvvvvvvvvtmmuuuuuuurvvvvvvvvvvvvvvvvvvvvvvvvvvtmmmmmrvvwwxxvvtmmmmmmmmmmoomlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
-c.............................lmmmmmrsssssssssssssssssssssssssstmmmmmmmmmrsssssssssssssssssssssssssstmmmmmrsssssssstmmmmmmmmmmoomlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
-c.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmoomlqqqqqqqqqqqqqqqqqqqqqqqqqqqqqd
-c.............................lmyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyoomlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
-c.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmoomlkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
-c.............................lmuuuuummmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmooml.............................d
-c.............................lmzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABoomlaaaaaaaaaaaaaaaaaaaaaaaaaaaaad
-c.............................lmzCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDECCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCBooml.............................d
-c.............................lmzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABooml.............................d
-c.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmooml.............................d
-cccccccccccccccccccccccccccccclmuuuuuuuuuuummmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmFFml.............................d
-cccccccccccccccccccccccccccccclmGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHIFFml.............................d
-ceeeeeeeeeeeeeeeeeeeeeeeeeeeeelmGJKKKLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLJIFFml.............................d
-chhhhhhhhhhhhhhhhhhhhhhhhhhhhhlmGJMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkklmGJMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkklmGJMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-ckkkkkkkkkkkkkkkkkkkkkkkkkkkkklmGJMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNJIFFml.............................d
-c.............................lmGJMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................lmGJMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOPPPPPPPPPPPPPPPPPPPPPQQQQQQQQQQQPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................lmGJNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................lmGJNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNOPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................lmGJNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNJIFFml.............................d
-c.............................lmGJNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNRPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................lmGJNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNRPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................lmGJNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNRPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................lmGJNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNJIFFml.............................d
-c.............................lmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmRPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c.............................llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllRPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c..............................................................cd.................................RPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdbbbb.lllllllllllllllllllllllllllllll.mmmm....mmmmmmmmmmmmm....................................d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd..............................bbb...nn...llllllllllllllllllll...lllllllllllllll...............d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd..............................................................................................d
 c..............................................................cd..............................................................................................d
-c..............................................................cd.................................RPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-c..............................................................cd.................................RPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPP.d
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddRPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPPdd
-SSSSTTTTTTTTTSSSTTTTTTTTSSSTTTTTTTTTTTTTSSSSTTTTTTTTTTTSSSTTTTTTTTTTTTSSSTTTTTTTTTTTTTTTTTTTTTTSSSTTTTTSSSSTTTTTTTTTTTTTTTTSSSTTTTTTTTTSSSTTTTTTTTTTTTTTTTTTTTTT
+c..............................................................cdooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
+c..............................................................cdkkkkkpkkkkkkpkkkkkkpkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
+c..............................................................cdkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
+c..............................................................cdooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
+c..............................................................cdkkkkkkkkkkkkkkkkkkkqqqqqqqqkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
+c.............................rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
+c.............................rssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssroooooooooooooooooooooooooooood
+c.............................rssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssrkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
+c.............................rsttttuuuuuuuvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvtttttttttttvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvuuttttttvvvsrkkkkkkkkkkkkkkkkkkkkkkkkkkkkkd
+c.............................rswwwwwssssssxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyzxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxsr.............................d
+c.............................rssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssraaaaaaaaaaaaaaaaaaaaaaaaaaaaad
+c.............................rsAAAAAAAAAAAsBBBBBBBsAAAAAAAAAsCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCsr.............................d
+c.............................rsDEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDsr.............................d
+c.............................rsDGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHDsr.............................d
+ccccccccccccccccccccccccccccccrsDGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHDsr.............................d
+ccccccccccccccccccccccccccccccrsDGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHDsr.............................d
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeersDGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHDsr.............................d
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhrsDGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkrsDGGGHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkrsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkrsAAAAAAAAAssssssssssssssssssssssssssssssssssAAAAAAAAAAAAAsssssssssssssssssssssssssssssssssssssssssr.............................d
+c.............................rrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................IJJJJJJJJJJJJJJJJJJJJJKKKKKKKKKKKJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................IJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................IJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd..............................................................................................d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd..............................................................................................d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd..............................................................................................d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+c..............................................................cd.................................LJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ.d
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccddddddddddddddddddddddddddddddddddLJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJdd
+MMMMNNNNNNNMMMMMMMMMNNNNNNNMMMMNNNNNNNNMMMMNNNNNNNMMMMMNNNNNNOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO
 --- legend
 . fg=#646464 bg=#121212
 a fg=#0a263a bg=#121212
@@ -112,38 +112,35 @@ h fg=#646464 bg=#13212c
 i fg=#1a1a1a bg=#121212
 j fg=#0b3a5f bg=#121212
 k fg=#646464 bg=#161616
-l fg=#121212 bg=#4f4f4f
-m fg=#e0e0e0 bg=#4f4f4f
-n fg=#646464 bg=#121212 bold
-o fg=#003054 bg=#4f4f4f inverse
-p fg=#0178d4 bg=#4f4f4f bold
-q fg=#121212 bg=#161616
-r fg=#292929 bg=#4f4f4f inverse
-s fg=#292929 bg=#363636
-t fg=#292929 bg=#4f4f4f
-u fg=#e0e0e0 bg=#4f4f4f bold
+l fg=#646464 bg=#121212 bold
+m fg=#646464 bg=#121212 underline
+n fg=#700a0a bg=#121212
+o fg=#121212 bg=#161616
+p default
+q fg=#700a0a bg=#161616
+r fg=#121212 bg=#4f4f4f
+s fg=#e0e0e0 bg=#4f4f4f
+t fg=#989898 bg=#4f4f4f
+u fg=#b4b4b4 bg=#4f4f4f
 v fg=#b4b4b4 bg=#363636
-w fg=#30383e bg=#363636 inverse
-x fg=#b4b4b4 bg=#272f33
-y fg=#004578 bg=#4f4f4f
-z fg=#0178d4 bg=#4f4f4f inverse
-A fg=#0178d4 bg=#272727
-B fg=#0178d4 bg=#4f4f4f
-C fg=#e0e0e0 bg=#272727
-D fg=#e0e0e0 bg=#2d4e74
-E fg=#121212 bg=#e0e0e0
-F fg=#e0e0e0 bg=#000000
-G fg=#191919 bg=#4f4f4f inverse
-H fg=#191919 bg=#272822
-I fg=#191919 bg=#4f4f4f
-J bg=#272822
-K fg=#c2c2bf bg=#3e3d32
-L fg=#f8f8f2 bg=#3e3d32
-M fg=#90908a bg=#272822
-N fg=#f8f8f2 bg=#272822
-O fg=#b93c5b bg=#343f49
-P fg=#e0e0e0 bg=#343f49
-Q fg=#ffff00 bg=#343f49
-R fg=#4ebf71 bg=#343f49
-S fg=#704d1c bg=#191d21 bold
-T fg=#646464 bg=#191d21
+w fg=#ffc473 bg=#4f4f4f
+x fg=#e0e0e0 bg=#272727
+y fg=#e0e0e0 bg=#2d4e74
+z fg=#121212 bg=#e0e0e0
+A fg=#b8b8b8 bg=#4f4f4f
+B fg=#e0e0e0 bg=#4f4f4f inverse
+C fg=#004578 bg=#4f4f4f
+D bg=#272822
+E fg=#c2c2bf bg=#3e3d32
+F fg=#f8f8f2 bg=#3e3d32
+G fg=#90908a bg=#272822
+H fg=#f8f8f2 bg=#272822
+I fg=#b93c5b bg=#343f49
+J fg=#e0e0e0 bg=#343f49
+K fg=#ffff00 bg=#343f49
+L fg=#4ebf71 bg=#343f49
+M fg=#ffa62b bg=#242f38 bold
+N fg=#e0e0e0 bg=#242f38
+O bg=#242f38
+--- cells
+11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│"," "," ","▶"," ","👍",""," ","2"," ","|"," ","🎉",""," ","1"," ","|"," ","👀",""," ","4"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

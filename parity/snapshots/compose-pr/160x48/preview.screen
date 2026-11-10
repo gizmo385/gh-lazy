@@ -1,0 +1,132 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-d█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+└─────────────────────────────█ New Pull Request · parity-bot/pr-details                                                         █─────────────────────────────┘
+┌─ [1] Repositories ──────────█                                                                                                  █─────────────────────────────┐
+│ ★  Owner       Name         █ Base        main                           ← Compare  Choose a head ref                Draft [ ] █                             │
+│ ☆  parity-bot  pr-details   █ Title       Compose the PR dialogs                                                               █━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     █                                                                                                  █                             │
+│ ☆  parity-bot  hello-world  █ Description  Write   Preview  ────────────────────────────────────────────────────────────────── █                             │
+│ ☆  parity-bot  lazy-demo    █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █  What changed                                                                                    █, for the PR details tabs.   │
+│                             █                                                                                                  █                             │
+│                             █  Create PR and Edit PR open as the compose sheet: one-row fields with their labels on the        █─────────────────────────────│
+│                             █  left, the branch row with Base, Compare and Draft on one line, the description under Write      █                             │
+│                             █  and Preview tabs, and Reviewers as one row until it has focus.                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █  Why                                                                                             █                             │
+│                             █                                                                                                  █                             │
+│                             █  The old dialog was a 36-row frame over 59 rows of content: the Create button was below the      █                             │
+│                             █  fold, and at 100x30 only one row of the description showed.                                     █                             │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █  Testing                                                                                         █                             │
+└─────────────────────────────█                                                                                                  █                             │
+┌─ [2] Pull Requests ─────────█  • unit tests for focus, the tab order, the Reviewers summary and its expansion                  █                             │
+│ #  Status  Author         Ti█  • snapshots at 160x48 and 100x30                                                                █                             │
+│ 5  open    parity-friend  Ad█  • the parity scenarios, whose writes are unchanged                                              █                             │
+│ 4  closed  parity-bot     Dr█                                                                                                  █                             │
+│ 3  closed  parity-bot     Re█                                                                                                  █                             │
+│ 2  open    parity-friend  Tr█  Follow-ups                                                                                      █                             │
+│                             █                                                                                                  █                             │
+│                             █  • New issue and Edit issue on the same sheet                                                    █                             │
+│                             █  • the diff's Add comment                                                                        █                             │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █  Notes                                                                                           █                             │
+│                             █                                                                                                  █                             │
+│                             █  The sheet grows with the description up to the screen less the footer and a margin row, and     █                             │
+│                             █  only then scrolls. Expanded with ctrl+o it takes the whole screen above the footer.         ▄▄  █                             │
+│                             █                                                                                                  █                             │
+│                             █  The last line of the long body.                                                                 █                             │
+│                             █                                                                                                  █                             │
+│                             █                                                                                                  █                             │
+│                             █ Reviewers  none  (tab to edit)                                                                   █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^s Create  shift+⏎ Create  ^t Write  ^o Expand  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbcccccccccccccccddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaadeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ffffffffffffffffffffffffffffffdeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedgggggggggggggggggggggggggggggg
+fhihhhhhhhhhhhhhhhhhhhhhhhhhhhdejjjjeeeeeee...............................jjjjjjjjjjj.kkkkkkkkkkkkkkkkk..............eejjjjjj...edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fllllllllllllllllllllllllllllldejjjjjeeeeee.....................................................................................edmmmmmmmmmmmmmmmmmmmmmmmmmmmmmg
+fnnnnnnnnnnnnnnnnnnnnnnnnnnnnndeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fnnnnnnnnnnnnnnnnnnnnnnnnnnnnndeoooooooooooejjjjjjjepppppppppeqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqedbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fnnnnnnnnnnnnnnnnnnnnnnnnnnnnnde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.ssssssssssss................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edaaaaaaaaaaaaaaaaaaaaaaaaaaaaag
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edtttttttttttttttttttttttttttbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.sss.........................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+fbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.sssssss.....................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+ffffffffffffffffffffffffffffffde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+ggggggggggggggggggggggggggggggde.uu..........................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gvvvvvvvvvvvvvvvvvvvvvvvvvvvvvde.uu..........................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gwwwwwwwwwwwwwwwwwwwwwwwwwwwwwde.uu..........................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gxxxxxxxxxxxxxxxxxxxxxxxxxxxxxde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gxxxxxxxxxxxxxxxxxxxxxxxxxxxxxde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gxxxxxxxxxxxxxxxxxxxxxxxxxxxxxde.ssssssssss..................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.uu..........................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.uu..........................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.sssss.......................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................rr.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................yy.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................zz.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................zz.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbde.............................................................................................zz.edbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbdejjjjjjjjjeeeeeeeejjjjjjjjjjjjjeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeedbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gbbbbbbbbbbbbbbbbbbbbbbbbbbbbbddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddbbbbbbbbbbbbbbbbbbbbbbbbbbbbbg
+gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg
+AAAABBBBBBBAAAAAAAAABBBBBBBAAAABBBBBBAAAABBBBBBBAAAAABBBBBBCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+--- legend
+. fg=#e0e0e0 bg=#1e1e1e
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#50701d bg=#121212
+d fg=#121212 bg=#4f4f4f
+e fg=#e0e0e0 bg=#4f4f4f
+f fg=#2a5738 bg=#121212
+g fg=#365270 bg=#121212
+h fg=#646464 bg=#1c2024 bold
+i fg=#476419 bg=#1c2024 bold
+j fg=#b8b8b8 bg=#4f4f4f
+k fg=#737373 bg=#1e1e1e
+l fg=#63696e bg=#0b3a5f bold
+m fg=#1a1a1a bg=#121212
+n fg=#646464 bg=#1a1a1a
+o fg=#ffc473 bg=#4f4f4f
+p fg=#e0e0e0 bg=#4f4f4f inverse
+q fg=#004578 bg=#4f4f4f
+r fg=#003054 bg=#1e1e1e inverse
+s fg=#0178d4 bg=#1e1e1e underline
+t fg=#0b3a5f bg=#121212 bold
+u fg=#57a5e2 bg=#1e1e1e
+v fg=#646464 bg=#191d21 bold
+w fg=#646464 bg=#13212c
+x fg=#646464 bg=#161616
+y fg=#003054 bg=#000000 inverse
+z fg=#e0e0e0 bg=#000000
+A fg=#ffa62b bg=#242f38 bold
+B fg=#e0e0e0 bg=#242f38
+C bg=#242f38

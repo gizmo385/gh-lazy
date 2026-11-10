@@ -46,9 +46,9 @@ cursor 21 67 hidden
 │                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
-│                                                              ││                                 ▌                                                            │
-│                                                              ││                                 ▌ Successfully updated PR!                                   │
-└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  ^m Merge PR  E Edit PR  R Add reaction  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Pallete  M Maximize  ? Keybindings
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -95,10 +95,10 @@ d.............................mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
 d.............................mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.............................e
 d..............................................................de..............................................................................................e
 d..............................................................de..............................................................................................e
-d..............................................................de.................................TUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.e
-d..............................................................de.................................TUVVVVVVVVVVVVVVVVVVVVVVVVUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU.e
-ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeTUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUee
-WWWWXXXXXXXXXWWWXXXXXXXXWWWXXXXXXXXXXXXXWWWWXXXXXXXXXXXWWWXXXXXXXXXXXXWWWXXXXXXXXXXXXXXXXXXXXXXWWWXXXXXWWWWXXXXXXXXXXXXXXXXWWWXXXXXXXXXWWWXXXXXXXXXXXXYYYYYYYYYY
+d..............................................................de..............................................................................................e
+d..............................................................de..............................................................................................e
+ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+TTTTUUUUUUUUUTTTUUUUUUUUTTTUUUUUUUUUUUUUTTTTUUUUUUUUUUUTTTUUUUUUUUUUUUTTTUUUUUUUUUUUUUUUUUUUUUUTTTUUUUUTTTTUUUUUUUUUUUUUUUUTTTUUUUUUUUUTTTUUUUUUUUUUUUVVVVVVVVVV
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#0a263a bg=#121212
@@ -146,9 +146,6 @@ P fg=#c2c2bf bg=#3e3d32
 Q fg=#f8f8f2 bg=#3e3d32
 R fg=#90908a bg=#272822
 S fg=#f8f8f2 bg=#272822
-T fg=#4ebf71 bg=#343f49
-U bg=#343f49
-V fg=#e0e0e0 bg=#343f49
-W fg=#704d1c bg=#191d21 bold
-X fg=#646464 bg=#191d21
-Y fg=#e0e0e0 bg=#191d21
+T fg=#704d1c bg=#191d21 bold
+U fg=#646464 bg=#191d21
+V fg=#e0e0e0 bg=#191d21

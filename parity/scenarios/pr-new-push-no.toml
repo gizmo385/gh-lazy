@@ -1,6 +1,10 @@
 version = 1
 description = "Create PR push prompt answered No: n closes the confirm, nothing is pushed and the New Pull Request form stays open with its fields"
 # The same push prompt as pr-new-push (origin served by fake-ssh from a local bare repo with only `main`), answered n.
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
+# and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
+# the second closes; in Python the second reaches the main screen, where it does nothing.
 gate = true
 parity_rows = [
     "keybindings.confirm-no",
@@ -65,7 +69,7 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "declined"
-checks = ["titles", "focus"]
+checks = []
 
 [expect.push-prompt]
 contains = ["Warning: Branch new-feature may not exist", "Do you want to create it?"]

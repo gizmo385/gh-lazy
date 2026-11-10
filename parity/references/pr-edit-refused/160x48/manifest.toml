@@ -4,11 +4,11 @@ size = "160x48"
 captures = ["already-merged", "open-pr4", "update-failed"]
 
 [inputs]
-scenario = "442b6c23326f27b2df4e164decb42d3938834ba2"
+scenario = "dac517071f11b1d0e9e59cf95ca520d2b696286f"
 fixtures = "70c67c6f60ac7f7d1fcafb823dfb0a71e6da2a86"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
-python = "3.13.18"
+python = "3.14.8"
 os = "linux"

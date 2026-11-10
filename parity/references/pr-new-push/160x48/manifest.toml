@@ -4,11 +4,11 @@ size = "160x48"
 captures = ["push-prompt", "pushed", "created", "reopened"]
 
 [inputs]
-scenario = "59bef7d07b397b7b0df18e86c7b8e00aadbd7cea"
+scenario = "6c4e7507de28a097d21852ec7174f3e3c880b65e"
 fixtures = "f71ef860c13c7a5b01116625039823a43becab0f"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
-python = "3.14.7"
+python = "3.14.8"
 os = "linux"

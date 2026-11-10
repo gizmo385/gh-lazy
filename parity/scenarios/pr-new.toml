@@ -1,11 +1,16 @@
 version = 1
-description = "Create PR modal (P): without a repo; the empty modal; missing fields; a head GitHub refuses, the push prompt and its failure outside a git repo; a suggested Compare branch, Draft, a two-line description, the created PR added and opened; escape and Cancel close"
+description = "Create PR modal (P): without a repo; the empty modal; missing fields; a head GitHub refuses, the push prompt and its failure outside a git repo; a suggested Compare branch, Draft, a two-line description, the created PR added and opened; escape closes from the title and from the description"
 # The working directory is not a git repo, so the push prompt Yes fails ("Error while pushing branch"); a successful
 # push needs a local git remote in the harness and is in pr-new-push (#184 sub-issues). The PR table after the
 # create is not compared: Python cuts the new number 10 to "1" (Py bug B73), so `created` checks only the titles,
-# tabs and focus. The modal hides the boxes under it from the structure, so the modal captures rely on [expect].
-# `escaped` and `cancelled` leave the footer out: with the PR table focused it's cut inside `^p Command Pallete`
-# (Py bug B14), which Rust spells right, so the cut footers differ.
+# tabs and focus. `escaped` and `closed-from-description` leave the footer out: with the PR table focused it's cut
+# inside `^p Command Pallete` (Py bug B14), which Rust spells right, so the cut footers differ.
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
+# and has its own footer, `^s Create ...`), and [expect] checks the text both show. The writes are compared as
+# before. Rust's one-row fields draw no outline `wait.focused` reads, so a focus move Python makes late is waited
+# out with `sleep_ms`. In the sheet the first escape leaves the field and the second closes; in Python the second
+# reaches the main screen, where it does nothing.
 gate = true
 parity_rows = [
     "modals.create-edit-pr",
@@ -63,10 +68,10 @@ keys = ["P"]
 [[step]]
 wait.text = "New Pull Request"
 
-# Focus is on the title. The modal has no footer of its own: the main screen footer stays under it.
+# Focus is on the title.
 [[step]]
 capture = "open"
-checks = ["footer"]
+checks = []
 
 # shift+enter, in the kitty keyboard protocol encoding (CSI 13;2 u), which both apps read. Title and Compare are empty.
 [[step]]
@@ -77,7 +82,7 @@ wait.text = "Missing required fields!"
 
 [[step]]
 capture = "missing-fields"
-checks = ["footer"]
+checks = []
 
 [[step]]
 type = "Parity PR"
@@ -86,8 +91,9 @@ type = "Parity PR"
 [[step]]
 keys = ["shift+tab"]
 
+# Python's Draft switch shows its focus; Rust's one-row `[ ]` has no outline the wait reads.
 [[step]]
-wait = { focused = "Draft" }
+sleep_ms = 500
 
 [[step]]
 keys = ["shift+tab"]
@@ -127,7 +133,7 @@ wait.text = "Error while pushing branch"
 
 [[step]]
 capture = "push-failed"
-checks = ["footer"]
+checks = []
 
 [[step]]
 wait.stable_ms = 500
@@ -140,23 +146,23 @@ type = "new"
 
 [[step]]
 capture = "suggested"
-checks = ["footer"]
+checks = []
 
 # Accept the suggestion, turn Draft on, and type a description.
 [[step]]
 keys = ["right", "tab"]
 
+# As above: Rust's Draft shows no outline.
 [[step]]
-wait = { focused = "Draft" }
+sleep_ms = 500
 
 [[step]]
 keys = ["space", "tab", "tab"]
 
-# Focusing the editor scrolls the dialog to put it at the top, which takes the heading out of view (the title, the
-# step before, leaves it in view). Not wait.focused: Python can leave the first refused submit's toast up for good
-# (under load it outlived a 15 s wait), over the editor's right edge, which hides the editor's outline.
+# Python's editor shows no marker the wait can rely on (the first refused submit's toast can stay over its outline),
+# and Rust's sheet keeps its heading in view, so the move to the editor is waited out.
 [[step]]
-wait = { gone = "New Pull Request" }
+sleep_ms = 500
 
 [[step]]
 type = "First line"
@@ -169,7 +175,7 @@ type = "Second line"
 
 [[step]]
 capture = "filled"
-checks = ["footer"]
+checks = []
 
 [[step]]
 type = "\u001b[13;2u"
@@ -221,7 +227,7 @@ wait.text = "New Pull Request"
 wait.stable_ms = 500
 
 [[step]]
-keys = ["escape"]
+keys = ["escape", "escape"]
 
 [[step]]
 wait.gone = "New Pull Request"
@@ -230,7 +236,7 @@ wait.gone = "New Pull Request"
 capture = "escaped"
 checks = ["titles", "focus"]
 
-# And with Cancel: title, description, reviewer, Create, Cancel.
+# And from the description. Rust's sheet has no Cancel button (decision compose-dialogs): escape is the way out.
 [[step]]
 keys = ["P"]
 
@@ -241,23 +247,24 @@ wait.text = "New Pull Request"
 wait.stable_ms = 500
 
 [[step]]
-keys = ["tab", "tab", "tab", "tab"]
+keys = ["tab"]
+
+# Neither app's editor shows a marker the wait reads here (Rust's has no outline).
+[[step]]
+sleep_ms = 500
 
 [[step]]
-wait = { focused = "Cancel" }
-
-[[step]]
-keys = ["enter"]
+keys = ["escape", "escape"]
 
 [[step]]
 wait.gone = "New Pull Request"
 
 [[step]]
-capture = "cancelled"
+capture = "closed-from-description"
 checks = ["titles", "focus"]
 
-# In a short terminal the dialog opens scrolled to the focused title, with the heading and the branches above the
-# fold (#336).
+# In a short terminal the dialog opens with the focused title in view: Python's scrolled past the heading and the
+# branches (#336), Rust's sheet near its top, under the heading and the branches.
 [[step]]
 resize = [48, 16]
 
@@ -272,7 +279,7 @@ wait.text = "Description"
 
 [[step]]
 capture = "short-terminal"
-checks = ["titles", "focus"]
+checks = []
 
 [expect.no-repo]
 contains = ["Cannot open new pull request", "Please select a repository first!"]
@@ -308,10 +315,10 @@ not_contains = ["New Pull Request", "Traceback"]
 focused = ["[2] Pull Requests"]
 not_contains = ["New Pull Request", "Traceback"]
 
-[expect.cancelled]
+[expect.closed-from-description]
 focused = ["[2] Pull Requests"]
 not_contains = ["New Pull Request", "Traceback"]
 
 [expect.short-terminal]
 contains = ["Title", "Description"]
-not_contains = ["New Pu", "Compare", "Traceback"]
+not_contains = ["Traceback"]

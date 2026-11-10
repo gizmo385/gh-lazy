@@ -2,9 +2,10 @@ version = 1
 description = "Edit PR (E) refused: a merged PR from the table (warning, no dialog), then a refused update of PR 4 (the error toast, the dialog stays open)"
 # shift+enter is sent in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read
 # (terminal-caveats.shift-enter). Python moves focus a tick after a focus key (Py bug B98), so each waits for it.
-# The dialog captures leave the footer out of `checks`: the main screen's footer shows under the dialog, cut inside
-# `^p Command Pallete` (Py bug B14), which Rust spells right, so the cut footers differ. Their `[expect]`s check
-# that it's the PR table's footer instead.
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
+# and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
+# the second closes; in Python the second reaches the main screen, where it does nothing.
 # Split from pr-edit, whose PR 5 captures would otherwise sit under these toasts.
 gate = true
 parity_rows = [
@@ -70,7 +71,7 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "open-pr4"
-checks = ["titles", "focus"]
+checks = []
 
 [[step]]
 type = "Drop the old renderer"
@@ -93,7 +94,7 @@ wait.text = "Unexpected error while attempting to update PR"
 
 [[step]]
 capture = "update-failed"
-checks = ["titles", "focus"]
+checks = []
 
 [expect.already-merged]
 focused = ["[2] Pull Requests"]
@@ -101,7 +102,7 @@ contains = ["This PR has already been merged!"]
 not_contains = ["Editing PR"]
 
 [expect.open-pr4]
-contains = [" E Edit PR  u View User ", "Editing PR 4", "Base", "Compare", "Draft", "Title", "Drop the legacy renderer", "Description", "Superseded by the new renderer."]
+contains = ["Editing PR 4", "Base", "Compare", "Draft", "Title", "Drop the legacy renderer", "Description", "Superseded by the new renderer."]
 
 [expect.update-failed]
 contains = ["Editing PR 4", "Error updating pull request", "Unexpected error while attempting to update PR"]

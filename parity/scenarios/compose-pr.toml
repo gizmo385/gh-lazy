@@ -1,0 +1,254 @@
+version = 1
+description = "Compose sheet on Create PR and Edit PR: opened with the PR template (15-row sheet growing with it), a long body at the cap (the body scrolls, its scrollbar shown only then), ctrl+t Preview, ctrl+o full screen and back, the Reviewers section expanded with a reviewer added, escape leaving a field (q Close) and closing, the saved draft restored at its height, then Edit PR and ctrl+s updating it (#422)"
+# Rust-only: the compose sheet is new behavior (decision compose-dialogs). Checked by eye at both sizes.
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "modals.compose-sheet",
+    "modals.compose-preview",
+    "modals.compose-expand",
+    "modals.create-edit-pr",
+    "modals.create-pr-branches",
+    "modals.create-pr-title-description",
+    "modals.pr-reviewers",
+    "modals.edit-pr",
+    "modals.dialog-footer",
+    "keybindings.compose-submit",
+    "keybindings.compose-toggle-preview",
+    "keybindings.compose-expand",
+]
+sizes = [[160, 48], [100, 30]]
+timeout_ms = 60000
+
+[env]
+# pr-edit for the reviewer lookups, PR 5's requested reviewers and its review request; pr-create for the branches.
+fixtures = ["pr-edit", "pr-create", "pr-details", "base"]
+# work/pr_template.md, and a draft that doesn't load, so Create PR first opens with the template.
+seed = "pr-draft-corrupt"
+# Keeps the toasts up, so which of them a capture shows doesn't depend on how fast the run got there.
+toast_timeout_ms = 60000
+config_overrides.appearance.show_issues = false
+config_overrides.appearance.show_workflows = false
+config_overrides.pull_requests.pull_request_template = "pr_template.md"
+
+[[step]]
+wait.text = "pr-details"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Add a curso"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.stable_ms = 500
+
+[[step]]
+keys = ["P"]
+
+# The template prefills the description: the sheet opens at the height its text needs.
+[[step]]
+wait.text = "Template text from pr_template.md"
+
+[[step]]
+capture = "template"
+
+[[step]]
+type = "Compose the PR dialogs"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+paste = """
+## What changed
+
+Create PR and Edit PR open as the compose sheet: one-row fields with their labels on the left, the branch row with \
+Base, Compare and Draft on one line, the description under Write and Preview tabs, and Reviewers as one row until it \
+has focus.
+
+## Why
+
+The old dialog was a 36-row frame over 59 rows of content: the Create button was below the fold, and at 100x30 only \
+one row of the description showed.
+
+## Testing
+
+- unit tests for focus, the tab order, the Reviewers summary and its expansion
+- snapshots at 160x48 and 100x30
+- the parity scenarios, whose writes are unchanged
+
+## Follow-ups
+
+- New issue and Edit issue on the same sheet
+- the diff's Add comment
+
+## Notes
+
+The sheet grows with the description up to the screen less the footer and a margin row, and only then scrolls.
+Expanded with ctrl+o it takes the whole screen above the footer.
+
+The last line of the long body.
+"""
+
+[[step]]
+wait.text = "The last line of the long body."
+
+[[step]]
+capture = "long"
+
+[[step]]
+keys = ["ctrl+t"]
+
+[[step]]
+wait.text = "^t Write"
+
+[[step]]
+capture = "preview"
+
+[[step]]
+keys = ["ctrl+o"]
+
+[[step]]
+wait.text = "^o Collapse"
+
+[[step]]
+capture = "expanded"
+
+[[step]]
+keys = ["ctrl+o", "ctrl+t"]
+
+[[step]]
+wait.text = "^t Preview"
+
+# The Reviewers section expands into its input; a looked-up login joins it as an item.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait.text = "Reviewers   Reviewer to add"
+
+[[step]]
+type = "parity-fr"
+
+[[step]]
+keys = ["right", "enter"]
+
+[[step]]
+wait.log.method = "GET"
+wait.log.path = "/users/parity-friend"
+
+[[step]]
+wait.text = "parity-friend ✕"
+
+[[step]]
+capture = "reviewers"
+
+# escape leaves the field (the section collapses to its summary) and the footer offers q Close; escape again closes
+# and saves the draft.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.text = "q Close"
+
+[[step]]
+capture = "sheet"
+
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.gone = "New Pull Request"
+
+[[step]]
+keys = ["P"]
+
+[[step]]
+wait.text = "Restored saved PR draft"
+
+[[step]]
+capture = "restored"
+
+[[step]]
+keys = ["escape", "escape"]
+
+[[step]]
+wait.gone = "New Pull Request"
+
+# Edit PR on PR 5: the branch row disabled, the requested reviewer in the summary.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["E"]
+
+[[step]]
+wait.text = "Editing PR 5"
+wait.timeout_ms = 15000
+
+[[step]]
+wait.text = "Reviewers  parity-reviewer"
+
+[[step]]
+capture = "edit"
+
+# Nothing changed: no PATCH, and the listed reviewer is requested already, so an empty review request.
+[[step]]
+keys = ["ctrl+s"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/requested_reviewers"
+wait.log.body.reviewers = []
+
+[[step]]
+wait.text = "Successfully updated PR!"
+
+[[step]]
+wait.gone = "Editing PR 5"
+
+[[step]]
+capture = "updated"
+
+[expect.template]
+contains = ["New Pull Request · parity-bot/pr-details", "Base        main", "← Compare  Choose a head ref", "Draft [ ]", "Title       Title", "Description  ", "Template text from pr_template.md", "Reviewers  none  (tab to edit)"]
+footer = ["^s Create", "shift+⏎ Create", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.long]
+contains = ["Compose the PR dialogs", "The last line of the long body.", "Reviewers  none  (tab to edit)"]
+footer = ["^s Create", "shift+⏎ Create", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.preview]
+contains = ["What changed", "Create PR and Edit PR open as the compose sheet"]
+not_contains = ["## What changed"]
+footer = ["^s Create", "shift+⏎ Create", "^t Write", "^o Expand", "esc Leave"]
+
+[expect.expanded]
+contains = ["What changed"]
+footer = ["^s Create", "shift+⏎ Create", "^t Write", "^o Collapse", "esc Leave"]
+
+[expect.reviewers]
+contains = ["Reviewers   Reviewer to add", "parity-friend ✕"]
+footer = ["^s Create", "shift+⏎ Create", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.sheet]
+contains = ["Reviewers  parity-friend  (tab to edit)"]
+footer = ["^s Create", "shift+⏎ Create", "^t Preview", "^o Expand", "q Close"]
+
+[expect.restored]
+contains = ["Restored saved PR draft", "Compose the PR dialogs", "Reviewers  parity-friend  (tab to edit)"]
+footer = ["^s Create", "shift+⏎ Create", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.edit]
+contains = ["Editing PR 5 · parity-bot/pr-details", "Base        main", "← Compare  cursor", "Add a cursor to the viewer", "Reviewers  parity-reviewer  (tab to edit)"]
+footer = ["^s Update", "shift+⏎ Update", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.updated]
+contains = ["Successfully updated PR!"]
+not_contains = ["Editing PR", "Traceback"]

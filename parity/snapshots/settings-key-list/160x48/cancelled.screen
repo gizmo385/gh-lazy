@@ -21,7 +21,7 @@ cursor 0 0 hidden
 │                             █ General                                                                                          █                             │
 │                             █    Quit                       q                 app.quit                                         █                             │
 │                             █    Command Palette            ^p                app.command_palette                              █                             │
-└─────────────────────────────█    Maximize                   M                 app.maximize_widget                              █                             │
+└─────────────────────────────█    Maximize                   M                 app.maximize_widget                           ▁▁ █                             │
 ┌─ [2] Pull Requests ─────────█    Keybindings                ?                 app.open_help                                    █PR diff, and participating   │
 │ #  Status  Author  Title    █    Notifications              ^n                notifications.open                               █reate a new PR for the       │
 │                             █    Paste link                 ^v                link.paste                                       █                             │
@@ -70,35 +70,35 @@ b.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj
 b.............................gjrrrrrrrjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjssjg.............................c
 b.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjssjg.............................c
 b.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjssjg.............................c
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjssjg.............................c
-ccccccccccccccccccccccccccccccgjttttttttttttttttttttttttttttttttttttttttttttttttuuuuuuuuuuuuutttttttttttttttttttttttttttttttttvvjg.............................c
-cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjrrrrrjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-ccccccccccccccccccccccccccccccgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-ccccccccccccccccccccccccccccccgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjvvjg.............................c
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjttjg.............................c
+ccccccccccccccccccccccccccccccgjuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuvvvvvvvvvvvvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuwwjg.............................c
+cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjrrrrrjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+ccccccccccccccccccccccccccccccgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+ccccccccccccccccccccccccccccccgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjpppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjppppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjwwjg.............................c
 c.............................gjpppppppppppppppppppppppppjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
 c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
-c.............................gxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxg.............................c
+c.............................gyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyg.............................c
 ccccccccccccccccccccccccccccccgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
-ccccccccccccccccccccccccccccccgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjyyyyyyyyyyyyyyyyzzzzzzzzzzzzzzzzjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
-cwwwwwwwwwwwwwwwwwwwwwwwwwwwwwgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjAAAAABBBBBBAAAAACCCCDDDDDDDDCCCCjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
-c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjEEEEEEEEEEEEEEEEFFFFFFFFFFFFFFFFjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
+ccccccccccccccccccccccccccccccgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjzzzzzzzzzzzzzzzzAAAAAAAAAAAAAAAAjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
+cxxxxxxxxxxxxxxxxxxxxxxxxxxxxxgjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjBBBBBCCCCCCBBBBBDDDDEEEEEEEEDDDDjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
+c.............................gjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjFFFFFFFFFFFFFFFFGGGGGGGGGGGGGGGGjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjg.............................c
 c.............................gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg.............................c
 c..............................................................cc..............................................................................................c
 c..............................................................cc..............................................................................................c
 c..............................................................cc..............................................................................................c
 c..............................................................cc..............................................................................................c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-GGGHHHHHHHHHHHGGGHHHHHHHHGGGHHHHHHGGGGGGGGGHHHHHHHGGGHHHHHHGGGHHHHHHHIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII
+HHHIIIIIIIIIIIHHHIIIIIIIIHHHIIIIIIHHHHHHHHHIIIIIIIHHHIIIIIIHHHIIIIIIIJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ
 --- legend
 . fg=#646464 bg=#121212
 a fg=#0a263a bg=#121212
@@ -120,19 +120,20 @@ p fg=#aeaeae bg=#4f4f4f
 q fg=#646464 bg=#121212 bold
 r fg=#e0e0e0 bg=#4f4f4f bold
 s fg=#003054 bg=#4f4f4f inverse
-t fg=#ddedf9 bg=#0178d4 bold
-u fg=#92c5ec bg=#0178d4 bold
-v fg=#e0e0e0 bg=#000000
-w fg=#646464 bg=#191d21 bold
-x fg=#004578 bg=#4f4f4f
-y fg=#7ae998 bg=#4ebf71
-z fg=#e76580 bg=#b93c5b
-A fg=#0a180e bg=#4ebf71
-B fg=#0a180e bg=#4ebf71 bold
-C fg=#f5e5e9 bg=#b93c5b
-D fg=#f5e5e9 bg=#b93c5b bold
-E fg=#008139 bg=#4ebf71
-F fg=#780028 bg=#b93c5b
-G fg=#ffa62b bg=#242f38 bold
-H fg=#e0e0e0 bg=#242f38
-I bg=#242f38
+t fg=#003054 bg=#000000 inverse
+u fg=#ddedf9 bg=#0178d4 bold
+v fg=#92c5ec bg=#0178d4 bold
+w fg=#e0e0e0 bg=#000000
+x fg=#646464 bg=#191d21 bold
+y fg=#004578 bg=#4f4f4f
+z fg=#7ae998 bg=#4ebf71
+A fg=#e76580 bg=#b93c5b
+B fg=#0a180e bg=#4ebf71
+C fg=#0a180e bg=#4ebf71 bold
+D fg=#f5e5e9 bg=#b93c5b
+E fg=#f5e5e9 bg=#b93c5b bold
+F fg=#008139 bg=#4ebf71
+G fg=#780028 bg=#b93c5b
+H fg=#ffa62b bg=#242f38 bold
+I fg=#e0e0e0 bg=#242f38
+J bg=#242f38

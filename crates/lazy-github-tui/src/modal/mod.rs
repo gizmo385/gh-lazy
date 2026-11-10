@@ -77,7 +77,6 @@ pub use trigger_workflow::{TriggerWorkflowAction, TriggerWorkflowDialog};
 pub use user_profile::{UserProfileAction, UserProfileDialog};
 
 // Each dialog's screen bindings and inner links, for the Key Bindings conflict contexts (`keymap::KEY_CONTEXTS`).
-pub(crate) use add_comment::ADD_COMMENT_BINDINGS;
 pub(crate) use add_reaction::ADD_REACTION_BINDINGS;
 pub(crate) use confirm::CONFIRM_BINDINGS;
 pub(crate) use debug_info::DEBUG_BINDINGS;

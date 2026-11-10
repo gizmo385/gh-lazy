@@ -1,0 +1,35 @@
+---
+source: crates/lazy-github-tui/src/modal/add_comment/tests.rs
+assertion_line: 238
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No reposi█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█         │
+└─────────█ Add Comment                                                                  █─────────┘
+┌─ [1] Rep█ ▎ +Run `viewer FILE`, then press `j` and `k` to move.                        █─────────┐
+│ ★  Owner█                                                                              █         │
+│         █  Write   Preview  ────────────────────────────────────────────────────────── █━━━━━━━━━│
+│         █  `g` jump to the last and the first line.                                    █         │
+│         █                                                                              █         │
+│         █  This line is the one the README's Keys section should mention: `j` and      █)        │
+│         █  `k` stop at either end of the file and never wrap around, and `G` /         █         │
+│         █  `g` jump to the last and the first line.                                    █h        │
+│         █                                                                              █ the     │
+└─────────█  This line is the one the README's Keys section should mention: `j` and      █nce      │
+┌─ [2] Pul█  `k` stop at either end of the file and never wrap around, and `G` /         █l        │
+│ #  Statu█  `g` jump to the last and the first line.                                    █d and    │
+│         █                                                                              █         │
+│         █  This line is the one the README's Keys section should mention: `j` and      █         │
+└─────────█  `k` stop at either end of the file and never wrap around, and `G` /     ▄▄  █o be   ▁▁│
+┌─ [3] Iss█  `g` jump to the last and the first line.                                    █         │
+│ #  Statu█                                                                              █         │
+│         █  This line is the one the README's Keys section should mention: `j` and      █         │
+│         █  `k` stop at either end of the file and never wrap around, and `G` /         █         │
+└─────────█  `g` jump to the last and the first line.                                    █         │
+┌─ [4] Wor█                                                                              █ls,      │
+│ Time  Re█  This line is the one the README's Keys section should mention: `j` and      █ctive    │
+│         █  `k` stop at either end of the file and never wrap around, and `G` /         █         │
+│         █  `g` jump to the last and the first line.                                    █.        │
+│         █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Add Comment  shift+⏎ Add Comment  ^t Preview  ^o Expand  esc Leave

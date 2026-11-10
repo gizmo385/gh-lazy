@@ -288,6 +288,10 @@ impl Owner {
                 Owner::Screen(ScreenKind::Modal(ModalKind::NewIssue | ModalKind::EditIssue)),
                 BindingId::ComposeSubmit | BindingId::ModalSubmit,
             ) => Some("Save"),
+            (
+                Owner::Screen(ScreenKind::Modal(ModalKind::AddComment)),
+                BindingId::ComposeSubmit | BindingId::ModalSubmit,
+            ) => Some("Add Comment"),
             _ => None,
         }
     }

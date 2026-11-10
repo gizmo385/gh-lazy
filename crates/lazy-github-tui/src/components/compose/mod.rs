@@ -21,7 +21,7 @@ use crate::modal::dialog_bindings;
 pub use body::{BodyMode, BodyMouse, ComposeBody};
 pub use fields::{LabelState, field_area, label_column, render_heading, render_label};
 pub use layout::{ComposeLayout, ComposeParts, SheetGeometry, SheetPlacement, sheet_geometry};
-pub use quote::Quote;
+pub use quote::{Quote, quote_line};
 
 /// A compose dialog's screen bindings: submit (`ctrl+s` and `shift+enter`), Preview, Expand, then `modal.close`, which
 /// leaves a field or, from the sheet, closes the dialog.

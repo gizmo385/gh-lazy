@@ -779,13 +779,16 @@ fn c_opens_add_comment_on_the_current_line() {
     app.press(&["c"]);
     assert_eq!(modals(&app), [ModalKind::AddComment]);
     let screen = app.screen(160, 48);
-    assert!(screen.contains("Commenting on:"), "{screen}");
+    assert!(screen.contains("Add Comment"), "{screen}");
+    assert!(!screen.contains("Commenting on:"), "{screen}");
     assert!(
-        screen.contains("+Run `viewer FILE`, then press `j` and `k` to move."),
+        screen.contains("▎ +Run `viewer FILE`, then press `j` and `k` to move."),
         "{screen}"
     );
-    // The screen's footer stays under the dim: the dialog has none of its own.
-    assert!(screen.lines().last().unwrap().contains("c Add Comment"), "{screen}");
+    // The compose sheet's own footer replaces the diff's.
+    let footer = screen.lines().last().unwrap();
+    assert!(footer.contains("^s Add Comment"), "{footer}");
+    assert!(!footer.contains("c Add Comment"), "{footer}");
 }
 
 #[test]
@@ -829,7 +832,8 @@ fn an_added_comment_is_pending_with_a_toast_and_focus_goes_back_to_the_body() {
 #[test]
 fn a_closed_dialog_adds_nothing() {
     let mut app = readme_line_at(4);
-    app.press(&["c", "x", "escape"]);
+    // The first escape leaves the body, the second closes.
+    app.press(&["c", "x", "escape", "escape"]);
     assert!(modals(&app).is_empty());
     assert!(view(&app).pending().is_empty());
     assert!(!app.screen(160, 48).contains("Pending comment"));

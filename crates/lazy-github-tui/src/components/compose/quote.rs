@@ -9,6 +9,7 @@ use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 
 use crate::components::markdown::{LinkSpan, Markdown, Rendered};
+use crate::display;
 use crate::theme::{Paint, Theme};
 
 /// What stands before each quoted row.
@@ -94,6 +95,22 @@ impl Quote {
     }
 }
 
+/// Quotes `line`, one line of plain text (the diff line Add comment answers), on `area`'s first row behind the dim bar,
+/// cut with `…` at the row's edge. Tabs are drawn as four spaces.
+pub fn quote_line(buf: &mut Buffer, area: Rect, line: &str, theme: &Theme, under: Paint) {
+    if area.height == 0 {
+        return;
+    }
+    let dim = Style::new().fg(theme.color(theme.roles().text.muted, under));
+    let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
+    let room = area.width.saturating_sub(BAR_WIDTH);
+    let expanded = line.replace('\t', "    ");
+    let sanitized = display::sanitize(&expanded);
+    let shown = display::truncate(&sanitized, usize::from(room));
+    buf.set_span(area.x, area.y, &Span::styled(BAR, dim), BAR_WIDTH.min(area.width));
+    buf.set_span(area.x + BAR_WIDTH, area.y, &Span::styled(shown, text), room);
+}
+
 /// Drops `rendered`'s blank rows at the end, which a block's bottom margin leaves.
 pub(super) fn trim_blank_tail(rendered: &mut Rendered) {
     while rendered
@@ -163,5 +180,19 @@ mod tests {
         assert_eq!(links.len(), 1);
         assert_eq!((links[0].row, links[0].columns.clone()), (0, 7..16));
         assert_eq!(&*links[0].target, "https://example.com/guide");
+    }
+
+    #[test]
+    fn a_quoted_line_is_cut_with_an_ellipsis_at_the_edge() {
+        let theme = Theme::default();
+        let under = theme.background();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 12, 1));
+        let area = buf.area;
+        quote_line(&mut buf, area, "+let cursor = 0;", &theme, under);
+        assert_eq!(text(&buf, 0), "▎ +let curs…");
+        let mut buf = Buffer::empty(Rect::new(0, 0, 20, 1));
+        let area = buf.area;
+        quote_line(&mut buf, area, "-\tgone", &theme, under);
+        assert_eq!(text(&buf, 0), "▎ -    gone");
     }
 }

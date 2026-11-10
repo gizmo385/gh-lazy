@@ -1,102 +1,70 @@
-//! Add Comment (`diff.add_comment` on a line of the diff body): the diff line being commented on, shown in a read-only input, a
-//! comment editor, then Add Comment and Cancel. It sends nothing: it closes with the comment's text, which the diff
-//! viewer keeps as a pending comment until the review is submitted. Python's `AddCommentModal`.
+//! Add Comment (`diff.add_comment` on a line of the diff body), on the compose sheet (decision compose-dialogs): an
+//! `Add Comment` heading, the diff line being commented on quoted on one row, then the comment under its
+//! `Write  Preview` tabs. It sends nothing: it closes with the comment's text, which the diff viewer keeps as a pending
+//! comment until the review is submitted. Python's `AddCommentModal`, whose fixed 80-wide layout with a read-only
+//! input for the line and Add Comment / Cancel buttons the sheet replaces.
 //!
-//! The dialog is 80 wide and as tall as its content, in a `thick $accent` border on `$surface`. When the screen is too
-//! short for it, the stack clips the frame and the interior scrolls (without a bar) to keep the focused field in
-//! view, where Python scrolls the modal screen.
+//! The sheet is 80 wide and keeps Python's `thick $accent` border on `$surface`.
 
-use std::ops::Range;
-
-use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
+use crossterm::event::{KeyEvent, MouseEvent};
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
+use ratatui::text::Span;
 
 use super::form::FormScroll;
-use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings};
+use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind};
 use crate::action::Action;
-use crate::component::{ChainLink, Component, Cx, RenderCx};
-use crate::components::button::{ButtonMouse, ButtonRow, ButtonVariant, Pressed};
-use crate::components::command_log::{WHEEL_ROWS, Wheel};
-use crate::components::text_editor::{EditorOutcome, EditorVariant, TextEditor};
-use crate::components::text_input::{self, TextInput};
+use crate::component::{BindingState, ChainLink, Component, Cx, RenderCx};
+use crate::components::command_log::Wheel;
+use crate::components::compose::{
+    BodyMode, BodyMouse, COMPOSE_BINDINGS, ComposeAction, ComposeBody, ComposeLayout, ComposeParts, SheetGeometry,
+    SheetPlacement, quote_line, sheet_geometry,
+};
+use crate::components::text_editor::{EditorOutcome, EditorVariant};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::theme::{Roles, ThemeColor};
+use crate::theme::{Paint, Roles, Theme, ThemeColor};
 use crate::toast::Toast;
 
-/// The dialog's screen bindings: `modal.submit`, then `modal.close`.
-pub(crate) const ADD_COMMENT_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
-
-/// `width: 80`, border included.
-const WIDTH: u16 = 80;
-
-/// The container's `padding: 1`.
-const PADDING: u16 = 1;
-
-/// The editor's `height: 10`.
-const EDITOR_HEIGHT: u16 = 10;
-
-/// Where each part goes, in rows from the top of the padded content. Each label has `margin: 1 0`, collapsing with its
-/// neighbours' margins; the input and the editor have `margin: 0 0 1 0`.
-const TITLE_ROW: u16 = 1;
-const COMMENTING_ROW: u16 = 3;
-const LINE_ROWS: Range<u16> = 5..5 + text_input::HEIGHT;
-const COMMENT_ROW: u16 = LINE_ROWS.end + 1;
-const EDITOR_ROWS: Range<u16> = COMMENT_ROW + 2..COMMENT_ROW + 2 + EDITOR_HEIGHT;
-const BUTTON_ROWS: Range<u16> = EDITOR_ROWS.end + 1..EDITOR_ROWS.end + 1 + ButtonRow::FLUSH_HEIGHT;
-
-/// The interior's rows: the content and its padding above and below.
-const INTERIOR_HEIGHT: u16 = BUTTON_ROWS.end + 2 * PADDING;
-
+/// Python's `width: 80`, border included: the sheet's widest.
+const MAX_WIDTH: u16 = 80;
+/// A comment's body is at least this tall.
+const BODY_MIN_ROWS: u16 = 3;
+/// Python's title.
+const HEADING: &str = "Add Comment";
 /// The text a whitespace-only comment toasts.
 const EMPTY_COMMENT: &str = "Comment cannot be empty!";
 
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AddCommentAction {
-    /// `modal.submit` or Add Comment: close with the comment, unless it's blank.
-    Submit,
-    /// `modal.close` or Cancel: close with nothing.
-    Close,
+    /// One of the sheet's shared keys.
+    Compose(ComposeAction),
 }
 
-/// The dialog's focusable fields, in screen order. The line's input is never focused.
+/// Where the dialog's focus is: the body, its only field, or the sheet itself after `escape` left the body.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum AddField {
-    Editor,
-    Add,
-    Cancel,
-}
-
-impl AddField {
-    fn button(self) -> Option<Pressed> {
-        match self {
-            AddField::Add => Some(Pressed::Submit),
-            AddField::Cancel => Some(Pressed::Cancel),
-            AddField::Editor => None,
-        }
-    }
-
-    /// Its rows, from the interior's top.
-    fn rows(self) -> Range<u16> {
-        let rows = match self {
-            AddField::Editor => EDITOR_ROWS,
-            AddField::Add | AddField::Cancel => BUTTON_ROWS,
-        };
-        rows.start + PADDING..rows.end + PADDING
-    }
+enum Focus {
+    Body,
+    Sheet,
 }
 
 /// Add Comment for one diff line. Its output is the comment as typed, or `None` when it was closed.
 #[derive(Debug)]
 pub struct AddCommentDialog {
-    /// The line, read-only.
-    line: TextInput,
-    ring: FocusRing<AddField>,
-    editor: TextEditor,
-    buttons: ButtonRow,
+    /// The line commented on, as the diff shows it: its `+`, `-` or space marker first, trimmed.
+    line: String,
+    body: ComposeBody,
+    focus: Focus,
+    /// `compose.expand`: the sheet fills the screen above the footer.
+    expanded: bool,
+    placement: SheetPlacement,
+    /// The interior, which scrolls (without a bar) only on a screen too short for even the body's minimum.
     scroll: FormScroll,
+    /// Scroll the body into view at the next draw, after an edit or a focus change.
+    reveal_body: bool,
+    /// The theme of the last draw, which [`Dialog::frame`] measures the preview in.
+    theme: Option<Theme>,
     /// The outer `Option` is whether it's done, the inner the dialog's output.
     #[allow(clippy::option_option)]
     output: Option<Option<String>>,
@@ -104,75 +72,76 @@ pub struct AddCommentDialog {
 
 impl AddCommentDialog {
     /// The dialog for the line whose diff text (its `+`, `-` or space marker first, trimmed) is `line_text`, with an
-    /// empty editor focused.
+    /// empty body focused.
     pub fn new(line_text: impl Into<String>) -> Self {
-        let mut line = TextInput::new("");
-        line.set_value(line_text.into());
         Self {
-            line,
-            ring: FocusRing::new([AddField::Editor, AddField::Add, AddField::Cancel]),
-            editor: TextEditor::new(EditorVariant::Plain, ""),
-            buttons: ButtonRow::spaced("Add Comment").with_cancel_variant(ButtonVariant::Default),
+            line: line_text.into(),
+            body: ComposeBody::new(EditorVariant::Plain, "Write a review comment (markdown)", BODY_MIN_ROWS),
+            focus: Focus::Body,
+            expanded: false,
+            placement: SheetPlacement::default(),
             scroll: FormScroll::without_scrollbar(),
+            reveal_body: false,
+            theme: None,
             output: None,
         }
     }
 
-    /// The line shown.
+    /// The line quoted.
     pub fn line_text(&self) -> &str {
-        self.line.value()
+        &self.line
     }
 
     /// The comment as typed.
     pub fn text(&self) -> String {
-        self.editor.text()
+        self.body.text()
     }
 
-    fn action(action: AddCommentAction) -> Action {
-        Action::Dialog(DialogAction::AddComment(action))
+    fn action(action: ComposeAction) -> Action {
+        Action::Dialog(DialogAction::AddComment(AddCommentAction::Compose(action)))
     }
 
-    fn pressed(button: Pressed) -> Action {
-        Self::action(match button {
-            Pressed::Submit => AddCommentAction::Submit,
-            Pressed::Cancel => AddCommentAction::Close,
-        })
+    /// The sheet's background, which its text and markdown sit on.
+    fn under(&self, theme: &Theme) -> Paint {
+        self.background(theme.roles()).over(theme.background())
     }
 
-    /// Moves focus with `f`: a field that gains it is scrolled into view, and the editor starts a new undo batch.
-    fn refocus(&mut self, f: impl FnOnce(&mut FocusRing<AddField>)) {
-        let before = self.ring.focused();
-        f(&mut self.ring);
-        let Some(field) = self.ring.focused().filter(|&field| Some(field) != before) else {
-            return;
+    /// The sheet's limits on `screen` and its parts' rows, measured in `theme`. The quote is always one row.
+    fn sheet(&self, screen: Rect, theme: &Theme) -> (SheetGeometry, ComposeLayout) {
+        let geometry = sheet_geometry(screen, MAX_WIDTH, self.expanded);
+        let parts = ComposeParts {
+            quote: 1,
+            body_needed: self.body.rows_needed(geometry.content_width, theme, self.under(theme)),
+            body_min: self.body.min_rows(),
+            ..ComposeParts::default()
         };
-        if field == AddField::Editor {
-            self.editor.focus_gained();
-        }
-        self.scroll.reveal(field.rows());
+        (geometry, ComposeLayout::new(&parts, geometry.room(), self.expanded))
     }
 
-    /// Python's `_submit_comment`: a comment that's only whitespace is refused with a toast, and the dialog stays.
+    /// The frame's outer size on `screen`: as tall as the parts, up to the most the screen allows.
+    fn sheet_size(&self, screen: Rect) -> (u16, u16) {
+        let theme = self.theme.unwrap_or_default();
+        let (geometry, layout) = self.sheet(screen, &theme);
+        (geometry.width, layout.height.min(geometry.room()) + 2)
+    }
+
+    /// Focuses the body: its next edit starts a new undo batch, and it's scrolled into view.
+    fn focus_body(&mut self) {
+        if self.focus != Focus::Body {
+            self.focus = Focus::Body;
+            self.body.focus_gained();
+        }
+        self.reveal_body = true;
+    }
+
+    /// Python's `_submit_comment`: a comment that's only whitespace is refused with a toast, and the sheet stays.
     fn submit(&mut self, cx: &mut Cx<'_>) {
-        let text = self.editor.text();
+        let text = self.body.text();
         if text.trim().is_empty() {
             cx.notify(Toast::warning(EMPTY_COMMENT));
             return;
         }
         self.output = Some(Some(text));
-    }
-
-    /// A wheel notch at `(column, row)`: the editor scrolls if it's under the pointer and can, else the interior does.
-    fn wheel(&mut self, wheel: Wheel, column: u16, row: u16) {
-        let rows = match wheel {
-            Wheel::Up => -WHEEL_ROWS.cast_signed(),
-            Wheel::Down => WHEEL_ROWS.cast_signed(),
-            Wheel::Left | Wheel::Right => return,
-        };
-        let over_editor = self.scroll.shows_at(AddField::Editor.rows(), column, row);
-        if !(over_editor && self.editor.scroll(rows)) {
-            self.scroll.wheel(wheel);
-        }
     }
 }
 
@@ -180,111 +149,138 @@ impl Component for AddCommentDialog {
     type Action = AddCommentAction;
 
     fn bindings(&self) -> &'static [BindingId] {
-        ADD_COMMENT_BINDINGS
+        COMPOSE_BINDINGS
     }
 
     fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        let action = match id {
+            BindingId::ComposeSubmit | BindingId::ModalSubmit => ComposeAction::Submit,
+            BindingId::ComposeTogglePreview => ComposeAction::TogglePreview,
+            BindingId::ComposeExpand => ComposeAction::ToggleExpand,
+            BindingId::ModalClose if self.focus == Focus::Body => ComposeAction::Leave,
+            BindingId::ModalClose => ComposeAction::Close,
+            _ => return None,
+        };
+        Some(Self::action(action))
+    }
+
+    fn binding_state(&self, id: BindingId, _cx: &Cx<'_>) -> BindingState {
         match id {
-            BindingId::ModalSubmit => Some(Self::action(AddCommentAction::Submit)),
-            BindingId::ModalClose => Some(Self::action(AddCommentAction::Close)),
-            _ => None,
+            BindingId::ComposeTogglePreview if self.body.mode() == BodyMode::Preview => {
+                BindingState::Relabeled("Write")
+            }
+            BindingId::ComposeExpand if self.expanded => BindingState::Relabeled("Collapse"),
+            BindingId::ModalClose if self.focus == Focus::Body => BindingState::Relabeled("Leave"),
+            _ => BindingState::Enabled,
         }
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
-        self.ring.is_focused(AddField::Editor) && self.editor.consumes_key(key, keymap)
+        self.focus == Focus::Body && self.body.consumes_key(key, keymap)
     }
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
-        if !self.ring.is_focused(AddField::Editor) {
+        if self.focus != Focus::Body {
             return None;
         }
-        match self.editor.handle_key(&chord, cx.keymap(), cx.clipboard(), cx.now()) {
-            EditorOutcome::Copied { text, .. } => Some(Action::Copy(text)),
-            EditorOutcome::Changed | EditorOutcome::Moved | EditorOutcome::Ignored => Some(Action::Consumed),
-        }
-    }
-
-    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, cx: &Cx<'_>) -> Option<Action> {
-        // The fields are drawn offscreen and copied with the scroll offset: their mouse coordinates are the form's.
-        let moved = self.scroll.to_content(event);
-        if self.editor.captured_mouse(moved) {
-            return Some(Action::Consumed);
-        }
-        if let Some((button, outcome)) = self.buttons.handle_mouse(&moved, cx.now()) {
-            return Some(match outcome {
-                ButtonMouse::Focus => {
-                    let field = match button {
-                        Pressed::Submit => AddField::Add,
-                        Pressed::Cancel => AddField::Cancel,
-                    };
-                    self.refocus(|ring| {
-                        ring.focus(field);
-                    });
+        Some(
+            match self.body.handle_key(&chord, cx.keymap(), cx.clipboard(), cx.now()) {
+                EditorOutcome::Changed => {
+                    self.reveal_body = true;
                     Action::Consumed
                 }
-                ButtonMouse::Pressed => Self::pressed(button),
-                ButtonMouse::Missed => Action::Consumed,
-            });
-        }
-        if let Some(wheel) = Wheel::from_mouse(&event) {
-            self.wheel(wheel, event.column, event.row);
-        } else if event.kind == MouseEventKind::Down(MouseButton::Left)
-            && self.scroll.shows_at(AddField::Editor.rows(), event.column, event.row)
-        {
-            self.refocus(|ring| {
-                ring.focus(AddField::Editor);
-            });
-            self.editor.press(moved.column, moved.row);
+                EditorOutcome::Copied { text, changed } => {
+                    self.reveal_body |= changed;
+                    Action::Copy(text)
+                }
+                EditorOutcome::Moved | EditorOutcome::Ignored => Action::Consumed,
+            },
+        )
+    }
+
+    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, _cx: &Cx<'_>) -> Option<Action> {
+        // The parts are drawn offscreen and copied with the interior's scroll: their coordinates are the content's.
+        match self.body.handle_mouse(self.scroll.to_content(event)) {
+            BodyMouse::Focused => self.focus_body(),
+            BodyMouse::Handled => {}
+            BodyMouse::Missed => {
+                if let Some(wheel) = Wheel::from_mouse(&event) {
+                    self.scroll.wheel(wheel);
+                }
+            }
         }
         Some(Action::Consumed)
     }
 
     fn update(&mut self, action: AddCommentAction, cx: &mut Cx<'_>) {
+        let AddCommentAction::Compose(action) = action;
         match action {
-            AddCommentAction::Submit => self.submit(cx),
-            AddCommentAction::Close => self.output = Some(None),
+            ComposeAction::Submit => self.submit(cx),
+            ComposeAction::Close => self.output = Some(None),
+            ComposeAction::Leave => self.focus = Focus::Sheet,
+            ComposeAction::TogglePreview => {
+                self.body.toggle_mode();
+                self.focus_body();
+            }
+            ComposeAction::ToggleExpand => {
+                self.expanded = !self.expanded;
+                self.reveal_body = true;
+            }
         }
     }
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.roles()).over(theme.background());
+        self.theme = Some(*theme);
+        let screen = frame.area();
+        let outer = Rect {
+            x: area.x.saturating_sub(1),
+            y: area.y.saturating_sub(1),
+            width: area.width + 2,
+            height: area.height + 2,
+        };
+        self.placement.record(screen, outer, self.expanded);
+        let (_, layout) = self.sheet(screen, theme);
+        let under = self.under(theme);
         let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
-        let fill = text.bg(theme.paint(under));
-        // `Label { color: $text; text-style: bold }`.
-        let label = Style::new()
-            .fg(theme.color(theme.roles().text.normal, under))
-            .add_modifier(Modifier::BOLD);
-        let focused = self.ring.focused();
-        let (line, editor, buttons) = (&mut self.line, &mut self.editor, &mut self.buttons);
-        self.scroll
-            .render(frame.buffer_mut(), area, theme, fill, INTERIOR_HEIGHT, |buf, form| {
-                let content = Rect {
-                    x: form.x + PADDING,
-                    y: form.y + PADDING,
-                    width: form.width.saturating_sub(2 * PADDING),
-                    height: form.height.saturating_sub(2 * PADDING),
+        if std::mem::take(&mut self.reveal_body) {
+            self.scroll.reveal(layout.body.clone());
+        }
+        let focused = self.focus == Focus::Body;
+        let (line, body) = (&self.line, &mut self.body);
+        // The preview's links drawn, in rows from the interior's top and columns from its left edge.
+        let mut links = Vec::new();
+        self.scroll.render(
+            frame.buffer_mut(),
+            area,
+            theme,
+            text.bg(theme.paint(under)),
+            layout.height,
+            |buf, content| {
+                let row = |y: u16, height: u16| Rect {
+                    x: content.x + 1,
+                    y: content.y + y,
+                    width: content.width.saturating_sub(2),
+                    height,
                 };
-                let rect = |rows: Range<u16>| Rect {
-                    y: content.y + rows.start,
-                    height: rows.end - rows.start,
-                    ..content
-                };
-                let width = usize::from(content.width);
-                for (row, text) in [
-                    (TITLE_ROW, "Add Comment"),
-                    (COMMENTING_ROW, "Commenting on:"),
-                    (COMMENT_ROW, "Comment:"),
-                ] {
-                    buf.set_stringn(content.x, content.y + row, text, width, label);
-                }
-                // Python's input is disabled and can't take focus; Textual draws it as an unfocused one.
-                line.render(buf, rect(LINE_ROWS), theme, under, false);
-                editor.render(buf, rect(EDITOR_ROWS), theme, under, focused == Some(AddField::Editor));
-                buttons.render(buf, rect(BUTTON_ROWS), theme, focused.and_then(AddField::button));
-            });
+                let heading = row(layout.heading, 1);
+                buf.set_span(heading.x, heading.y, &Span::styled(HEADING, text), heading.width);
+                quote_line(buf, row(layout.quote.start, 1), line, theme, under);
+                let rect = row(layout.body.start, layout.body_rows());
+                let spans = body.render(buf, row(layout.tabs, 1), rect, theme, under, focused);
+                links.extend(spans.into_iter().map(|mut span| {
+                    span.row += usize::from(rect.y - content.y);
+                    let shift = rect.x - content.x;
+                    span.columns = span.columns.start + shift..span.columns.end + shift;
+                    span
+                }));
+            },
+        );
+        // As New comment's, the preview's links open on a click.
+        if let Some(sink) = cx.links {
+            self.scroll.record_links(sink, &links);
+        }
     }
 }
 
@@ -302,13 +298,20 @@ impl Dialog for AddCommentDialog {
         }
     }
 
-    fn move_focus(&mut self, direction: FocusMove) {
-        self.refocus(|ring| ring.step(direction));
+    /// `tab` and `shift+tab` go back to the body from the sheet; in the body, its only field, they do nothing.
+    fn move_focus(&mut self, _direction: FocusMove) {
+        self.focus_body();
     }
 
-    /// 80 wide, as tall as the content with its padding and the border.
-    fn size(&self, _available: Rect) -> (u16, u16) {
-        (WIDTH, INTERIOR_HEIGHT + 2)
+    fn size(&self, available: Rect) -> (u16, u16) {
+        self.sheet_size(Rect {
+            height: available.height + 1,
+            ..available
+        })
+    }
+
+    fn frame(&self, area: Rect) -> Rect {
+        self.placement.place(area, self.sheet_size(area), self.expanded)
     }
 
     /// `background: $surface`.
@@ -321,47 +324,33 @@ impl Dialog for AddCommentDialog {
         roles.border.emphasis
     }
 
-    /// Python's modal has no footer of its own: the screen's shows under the dim.
-    fn shows_footer(&self) -> bool {
-        false
-    }
-
     fn take_output(&mut self) -> Option<Option<String>> {
         self.output.take()
     }
 
     fn field_chain(&self) -> Vec<ChainLink> {
-        let field = match self.ring.focused() {
-            Some(AddField::Editor) => FieldKind::TextEditor,
-            Some(AddField::Add | AddField::Cancel) => FieldKind::Button,
-            None => return Vec::new(),
-        };
-        vec![field.link(self.kind())]
-    }
-
-    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
-        match (field, id) {
-            (FieldKind::Button, BindingId::TextualButtonPress) => {
-                let button = self.ring.focused().and_then(AddField::button)?;
-                // A press inside the debounce still takes the key.
-                Some(
-                    self.buttons
-                        .press(button, cx.now())
-                        .map_or(Action::Consumed, Self::pressed),
-                )
-            }
-            // `consumes_key` already gave the editor every key it binds.
-            _ => Some(Action::Consumed),
+        match self.focus {
+            // The preview keeps the editor's link: the keys it would type do nothing there instead of reaching the
+            // sheet's bindings, and the footer stays as it was.
+            Focus::Body => vec![FieldKind::TextEditor.link(self.kind())],
+            Focus::Sheet => Vec::new(),
         }
     }
 
+    fn on_field_binding(&mut self, _field: FieldKind, _id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        // `consumes_key` already gave the body every key the editor binds.
+        Some(Action::Consumed)
+    }
+
     fn captures_mouse(&self) -> bool {
-        self.editor.is_selecting()
+        self.body.is_selecting()
     }
 
     fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {
-        self.ring.is_focused(AddField::Editor).then(|| {
-            let _ = self.editor.handle_paste(text, cx.now());
+        (self.focus == Focus::Body).then(|| {
+            if self.body.handle_paste(text, cx.now()) == EditorOutcome::Changed {
+                self.reveal_body = true;
+            }
             Action::Consumed
         })
     }

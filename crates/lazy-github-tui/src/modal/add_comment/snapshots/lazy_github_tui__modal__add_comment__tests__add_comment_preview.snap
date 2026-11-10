@@ -1,0 +1,35 @@
+---
+source: crates/lazy-github-tui/src/modal/add_comment/tests.rs
+assertion_line: 248
+expression: "app.screen(100, 30)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│No repository selected                                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Details ────────────────────────────────────────────┐
+│ ★  Owner  Name  Private              ││ Introduction                                             │
+│                                      ││╸━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                      ││                                                          │
+│                                      ││                                                          │
+│                                      ││      LazyGithub: A Terminal UI For GitHub (0.1.0)        │
+│                                      ││                                                          │
+│         █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█h        │
+│         █ Add Comment                                                                  █ the     │
+└─────────█ ▎ +Run `viewer FILE`, then press `j` and `k` to move.                        █nce      │
+┌─ [2] Pul█                                                                              █l        │
+│ #  Statu█  Write   Preview  ────────────────────────────────────────────────────────── █d and    │
+│         █  Mention the arrow keys too, and G / g.                                      █         │
+│         █                                                                              █         │
+└─────────█                                                                              █o be   ▁▁│
+┌─ [3] Iss█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█         │
+│ #  Status  Author  Title             ││                                                          │
+│                                      ││                                                          │
+│                                      ││  Pull Requests                                           │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│  You can interact with a PR by viewing its details,      │
+│ Time  Result  Job Name  Run Name  Run││  viewing the PR diff, and participating in any active    │
+│                                   ▎  ││  conversations happening on the PR. You can also         │
+│                                      ││  create a new PR for the currently selected repo.        │
+│                                      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Add Comment  shift+⏎ Add Comment  ^t Write  ^o Expand  esc Leave

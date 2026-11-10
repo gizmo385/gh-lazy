@@ -67,22 +67,19 @@ const DECISION: &str = "\
 - Rows: `demo.two`
 ";
 const SCENARIO: &str = "version = 1\nparity_rows = [\"demo.one\"]\n";
-const GOLDEN: &str = r#"version = 1
+const GOLDEN: &str = r#"version = 2
 description = "Demo golden"
-generator = "gen.py"
 golden = ["golden.json"]
 test = "tests/demo.rs"
-fresh_test = "demo_goldens_are_fresh"
 parity_rows = ["demo.two"]
 "#;
 const GOLDEN_TEST: &str = r#"
 #[test]
 fn matches_the_golden() {}
 
-#[cfg(unix)]
 #[test]
-#[ignore = "needs uv and the Python app"]
-fn demo_goldens_are_fresh() {}
+#[ignore = "slow"]
+fn an_ignored_extra() {}
 "#;
 
 /// A repo with a valid matrix, with `edit` applied to one of its files.
@@ -102,7 +99,6 @@ fn repo_with(edit: impl FnOnce(&Path)) -> tempfile::TempDir {
     fs::write(m.join("decisions/gh.md"), DECISION).unwrap();
     fs::write(root.join("parity/scenarios/demo.toml"), SCENARIO).unwrap();
     fs::write(root.join("parity/goldens/demo.toml"), GOLDEN).unwrap();
-    fs::write(root.join("gen.py"), "").unwrap();
     fs::write(root.join("golden.json"), "[]\n").unwrap();
     fs::write(root.join("tests/demo.rs"), GOLDEN_TEST).unwrap();
     edit(root);
@@ -338,7 +334,7 @@ fn golden_parity_rows_must_be_row_ids() {
         GOLDEN_FILE,
         "\"demo.two\"",
         "\"demo.gone\"",
-        "parity/goldens/demo.toml:7: parity_rows names `demo.gone`, which isn't a row id",
+        "parity/goldens/demo.toml:5: parity_rows names `demo.gone`, which isn't a row id",
     );
 }
 
@@ -348,33 +344,47 @@ fn golden_manifests_reject_unknown_keys() {
         GOLDEN_FILE,
         "parity_rows =",
         "parity_row =",
-        "parity/goldens/demo.toml:7: unknown field `parity_row`",
+        "parity/goldens/demo.toml:5: unknown field `parity_row`",
     );
 }
 
 #[test]
-fn golden_manifests_are_version_1() {
+fn golden_manifests_are_version_2() {
     assert_edit(
         GOLDEN_FILE,
-        "version = 1",
         "version = 2",
-        "parity/goldens/demo.toml:1: version 2 isn't supported (only 1 is)",
+        "version = 1",
+        "parity/goldens/demo.toml:1: version 1 isn't supported (only 2 is); version 2 drops `generator` and \
+         `fresh_test` with the Python generators (#398)",
     );
+}
+
+#[test]
+fn golden_manifests_reject_the_version_1_keys() {
+    for key in ["generator = \"gen.py\"", "fresh_test = \"demo_goldens_are_fresh\""] {
+        let name = key.split(' ').next().unwrap();
+        assert_edit(
+            GOLDEN_FILE,
+            "test = ",
+            &format!("{key}\ntest = "),
+            &format!(
+                "parity/goldens/demo.toml:4: unknown field `{name}`, expected one of `version`, `description`, \
+                 `golden`, `test`, `parity_rows`; version 2 drops `generator` and `fresh_test` with the Python \
+                 generators (#398)"
+            ),
+        );
+    }
 }
 
 #[test]
 fn golden_manifest_paths_must_exist() {
     assert_one(
-        |r| fs::remove_file(r.join("gen.py")).unwrap(),
-        "parity/goldens/demo.toml:3: generator file `gen.py` doesn't exist",
-    );
-    assert_one(
         |r| fs::remove_file(r.join("golden.json")).unwrap(),
-        "parity/goldens/demo.toml:4: golden file `golden.json` doesn't exist",
+        "parity/goldens/demo.toml:3: golden file `golden.json` doesn't exist",
     );
     assert_one(
         |r| fs::remove_file(r.join("tests/demo.rs")).unwrap(),
-        "parity/goldens/demo.toml:5: test file `tests/demo.rs` doesn't exist",
+        "parity/goldens/demo.toml:4: test file `tests/demo.rs` doesn't exist",
     );
 }
 
@@ -384,27 +394,7 @@ fn golden_test_must_run_in_plain_cargo_test() {
         "tests/demo.rs",
         "#[test]\nfn matches_the_golden",
         "#[test]\n#[ignore]\nfn matches_the_golden",
-        "parity/goldens/demo.toml:5: tests/demo.rs has no #[test] that isn't #[ignore]d",
-    );
-}
-
-#[test]
-fn fresh_test_must_exist() {
-    assert_edit(
-        GOLDEN_FILE,
-        "\"demo_goldens_are_fresh\"",
-        "\"demo_golden_is_fresh\"",
-        "parity/goldens/demo.toml:6: fresh_test `demo_golden_is_fresh` isn't a #[test] fn in tests/demo.rs",
-    );
-}
-
-#[test]
-fn fresh_test_must_be_ignored() {
-    assert_edit(
-        "tests/demo.rs",
-        "#[ignore = \"needs uv and the Python app\"]\n",
-        "",
-        "parity/goldens/demo.toml:6: fresh_test `demo_goldens_are_fresh` in tests/demo.rs isn't #[ignore]d",
+        "parity/goldens/demo.toml:4: tests/demo.rs has no #[test] that isn't #[ignore]d",
     );
 }
 

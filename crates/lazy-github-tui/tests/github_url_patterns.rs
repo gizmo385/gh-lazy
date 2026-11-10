@@ -1,8 +1,11 @@
 //! `core::links` against the Python app's own link patterns (`github_url_patterns.json`, golden manifest
 //! `parity/goldens/github-url-patterns.toml`): for every text in the corpus, the validator's answer and the link
 //! looked up with and without repository links.
-
-mod common;
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by
+//! `crates/lazy-github-tui/tests/fixtures/generate_github_url_patterns.py`, removed at cutover (#398; `git log
+//! --diff-filter=D -- crates/lazy-github-tui/tests/fixtures/generate_github_url_patterns.py` finds its last version).
+//! Edit by hand when the Rust behavior changes on purpose.
 
 use std::path::Path;
 
@@ -71,18 +74,4 @@ fn links_parse_as_in_python() {
         }
     }
     assert!(wrong.is_empty(), "{}", wrong.join("\n"));
-}
-
-/// Regenerates `github_url_patterns.json` with the Python app and checks the committed copy matches (the golden
-/// manifest is `parity/goldens/github-url-patterns.toml`).
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn github_url_patterns_golden_is_fresh() {
-    let home = tempfile::tempdir().unwrap();
-    common::assert_goldens_fresh(
-        "crates/lazy-github-tui/tests/fixtures/generate_github_url_patterns.py",
-        &[GOLDEN],
-        home.path(),
-        "uv run python crates/lazy-github-tui/tests/fixtures/generate_github_url_patterns.py",
-    );
 }

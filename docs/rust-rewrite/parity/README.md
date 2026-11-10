@@ -70,8 +70,8 @@ Wording in quotes is the exact text the Python app shows. Toast rows give severi
   usually, but not always, every id in the PR's scenarios' `parity_rows`: an `intentional diff` row stays one, and
   a row the scenario only covers in part (e.g. `main-layout.command-log` before #80) stays where it is.
 - The same goes for a row named in a golden manifest's `parity_rows` (`parity/goldens/`, see
-  [`parity/README.md`](../../../parity/README.md#python-goldens)). The reviewer moves it to `parity` when the
-  manifest's `test` passes in `cargo test` and its `fresh_test` passed in the PR's CI run. The exceptions are the
+  [`parity/README.md`](../../../parity/README.md#goldens)). The reviewer moves it to `parity` when the
+  manifest's `test` passes in `cargo test`. The exceptions are the
   same as for scenarios: an `intentional diff` row stays as it is, and so does a row whose Notes say the golden
   covers it only in part, or one with an open `Py bug` whose recommendation the Rust side doesn't follow yet.
 - A new suspected Python bug is a new file `py-bugs/B<nn>.md` with the next free number (look at `rust-main` and open
@@ -109,9 +109,8 @@ Wording in quotes is the exact text the Python app shows. Toast rows give severi
 of the values above, a `Py bug Bn` note has no file, an `intentional diff` row doesn't link a decision, a py-bug or
 decision file names a row that doesn't exist, a scenario's `parity_rows` entry isn't a row id, or an area file is
 missing from the index below. It also checks the golden manifests in `parity/goldens/`: each parses with no unknown
-keys and `version = 1`, its `parity_rows` are row ids, its `generator`, `golden` and `test` files exist, its
-`test` file has a `#[test]` that isn't `#[ignore]`d, and its `fresh_test` is an `#[ignore]`d `#[test]` fn in that
-file.
+keys and `version = 2`, its `parity_rows` are row ids, its `golden` and `test` files exist, and its `test` file has
+a `#[test]` that isn't `#[ignore]`d.
 
 ## Index
 

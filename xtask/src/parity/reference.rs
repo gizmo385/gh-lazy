@@ -52,7 +52,7 @@ pub const HARNESS_INPUTS: &[&str] = &[
     "parity/themes.toml",
 ];
 /// Paths that need live Python in CI without being reference inputs: the Python-backed `#[ignore]`d tests and the
-/// workflow itself. [`plan`] adds every path the `parity/goldens/*.toml` manifests name.
+/// workflow itself.
 pub const CI_PYTHON_PATHS: &[&str] = &[
     "xtask/tests/python_app.rs",
     "xtask/tests/structural_check.rs",
@@ -1385,18 +1385,17 @@ impl fmt::Display for LivePlan {
 
 /// Decides where the Python sides of `scenarios` come from, given what changed between `rev` and the working tree
 /// under `repo` (`git diff REV`, plus untracked files). A change to any of [`PYTHON_APP_INPUTS`],
-/// [`HARNESS_INPUTS`], [`CI_PYTHON_PATHS`], a path a golden manifest names, or a [`PINNED_CRATES`] version in
+/// [`HARNESS_INPUTS`], [`CI_PYTHON_PATHS`] or a [`PINNED_CRATES`] version in
 /// `Cargo.lock` runs every scenario live. Otherwise the selected scenarios that run Python and whose
 /// `parity/references/<name>/` changed run live; references of other scenarios (or deleted ones) are ignored.
 pub fn plan(repo: &Path, rev: &str, scenarios: &[Scenario]) -> Result<LivePlan> {
     let changed = changed_since(repo, rev)?;
-    let mut triggers: Vec<String> = PYTHON_APP_INPUTS
+    let triggers: Vec<&str> = PYTHON_APP_INPUTS
         .iter()
         .chain(HARNESS_INPUTS)
         .chain(CI_PYTHON_PATHS)
-        .map(|p| (*p).to_owned())
+        .copied()
         .collect();
-    triggers.extend(golden_paths(repo)?);
     let under =
         |path: &str, input: &str| path == input || path.strip_prefix(input).is_some_and(|rest| rest.starts_with('/'));
     if changed.iter().any(|path| triggers.iter().any(|t| under(path, t))) {
@@ -1434,31 +1433,6 @@ fn changed_since(repo: &Path, rev: &str) -> Result<BTreeSet<String>> {
         .filter(|raw| !raw.is_empty())
         .map(|raw| String::from_utf8_lossy(raw).into_owned())
         .collect())
-}
-
-/// The `generator`, `golden` and `test` paths of every `parity/goldens/*.toml` manifest, so a change to one runs its
-/// `#[ignore]`d freshness test. `cargo xtask parity-matrix` checks the rest of each manifest.
-fn golden_paths(repo: &Path) -> Result<Vec<String>> {
-    #[derive(Deserialize)]
-    struct Manifest {
-        generator: String,
-        golden: Vec<String>,
-        test: String,
-    }
-    let mut paths = Vec::new();
-    for file in list_dir(&repo.join(crate::matrix::GOLDENS_DIR))? {
-        if file.extension().is_none_or(|e| e != "toml") {
-            continue;
-        }
-        let text = std::fs::read_to_string(&file).with_context(|| format!("reading {}", file.display()))?;
-        let manifest: Manifest = toml::from_str(&text).with_context(|| format!("parsing {}", file.display()))?;
-        let named = [manifest.generator, manifest.test].into_iter().chain(manifest.golden);
-        paths.extend(named.map(|path| {
-            let path = path.replace('\\', "/");
-            path.strip_prefix("./").map_or_else(|| path.clone(), str::to_owned)
-        }));
-    }
-    Ok(paths)
 }
 
 /// Whether a [`PINNED_CRATES`] version differs between `rev`'s `Cargo.lock` and the working tree's. A `Cargo.lock`
@@ -2644,18 +2618,9 @@ c fg=#ddedf9 bg=#0178d4 bold
 
     // ---- the CI plan ----
 
-    const GOLDEN_MANIFEST: &str = r#"version = 1
-description = "d"
-generator = "crates/core/tests/fixtures/generate.py"
-golden = ["crates/core/tests/fixtures/python.json"]
-test = "crates/core/tests/config.rs"
-fresh_test = "config_goldens_are_fresh"
-parity_rows = ["config.theme"]
-"#;
-
     /// [`Repo::harness`] plus everything [`plan`] tells apart, committed: scenarios `demo` and `startup` with
-    /// references, `rust-only` that doesn't run Python, a reference of a deleted scenario `gone`, a golden manifest
-    /// and its files, a Python-backed test, Rust app code and docs.
+    /// references, `rust-only` that doesn't run Python, a reference of a deleted scenario `gone`, a Python-backed test,
+    /// Rust app code and docs.
     fn planned_repo() -> Repo {
         let repo = Repo::harness();
         repo.write("parity/scenarios/startup.toml", DEMO);
@@ -2663,12 +2628,7 @@ parity_rows = ["config.theme"]
         for name in ["demo", "startup", "gone", "rust-only"] {
             repo.write(&format!("parity/references/{name}/80x24/manifest.toml"), "format = 1\n");
         }
-        repo.write("parity/goldens/config.toml", GOLDEN_MANIFEST);
         for rel in [
-            "crates/core/tests/fixtures/generate.py",
-            "crates/core/tests/fixtures/python.json",
-            "crates/core/tests/config.rs",
-            "crates/core/tests/other.rs",
             "xtask/tests/python_app.rs",
             "xtask/tests/reference_reads.rs",
             "crates/lazy-github/src/main.rs",
@@ -2715,19 +2675,6 @@ parity_rows = ["config.theme"]
         ] {
             assert_eq!(plan_after(&[path]), LivePlan::All, "{path}");
         }
-    }
-
-    #[test]
-    fn a_path_a_golden_manifest_names_runs_everything_live() {
-        for path in [
-            "crates/core/tests/fixtures/generate.py",
-            "crates/core/tests/fixtures/python.json",
-            "crates/core/tests/config.rs",
-        ] {
-            assert_eq!(plan_after(&[path]), LivePlan::All, "{path}");
-        }
-        // A file next to them that no manifest names doesn't.
-        assert_eq!(plan_after(&["crates/core/tests/other.rs"]), LivePlan::None);
     }
 
     #[test]

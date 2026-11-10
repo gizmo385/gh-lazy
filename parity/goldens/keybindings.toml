@@ -1,13 +1,11 @@
-version = 1
+version = 2
 description = "Bindings: every id's defaults and flags, each class's merged bindings in Textual's order, and how default keys and override spellings parse and display"
-generator = "crates/lazy-github-tui/tests/fixtures/generate_bindings.py"
 golden = [
     "crates/lazy-github-tui/tests/fixtures/bindings.json",
     "crates/lazy-github-tui/tests/fixtures/contexts.json",
     "crates/lazy-github-tui/tests/fixtures/keys.json",
 ]
 test = "crates/lazy-github-tui/tests/registry.rs"
-fresh_test = "bindings_goldens_are_fresh"
 parity_rows = [
     "keybindings.all-ids",
     "keybindings.app-quit",

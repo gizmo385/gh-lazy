@@ -1,7 +1,9 @@
 //! The binding registry matches the Python app's, dumped to `fixtures/bindings.json` by
 //! `fixtures/generate_bindings.py`. `contexts.rs` and `keys.rs` check the generator's other two goldens.
-
-mod common;
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by `crates/lazy-github-tui/tests/fixtures/generate_bindings.py`,
+//! removed at cutover (#398; `git log --diff-filter=D -- crates/lazy-github-tui/tests/fixtures/generate_bindings.py`
+//! finds its last version). Edit by hand when the Rust behavior changes on purpose.
 
 use std::collections::HashSet;
 
@@ -134,23 +136,4 @@ fn rust_only_ids_are_rebindable_and_unknown_to_python() {
         let id = BindingId::from_config_id(name).unwrap_or_else(|| panic!("{name} isn't rebindable"));
         assert!(!id.def().internal, "{name}");
     }
-}
-
-/// Regenerates `bindings.json`, `contexts.json` and `keys.json` with the Python app and checks the committed copies
-/// match (the golden manifest is `parity/goldens/keybindings.toml`).
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn bindings_goldens_are_fresh() {
-    // An empty HOME, so `notifications.open` gets the default config, as the generator's docstring says.
-    let home = tempfile::tempdir().unwrap();
-    common::assert_goldens_fresh(
-        "crates/lazy-github-tui/tests/fixtures/generate_bindings.py",
-        &[
-            "crates/lazy-github-tui/tests/fixtures/bindings.json",
-            "crates/lazy-github-tui/tests/fixtures/contexts.json",
-            "crates/lazy-github-tui/tests/fixtures/keys.json",
-        ],
-        home.path(),
-        "HOME=$(mktemp -d) uv run python crates/lazy-github-tui/tests/fixtures/generate_bindings.py",
-    );
 }

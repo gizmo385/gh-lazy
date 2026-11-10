@@ -1,6 +1,10 @@
 //! Table cache files shared with the Python app. The goldens in `tests/fixtures/cache/` are written by the Python app
 //! (`generate.py` there) from the parity fixtures; these tests check the Rust app reads them as the models it builds
 //! from the same fixtures, and writes those models as the same JSON values.
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by `crates/lazy-github-core/tests/fixtures/cache/generate.py`,
+//! removed at cutover (#398; `git log --diff-filter=D -- crates/lazy-github-core/tests/fixtures/cache/generate.py`
+//! finds its last version). Edit by hand when the Rust behavior changes on purpose.
 
 use std::path::{Path, PathBuf};
 
@@ -136,63 +140,4 @@ fn notifications_json_round_trips_with_python() {
     let notifications: Vec<Notification> =
         serde_json::from_value(body("notifications-modal", NOTIFICATIONS_PAGE)).unwrap();
     check("notifications.json", "Notification", &notifications);
-}
-
-/// Regenerates the goldens with the Python app and checks the committed copies match (the golden manifest is
-/// `parity/goldens/table-caches.toml`).
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn cache_goldens_are_fresh() {
-    use std::process::Command;
-
-    const GENERATOR: &str = "crates/lazy-github-core/tests/fixtures/cache/generate.py";
-    const GOLDENS: [&str; 5] = [
-        "repos.json",
-        "parity-bot_cache-fixture_pull_requests.json",
-        "parity-bot_cache-fixture_issues.json",
-        "parity-bot_cache-fixture_workflow_runs.json",
-        "notifications.json",
-    ];
-    let root = root();
-    let out = tempfile::tempdir().unwrap();
-    let found = Command::new("uv")
-        .args(["run", "--frozen", "python", "-c", "import sys; print(sys.executable)"])
-        .current_dir(&root)
-        .output()
-        .expect("uv is on PATH");
-    assert!(
-        found.status.success(),
-        "uv run failed:\n{}",
-        String::from_utf8_lossy(&found.stderr)
-    );
-    let python = String::from_utf8(found.stdout).unwrap();
-    let run = Command::new(python.trim())
-        .arg(GENERATOR)
-        .arg("--out")
-        .arg(out.path())
-        .current_dir(&root)
-        .output()
-        .unwrap();
-    assert!(
-        run.status.success(),
-        "{GENERATOR} failed:\n{}{}",
-        String::from_utf8_lossy(&run.stdout),
-        String::from_utf8_lossy(&run.stderr)
-    );
-    for golden in GOLDENS {
-        let committed = std::fs::read_to_string(goldens().join(golden)).unwrap();
-        let fresh = std::fs::read_to_string(out.path().join(golden)).unwrap();
-        if committed != fresh {
-            let diff = similar::TextDiff::from_lines(&committed, &fresh)
-                .unified_diff()
-                .header(golden, "regenerated")
-                .to_string();
-            let diff: Vec<&str> = diff.lines().take(40).collect();
-            panic!(
-                "{golden} is stale; the Python app now writes:\n{}\n\n\
-                 Regenerate it from the repository root with:\n    uv run python {GENERATOR}",
-                diff.join("\n")
-            );
-        }
-    }
 }

@@ -1,8 +1,10 @@
 //! The fuzzy matcher scores and highlights as Textual's does: `fixtures/generate_fuzzy.py` dumps
 //! `FuzzySearch.match` and `Matcher.highlight` for each query and name in its corpus to `fixtures/fuzzy.json`, and
 //! this runs `fuzzy_match` on every pair and compares the score, the offsets and the highlighted offsets.
-
-mod common;
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by `crates/lazy-github-tui/tests/fixtures/generate_fuzzy.py`, removed
+//! at cutover (#398; `git log --diff-filter=D -- crates/lazy-github-tui/tests/fixtures/generate_fuzzy.py` finds its
+//! last version). Edit by hand when the Rust behavior changes on purpose.
 
 use lazy_github_tui::fuzzy::fuzzy_match;
 use serde::Deserialize;
@@ -43,19 +45,5 @@ fn fuzzy_match_reproduces_textual() {
         failures.len(),
         cases.len(),
         failures.join("\n")
-    );
-}
-
-/// Regenerates `fixtures/fuzzy.json` from the pinned Textual and compares it with the committed one (see
-/// `parity/goldens/fuzzy-match.toml`).
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn fuzzy_goldens_are_fresh() {
-    let home = tempfile::tempdir().unwrap();
-    common::assert_goldens_fresh(
-        "crates/lazy-github-tui/tests/fixtures/generate_fuzzy.py",
-        &["crates/lazy-github-tui/tests/fixtures/fuzzy.json"],
-        home.path(),
-        "uv run python crates/lazy-github-tui/tests/fixtures/generate_fuzzy.py",
     );
 }

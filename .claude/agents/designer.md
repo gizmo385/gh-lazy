@@ -30,7 +30,7 @@ PROCESS.md:
   data flow, not Python-to-Rust line mapping. If Textual did something because of Textual (CSS, message bubbling,
   reactive attributes), say what the user-visible effect was and design for that effect directly.
 - **Acceptance criteria.** A checklist that a reviewer can verify. Always includes: the parity scenario file name(s) to
-  add under `parity/scenarios/` or golden manifest(s) under `parity/goldens/` (data rows; see "Python goldens" in
+  add under `parity/scenarios/` or golden manifest(s) under `parity/goldens/` (data rows; see "Goldens" in
   `parity/README.md`), the structural assertions that must pass, the `insta` snapshots to add, and unit tests
   for any non-UI logic.
 - **Fixtures.** The `parity/fixtures` entries needed, and whether they must be recorded.

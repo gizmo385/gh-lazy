@@ -1,11 +1,10 @@
-version = 1
+version = 2
 description = "PR Conversation: r on a review comment opens the reply modal and posts through the review-reply API; n opens New comment, posts an issue comment and reloads the conversation"
-# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 50 modal hides the panes, Rust's sheet leaves them in view), and [expect] checks the text both
 # show. After the reply Rust reloads the
 # conversation (Py bug B18's recommendation) and Python doesn't, so the reply's text is only in [expect] after the
 # reload that `n` causes in both apps.
-gate = true
 parity_rows = [
     "pull-requests.conversation-new-comment",
     "pull-requests.conversation-reply",
@@ -82,7 +81,6 @@ wait = { focused = "Should the cursor wrap at the end?" }
 
 [[step]]
 capture = "comment-focused"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["r"]
@@ -92,7 +90,6 @@ wait.text = "Replying to comment from parity-bot"
 
 [[step]]
 capture = "reply-open"
-checks = []
 
 [[step]]
 type = "It stops, yes."
@@ -129,7 +126,6 @@ wait.regex = 'It stops, yes\.|\^p Command Pallete'
 
 [[step]]
 capture = "replied"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["n"]
@@ -139,7 +135,6 @@ wait.text = "New comment"
 
 [[step]]
 capture = "new-open"
-checks = []
 
 [[step]]
 type = "Ship it."
@@ -174,7 +169,6 @@ wait.text = "It stops, yes."
 
 [[step]]
 capture = "reloaded"
-checks = ["titles", "tabs", "focus"]
 
 # Not the footer: Python sometimes hasn't redrawn it yet when the screen settles here.
 [expect.comment-focused]

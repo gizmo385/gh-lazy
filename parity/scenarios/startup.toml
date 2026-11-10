@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Main screen right after launch, no current-directory repo"
-gate = true
 parity_rows = ["main-layout.layout", "repositories.table", "repositories.columns"]
 sizes = [[160, 48], [100, 30]]
 

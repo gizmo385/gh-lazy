@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "Issue milestone: a milestoned issue's Overview shows the milestone line under its header; with the content focused, m opens the Search modal on is:issue milestone:\"<title>\" repo:<owner>/<name> and runs it; escape returns to the Overview; an issue without a milestone shows no line and no m; a closed milestone without a due date (#410)"
 # Rust-only: Python has no milestone support (decision issue-milestone). The Details box's text and the modal's loose
 # text are checked with [expect].
-gate = true
-apps = ["rust"]
 parity_rows = [
     "issues.overview-milestone",
     "issues.overview-milestone-search",

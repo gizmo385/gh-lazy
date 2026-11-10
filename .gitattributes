@@ -1,9 +1,3 @@
-# Recorded Python references (parity/README.md, "Recorded references"): LF everywhere, so their hashes and diffs
-# don't depend on the checkout. Manifests and request logs are generated, so PR diffs collapse them and show the
-# .screen files.
-parity/references/** text eol=lf
-parity/references/**/manifest.toml linguist-generated
-parity/references/**/requests.jsonl linguist-generated
 # Rust scenario snapshots (parity/README.md, "Rust snapshots"): LF everywhere too. The .screen files and effects.txt
 # collapse in PR diffs, so the file list shows the .svg pictures; the text diff is a click away.
 parity/snapshots/** text eol=lf

@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Paste link (ctrl+v): the dialog, enter in the input (validates, doesn't open), an unknown link, a link that doesn't resolve, and pull request (shift+enter), issue, issue-that-is-a-PR, repository and user links opening in-app with their toasts; a repo picked from the profile is selected; escape closes it"
 # Each link gets a fresh dialog, since the input keeps its text after a failed lookup. Open pressed with enter blurs the
 # button (Textual blurs a widget it disables), so nothing in the dialog has focus afterwards and escape closes it.
-gate = true
 parity_rows = [
     "modals.paste-link",
     "markdown-links.github-url-patterns",
@@ -33,7 +32,6 @@ wait = { text = "Paste a web GitHub link:" }
 
 [[step]]
 capture = "open"
-checks = ["titles", "footer"]
 
 # Enter in the input doesn't open the link (Textual's Input.Submitted isn't handled); it only validates, so the
 # input turns red.
@@ -45,7 +43,6 @@ keys = ["enter"]
 
 [[step]]
 capture = "invalid"
-checks = ["titles", "footer"]
 
 [[step]]
 keys = ["tab"]
@@ -62,7 +59,6 @@ wait = { text = "Unknown link" }
 
 [[step]]
 capture = "unknown"
-checks = ["titles", "footer"]
 
 [[step]]
 keys = ["escape"]
@@ -72,7 +68,6 @@ wait = { gone = "Paste a web GitHub link:" }
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["ctrl+v"]
@@ -97,7 +92,6 @@ wait = { text = "Could not resolve link!" }
 
 [[step]]
 capture = "not-found"
-checks = ["titles", "footer"]
 
 [[step]]
 keys = ["escape"]
@@ -127,7 +121,6 @@ wait = { text = "Overview  Diff  Conversation", timeout_ms = 15000 }
 
 [[step]]
 capture = "pull-request"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["ctrl+v"]
@@ -155,7 +148,6 @@ wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
 
 [[step]]
 capture = "issue"
-checks = ["titles", "focus"]
 
 # An issue link whose number is a pull request opens the pull request.
 [[step]]
@@ -184,7 +176,6 @@ wait = { text = "Overview  Diff  Conversation", timeout_ms = 15000 }
 
 [[step]]
 capture = "issue-is-pull-request"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["ctrl+v"]
@@ -212,7 +203,6 @@ wait = { text = "Pull requests for the PR details tabs.", timeout_ms = 15000 }
 
 [[step]]
 capture = "repository"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["ctrl+v"]
@@ -239,7 +229,6 @@ wait = { text = "Followers: 12" }
 # 160x48, as in `user-profile`'s `organization` capture.
 [[step]]
 capture = "user"
-checks = []
 
 # A repo picked in the profile (tab focuses its table) is selected, and not added to the repos table.
 [[step]]
@@ -256,7 +245,6 @@ wait = { text = "Current repo: parity-bot/profile-only" }
 
 [[step]]
 capture = "user-repo"
-checks = ["titles", "focus"]
 
 [expect.open]
 contains = ["Paste a web GitHub link:", "Link:", "https://github.com/...", "Open", "Cancel"]

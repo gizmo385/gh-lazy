@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Favorite toggle (ctrl+f) on the repos table: the star, favorites first, the cursor staying on its row index, and unfavorited rows keeping their place"
-gate = true
 parity_rows = [
     "repositories.toggle-favorite",
     "keybindings.repositories-favorite",
@@ -18,7 +17,6 @@ wait = { regex = "★  parity-bot  dotfiles" }
 
 [[step]]
 capture = "first"
-checks = ["rows", "cursor", "footer", "focus"]
 
 # The third row moves up to second; the cursor stays on the third row, now hello-world.
 [[step]]
@@ -29,7 +27,6 @@ wait = { regex = "★  parity-bot  lazy-demo" }
 
 [[step]]
 capture = "second"
-checks = ["rows", "cursor"]
 
 # Unfavoriting the first row: lazy-demo moves up, dotfiles drops to the top of the rest.
 [[step]]
@@ -40,7 +37,6 @@ wait = { regex = "☆  parity-bot  dotfiles" }
 
 [[step]]
 capture = "unfavorite"
-checks = ["rows", "cursor"]
 
 # Unfavoriting the last favorite: the rows go back to the order they were added (dotfiles first), not the order shown.
 [[step]]
@@ -51,4 +47,3 @@ wait = { regex = "☆  parity-bot  lazy-demo" }
 
 [[step]]
 capture = "none-left"
-checks = ["rows", "cursor"]

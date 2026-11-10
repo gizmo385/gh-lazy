@@ -1,4 +1,4 @@
-//! Parsing and validating `parity/scenarios/<name>.toml` (format v1, documented in `parity/README.md`).
+//! Parsing and validating `parity/scenarios/<name>.toml` (format v2, documented in `parity/README.md`).
 //!
 //! Parsing happens in two stages: serde reads the file into `Raw*` types that mirror the TOML and reject unknown
 //! keys, then [`Scenario::parse`] checks the rules serde can't express (exactly one action per step, capture names,
@@ -20,38 +20,13 @@ use toml::Spanned;
 use super::keys;
 
 /// The only scenario format version this harness reads.
-pub const SCENARIO_VERSION: u32 = 1;
+pub const SCENARIO_VERSION: u32 = 2;
 
 const DEFAULT_TIMEOUT: Duration = Duration::from_secs(30);
 const DEFAULT_KEY_DELAY: Duration = Duration::from_millis(30);
 const DEFAULT_CAPTURE_STABLE: Duration = Duration::from_millis(300);
 /// How long a `wait` step may take when it doesn't set `timeout_ms`.
 pub const DEFAULT_WAIT_TIMEOUT: Duration = Duration::from_secs(10);
-
-/// One of the two implementations under test.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum App {
-    Python,
-    Rust,
-}
-
-impl App {
-    pub const ALL: [App; 2] = [App::Python, App::Rust];
-
-    pub fn name(self) -> &'static str {
-        match self {
-            App::Python => "python",
-            App::Rust => "rust",
-        }
-    }
-}
-
-impl fmt::Display for App {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.name())
-    }
-}
 
 /// A terminal size. Written `COLSxROWS`, e.g. `160x48`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -107,10 +82,10 @@ impl GhAuth {
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum GitRemoteProtocol {
-    /// `https://github.com/<owner>/<name>.git`. Python doesn't parse this one (Py bug B5), so it never auto-selects.
+    /// `https://github.com/<owner>/<name>.git`.
     #[default]
     Https,
-    /// `git@github.com:<owner>/<name>.git`, which both apps parse.
+    /// `git@github.com:<owner>/<name>.git`.
     Ssh,
 }
 
@@ -132,67 +107,16 @@ impl GitRemoteProtocol {
     }
 }
 
-/// A structural check a capture can ask for (evaluated by #93).
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum Check {
-    Titles,
-    Tabs,
-    Headers,
-    Rows,
-    Cursor,
-    Footer,
-    Focus,
-}
-
-impl Check {
-    pub const ALL: [Check; 7] = [
-        Check::Titles,
-        Check::Tabs,
-        Check::Headers,
-        Check::Rows,
-        Check::Cursor,
-        Check::Footer,
-        Check::Focus,
-    ];
-}
-
 /// `ignore` on a capture step.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Ignore {
-    /// Skip every check but `titles` inside boxes whose title contains one of these.
+    /// Mask the interior of every box whose title contains one of these in the capture's snapshot.
     #[serde(default)]
     pub boxes: Vec<String>,
-    /// Leave writes with this `METHOD /path` out of the cross-app `writes` check. Only on the scenario's last
-    /// capture, where that check's mismatch goes.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub writes: Vec<String>,
 }
 
-impl Ignore {
-    /// Whether `ignore.writes` covers a write of `method` to `path` (the path without its query).
-    pub fn covers_write(&self, method: &str, path: &str) -> bool {
-        self.writes
-            .iter()
-            .filter_map(|w| w.split_once(' '))
-            .any(|(m, p)| m.eq_ignore_ascii_case(method) && p == path)
-    }
-}
-
-/// Whether `entry` is an `ignore.writes` entry: an upper-case method other than `GET`, one space, and a path that
-/// starts with `/` and has no query or spaces.
-fn is_write_entry(entry: &str) -> bool {
-    entry.split_once(' ').is_some_and(|(method, path)| {
-        !method.is_empty()
-            && method != "GET"
-            && method.chars().all(|c| c.is_ascii_uppercase())
-            && path.starts_with('/')
-            && !path.contains(['?', ' '])
-    })
-}
-
-/// `[expect.<capture>]`: expectations checked against each app on its own (evaluated by #93).
+/// `[expect.<capture>]`: expectations checked against the capture's screen.
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Expect {
@@ -240,12 +164,11 @@ pub struct EnvSpec {
     /// `config_dir_read_only`: the config folder (`home/.config/lazy-github`) is made read-only once it's filled, so
     /// the app can't write its config, log file or cache there. Unix only.
     pub config_dir_read_only: bool,
-    /// `gh_timeout_ms`: the Rust app (a debug build) runs every `gh` call with this time limit instead of its
-    /// defaults, so a scenario can show a timeout in seconds. Python has no limit and ignores it.
+    /// `gh_timeout_ms`: the app (a debug build) runs every `gh` call with this time limit instead of its defaults,
+    /// so a scenario can show a timeout in seconds.
     pub gh_timeout_ms: Option<u64>,
-    /// `toast_timeout_ms`: the Rust app (a debug build) keeps every toast up this long instead of its own timeout, so
-    /// a capture that shows toasts raised several steps earlier doesn't depend on how fast the machine is. Python's
-    /// toasts don't time out under the harness, so it ignores this, and it's not part of the capture key.
+    /// `toast_timeout_ms`: the app (a debug build) keeps every toast up this long instead of its own timeout, so a
+    /// capture that shows toasts raised several steps earlier doesn't depend on how fast the machine is.
     pub toast_timeout_ms: Option<u64>,
 }
 
@@ -279,10 +202,8 @@ pub struct Wait {
 #[derive(Debug, Clone)]
 pub struct Capture {
     pub name: String,
-    pub checks: Vec<Check>,
     pub ignore: Ignore,
-    /// `mask`: patterns whose matches on a row are masked in the Rust snapshot (`parity/README.md`, "Rust
-    /// snapshots"). Not part of a reference's capture key: Python's run doesn't depend on them.
+    /// `mask`: patterns whose matches on a row are masked in the snapshot (`parity/README.md`, "Rust snapshots").
     pub mask: Vec<Regex>,
 }
 
@@ -337,14 +258,14 @@ pub enum Step {
 /// Timing settings shared by every step of a run.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Timing {
-    /// The whole run, per app per size.
+    /// The whole run, per size.
     pub timeout: Duration,
     /// The pause after each key (at least [`ESCAPE_DELAY`](super::runner::ESCAPE_DELAY) after `escape`).
     pub key_delay: Duration,
     /// The implicit stability wait before each capture.
     pub capture_stable: Duration,
     /// When set, the most any condition `wait` may take, whatever its `timeout_ms`. Stability waits aren't capped.
-    /// Never set from a scenario file: `--ci` sets it for runs that can't fail the gate.
+    /// Never set from a scenario file; the harness's own tests use it.
     pub wait_cap: Option<Duration>,
 }
 
@@ -366,8 +287,6 @@ pub struct Scenario {
     pub name: String,
     pub path: PathBuf,
     pub description: String,
-    pub gate: bool,
-    pub apps: Vec<App>,
     pub parity_rows: Vec<String>,
     pub sizes: Vec<Size>,
     pub timing: Timing,
@@ -507,12 +426,11 @@ fn walk_seed(dir: &Path, rel: &str, files: &mut Vec<String>) -> Result<(), Strin
 #[derive(Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawScenario {
-    version: Spanned<u32>,
+    /// Already checked by `check_version`, which reads it before the rest of the file; kept so the field parses.
+    #[serde(rename = "version")]
+    _version: u32,
     #[serde(default)]
     description: String,
-    #[serde(default)]
-    gate: bool,
-    apps: Option<Spanned<Vec<App>>>,
     #[serde(default)]
     parity_rows: Vec<String>,
     sizes: Option<Spanned<Vec<[u16; 2]>>>,
@@ -555,7 +473,6 @@ struct RawStep {
     type_text: Option<String>,
     paste: Option<String>,
     capture: Option<Spanned<String>>,
-    checks: Option<Vec<Check>>,
     ignore: Option<Ignore>,
     mask: Option<Vec<Spanned<String>>>,
     sleep_ms: Option<u64>,
@@ -643,6 +560,7 @@ impl Scenario {
     /// Validates `source`, the contents of the scenario file at `path`.
     pub fn parse(path: &Path, source: &str, roots: &Roots) -> Result<Self, ScenarioError> {
         let loc = Locator { file: path, source };
+        check_version(source, &loc)?;
         let raw: RawScenario = toml::from_str(source).map_err(|e| {
             let line = e.span().map_or(0, |s| loc.line_of(s.start));
             ScenarioError {
@@ -666,27 +584,6 @@ impl Scenario {
             });
         }
 
-        if *raw.version.get_ref() != SCENARIO_VERSION {
-            return Err(loc.at_span(
-                &raw.version,
-                format!(
-                    "unsupported version {}; this harness reads version {SCENARIO_VERSION}",
-                    raw.version.get_ref()
-                ),
-            ));
-        }
-
-        let apps = match raw.apps {
-            None => App::ALL.to_vec(),
-            Some(apps) => {
-                let unique: BTreeSet<_> = apps.get_ref().iter().collect();
-                if apps.get_ref().is_empty() || unique.len() != apps.get_ref().len() {
-                    return Err(loc.at_span(&apps, "`apps` must list python and/or rust, each at most once"));
-                }
-                apps.into_inner()
-            }
-        };
-
         let sizes = match raw.sizes {
             None => vec![Size { cols: 160, rows: 48 }],
             Some(sizes) => {
@@ -709,12 +606,7 @@ impl Scenario {
 
         let env = parse_env(raw.env, &loc, roots)?;
 
-        let (steps, captures) = parse_steps(
-            raw.steps,
-            &loc,
-            env.git_remote_branches.is_some(),
-            apps.contains(&App::Python),
-        )?;
+        let (steps, captures) = parse_steps(raw.steps, &loc, env.git_remote_branches.is_some())?;
 
         let mut expect = BTreeMap::new();
         for (key, value) in raw.expect {
@@ -734,8 +626,6 @@ impl Scenario {
             name,
             path: path.to_owned(),
             description: raw.description,
-            gate: raw.gate,
-            apps,
             parity_rows: raw.parity_rows,
             sizes,
             timing,
@@ -746,27 +636,41 @@ impl Scenario {
     }
 }
 
-/// The default keys that focus a main-screen section (`[1]` to `[6]`).
-const FOCUS_KEYS: &[&str] = &["1", "2", "3", "4", "5", "6"];
+/// Checks the file's `version` before anything else, so a version 1 file gets one error that says what changed rather
+/// than an unknown-key error for whichever Python key comes first.
+fn check_version(source: &str, loc: &Locator<'_>) -> Result<(), ScenarioError> {
+    #[derive(Deserialize)]
+    struct VersionOnly {
+        version: Option<Spanned<u32>>,
+    }
+    // A file that isn't TOML, or has no number `version`, gets its error from the full parse.
+    let Ok(VersionOnly { version: Some(version) }) = toml::from_str::<VersionOnly>(source) else {
+        return Ok(());
+    };
+    match *version.get_ref() {
+        SCENARIO_VERSION => Ok(()),
+        1 => Err(loc.at_span(
+            &version,
+            format!(
+                "version 1 scenarios had Python keys; this harness reads version {SCENARIO_VERSION} (parity/README.md, \
+                 \"Scenario format\")"
+            ),
+        )),
+        other => Err(loc.at_span(
+            &version,
+            format!("unsupported version {other}; this harness reads version {SCENARIO_VERSION}"),
+        )),
+    }
+}
 
-/// The keys that move focus to the next or previous widget.
-const TAB_KEYS: &[&str] = &["tab", "shift+tab"];
-
-/// The steps, and the capture names. Capture names must be unique, and only the last capture may set
-/// `ignore.writes`. With `python`, a focus key must end its step, only more `tab` / `shift+tab` may follow a `tab` /
-/// `shift+tab` in its step, and either must be followed by a condition wait ([`check_focus_waits`]).
+/// The steps, and the capture names, which must be unique.
 fn parse_steps(
     raw: Vec<Spanned<RawStep>>,
     loc: &Locator<'_>,
     has_remote: bool,
-    python: bool,
 ) -> Result<(Vec<Step>, BTreeSet<String>), ScenarioError> {
-    let mut starts = Vec::with_capacity(raw.len());
     let mut steps = Vec::with_capacity(raw.len());
     let mut captures = BTreeSet::new();
-    // The start of each capture step with `ignore.writes`, and of the last capture step.
-    let mut ignoring_writes = Vec::new();
-    let mut last_capture = None;
     for step in raw {
         let start = step.span().start;
         if let Some(Step::Wait(Wait {
@@ -779,96 +683,14 @@ fn parse_steps(
             ));
         }
         let step = parse_step(step.into_inner(), start, loc, has_remote)?;
-        if let Step::Capture(c) = &step {
-            if !captures.insert(c.name.clone()) {
-                return Err(loc.at(start, format!("duplicate capture name {:?}", c.name)));
-            }
-            if !c.ignore.writes.is_empty() {
-                ignoring_writes.push(start);
-            }
-            last_capture = Some(start);
+        if let Step::Capture(c) = &step
+            && !captures.insert(c.name.clone())
+        {
+            return Err(loc.at(start, format!("duplicate capture name {:?}", c.name)));
         }
-        starts.push(start);
         steps.push(step);
     }
-    if python {
-        check_focus_waits(&steps, &starts, loc)?;
-    }
-    // The `writes` mismatch goes on the last capture, so `ignore.writes` anywhere else would do nothing.
-    if let Some(&start) = ignoring_writes.iter().find(|&&s| Some(s) != last_capture) {
-        return Err(loc.at(start, "`ignore.writes` is only allowed on the scenario's last capture"));
-    }
     Ok((steps, captures))
-}
-
-/// Python moves focus late after a focus-moving key, so on a loaded machine a key sent right after one, or a capture,
-/// can reach the widget that had focus before. A focus key (`1` to `6`) moves focus a tick late (Py bug B98), so it
-/// must end its `keys` step. `tab` and `shift+tab` move focus only once the key has bubbled back up to the app (Py bug
-/// B121), so only more of them may follow the first in its step: a run of tabs is fine, a key after it isn't. Either
-/// way, the next step must wait on a condition that shows the focus moved: `wait.focused` on the newly focused widget,
-/// or its bindings in the footer. A `stable_ms` wait doesn't count: a busy Python can hold the screen still past it.
-/// Where nothing on screen shows the move (focus moving behind a maximized section), an explicit `sleep_ms` is allowed
-/// instead. `starts` are the steps' offsets.
-fn check_focus_waits(steps: &[Step], starts: &[usize], loc: &Locator<'_>) -> Result<(), ScenarioError> {
-    let is_focus_key = |k: &String| FOCUS_KEYS.contains(&k.as_str());
-    let is_tab = |k: &String| TAB_KEYS.contains(&k.as_str());
-    for (i, step) in steps.iter().enumerate() {
-        let Step::Keys(keys) = step else { continue };
-        if let Some(pos) = keys.iter().position(is_focus_key)
-            && pos + 1 < keys.len()
-        {
-            return Err(loc.at(
-                starts[i],
-                format!(
-                    "focus key {:?} must end its `keys` step: Python moves focus a tick late (Py bug B98), so send \
-                     it, wait for the focus to move, then send the rest",
-                    keys[pos]
-                ),
-            ));
-        }
-        if let Some(pos) = keys.iter().position(is_tab)
-            && !keys[pos..].iter().all(is_tab)
-        {
-            return Err(loc.at(
-                starts[i],
-                format!(
-                    "{:?} must end its `keys` step, with only tab or shift+tab after it: Python moves focus only \
-                     once the key reaches the app (Py bug B121), so send the tabs, wait for the focus to land, then \
-                     send the rest",
-                    keys[pos]
-                ),
-            ));
-        }
-        let Some(last) = keys.last() else { continue };
-        let (what, why) = if is_focus_key(last) {
-            (
-                "focus key",
-                "`focused = \"<section title>\"`: Python moves focus a tick late (Py bug B98)",
-            )
-        } else if is_tab(last) {
-            (
-                "focus-moving key",
-                "`focused = \"<label>\"`: Python moves focus only once the key reaches the app (Py bug B121)",
-            )
-        } else {
-            continue;
-        };
-        let waits = match steps.get(i + 1) {
-            Some(Step::Wait(w)) => !matches!(w.until, WaitFor::Stable(_)),
-            Some(Step::Sleep(_)) => true,
-            _ => false,
-        };
-        if !waits {
-            return Err(loc.at(
-                starts[i],
-                format!(
-                    "{what} {last:?} must be followed by a `wait` that shows the focus moved (not `stable_ms`), e.g. \
-                     {why}"
-                ),
-            ));
-        }
-    }
-    Ok(())
 }
 
 fn parse_env(raw: RawEnv, loc: &Locator<'_>, roots: &Roots) -> Result<EnvSpec, ScenarioError> {
@@ -1040,11 +862,8 @@ fn is_capture_name(s: &str) -> bool {
 
 /// `has_remote`: the scenario sets `git_remote_branches`, which `wait.remote_branch` needs.
 fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -> Result<Step, ScenarioError> {
-    if raw.capture.is_none() && (raw.checks.is_some() || raw.ignore.is_some() || raw.mask.is_some()) {
-        return Err(loc.at(
-            start,
-            "`checks`, `ignore` and `mask` are only allowed in a capture step",
-        ));
+    if raw.capture.is_none() && (raw.ignore.is_some() || raw.mask.is_some()) {
+        return Err(loc.at(start, "`ignore` and `mask` are only allowed in a capture step"));
     }
 
     let present: Vec<&str> = [
@@ -1101,12 +920,6 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -
             ));
         }
         let ignore = raw.ignore.unwrap_or_default();
-        if let Some(bad) = ignore.writes.iter().find(|w| !is_write_entry(w)) {
-            return Err(loc.at(
-                start,
-                format!("`ignore.writes` entry {bad:?} must be \"METHOD /path\", with a method other than GET"),
-            ));
-        }
         let mut mask = Vec::new();
         for pattern in raw.mask.unwrap_or_default() {
             let re = Regex::new(pattern.get_ref())
@@ -1115,7 +928,6 @@ fn parse_step(raw: RawStep, start: usize, loc: &Locator<'_>, has_remote: bool) -
         }
         return Ok(Step::Capture(Capture {
             name: name.into_inner(),
-            checks: raw.checks.unwrap_or_else(|| Check::ALL.to_vec()),
             ignore,
             mask,
         }));
@@ -1306,10 +1118,8 @@ mod tests {
     }
 
     const VALID: &str = r#"
-version = 1
+version = 2
 description = "Main screen"
-gate = true
-apps = ["python"]
 parity_rows = ["main-layout.layout"]
 sizes = [[160, 48], [100, 30]]
 timeout_ms = 20000
@@ -1361,7 +1171,6 @@ wait = { gone = "Loading" }
 
 [[step]]
 capture = "after-select"
-checks = ["titles", "footer"]
 ignore = { boxes = ["Details"] }
 
 [expect.main]
@@ -1377,8 +1186,6 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
     fn parses_a_valid_scenario() {
         let s = parse(VALID).unwrap();
         assert_eq!(s.name, "test");
-        assert!(s.gate);
-        assert_eq!(s.apps, [App::Python]);
         assert_eq!(s.sizes, [Size { cols: 160, rows: 48 }, Size { cols: 100, rows: 30 }]);
         assert_eq!(
             s.timing,
@@ -1411,11 +1218,10 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
         let Step::Capture(c) = &s.steps[1] else {
             panic!("not a capture")
         };
-        assert_eq!(c.checks, Check::ALL);
+        assert!(c.ignore.boxes.is_empty());
         let Step::Capture(c) = &s.steps[11] else {
             panic!("not a capture")
         };
-        assert_eq!(c.checks, [Check::Titles, Check::Footer]);
         assert_eq!(c.ignore.boxes, ["Details"]);
         assert_eq!(s.capture_names().collect::<Vec<_>>(), ["main", "after-select"]);
         assert_eq!(s.expect["main"].tabs.as_ref().unwrap().in_box, "Details");
@@ -1423,9 +1229,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
 
     #[test]
     fn applies_defaults() {
-        let s = parse("version = 1\n").unwrap();
-        assert!(!s.gate);
-        assert_eq!(s.apps, App::ALL);
+        let s = parse("version = 2\n").unwrap();
         assert_eq!(s.sizes, [Size { cols: 160, rows: 48 }]);
         assert_eq!(s.timing, Timing::default());
         assert_eq!(s.env.fixtures, ["base"]);
@@ -1442,23 +1246,23 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
 
     #[test]
     fn parses_a_toast_lifetime() {
-        let s = parse("version = 1\n[env]\ntoast_timeout_ms = 60000\n").unwrap();
+        let s = parse("version = 2\n[env]\ntoast_timeout_ms = 60000\n").unwrap();
         assert_eq!(s.env.toast_timeout_ms, Some(60000));
-        let error = parse("version = 1\n[env]\ntoast_timeout_ms = 0\n").unwrap_err();
+        let error = parse("version = 2\n[env]\ntoast_timeout_ms = 0\n").unwrap_err();
         assert!(error.message.contains("toast_timeout_ms"), "{error:?}");
     }
 
     #[test]
     fn parses_a_gh_time_limit() {
-        let s = parse("version = 1\n[env]\ngh_timeout_ms = 1500\n").unwrap();
+        let s = parse("version = 2\n[env]\ngh_timeout_ms = 1500\n").unwrap();
         assert_eq!(s.env.gh_timeout_ms, Some(1500));
-        let error = parse("version = 1\n[env]\ngh_timeout_ms = 0\n").unwrap_err();
+        let error = parse("version = 2\n[env]\ngh_timeout_ms = 0\n").unwrap_err();
         assert!(error.message.contains("gh_timeout_ms"), "{error:?}");
     }
 
     #[test]
     fn parses_a_read_only_config_dir() {
-        let s = parse("version = 1\n[env]\nconfig_dir_read_only = true\n").unwrap();
+        let s = parse("version = 2\n[env]\nconfig_dir_read_only = true\n").unwrap();
         assert!(s.env.config_dir_read_only);
     }
 
@@ -1481,7 +1285,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
     /// Asserts that `[env] seed = "<name>"` fails on line 3 with a message containing `needle`.
     #[track_caller]
     fn assert_seed_error(roots: &Roots, name: &str, needle: &str) {
-        let source = format!("version = 1\n[env]\nseed = {name:?}\n");
+        let source = format!("version = 2\n[env]\nseed = {name:?}\n");
         let err = Scenario::parse(Path::new("parity/scenarios/test.toml"), &source, roots)
             .expect_err("scenario should be invalid");
         assert_eq!(err.line, 3, "{err}");
@@ -1490,7 +1294,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
 
     #[test]
     fn parses_a_seed() {
-        let s = parse("version = 1\n[env]\nseed = \"repos-cache\"\n").unwrap();
+        let s = parse("version = 2\n[env]\nseed = \"repos-cache\"\n").unwrap();
         assert_eq!(s.env.seed.as_deref(), Some("repos-cache"));
         let (dir, roots) = seed_roots();
         write_seed_file(dir.path(), "both/work/b.md");
@@ -1500,7 +1304,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
             seed_files(&dir.path().join("both")).unwrap(),
             ["home/.cache/z.json", "home/a.json", "work/b.md"]
         );
-        let source = "version = 1\n[env]\nseed = \"both\"\n";
+        let source = "version = 2\n[env]\nseed = \"both\"\n";
         Scenario::parse(Path::new("t.toml"), source, &roots).unwrap();
     }
 
@@ -1532,7 +1336,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
     #[test]
     fn parses_the_git_remote_protocol() {
         let env = |extra: &str| {
-            parse(&format!("version = 1\n[env]\ngit_remote = \"o/n\"\n{extra}"))
+            parse(&format!("version = 2\n[env]\ngit_remote = \"o/n\"\n{extra}"))
                 .unwrap()
                 .env
         };
@@ -1552,12 +1356,12 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
     #[test]
     fn rejects_a_git_remote_protocol_without_a_remote_or_known_value() {
         assert_error(
-            "version = 1\n[env]\ngit_remote_protocol = \"ssh\"\n",
+            "version = 2\n[env]\ngit_remote_protocol = \"ssh\"\n",
             3,
             "needs a `git_remote`",
         );
         assert_error(
-            "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"git\"\n",
+            "version = 2\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"git\"\n",
             4,
             "unknown variant `git`",
         );
@@ -1565,7 +1369,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
 
     #[test]
     fn parses_the_exited_wait_only_as_the_last_step() {
-        let s = parse("version = 1\n[[step]]\nkeys = [\"q\"]\n[[step]]\nwait.exited = true\n").unwrap();
+        let s = parse("version = 2\n[[step]]\nkeys = [\"q\"]\n[[step]]\nwait.exited = true\n").unwrap();
         assert!(matches!(
             &s.steps[1],
             Step::Wait(Wait {
@@ -1574,19 +1378,19 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
             })
         ));
         assert_error(
-            "version = 1\n[[step]]\nwait.exited = true\n[[step]]\nkeys = [\"q\"]\n",
+            "version = 2\n[[step]]\nwait.exited = true\n[[step]]\nkeys = [\"q\"]\n",
             4,
             "no step can follow `wait.exited`",
         );
-        assert_error("version = 1\n[[step]]\nwait.exited = false\n", 3, "can only be `true`");
+        assert_error("version = 2\n[[step]]\nwait.exited = false\n", 3, "can only be `true`");
         assert_error(
-            "version = 1\n[[step]]\nwait = { exited = true, text = \"x\" }\n",
+            "version = 2\n[[step]]\nwait = { exited = true, text = \"x\" }\n",
             3,
             "exactly one of",
         );
     }
 
-    const SSH_REMOTE: &str = "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"ssh\"\n";
+    const SSH_REMOTE: &str = "version = 2\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"ssh\"\n";
 
     #[test]
     fn parses_git_remote_branches_and_the_remote_branch_wait() {
@@ -1607,17 +1411,17 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
     #[test]
     fn rejects_git_remote_branches_without_an_ssh_remote() {
         assert_error(
-            "version = 1\n[env]\ngit_remote_branches = [\"main\"]\n",
+            "version = 2\n[env]\ngit_remote_branches = [\"main\"]\n",
             3,
             "needs a `git_remote` with `git_remote_protocol = \"ssh\"`",
         );
         assert_error(
-            "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_branches = [\"main\"]\n",
+            "version = 2\n[env]\ngit_remote = \"o/n\"\ngit_remote_branches = [\"main\"]\n",
             4,
             "git_remote_protocol = \"ssh\"",
         );
         assert_error(
-            "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"https\"\ngit_remote_branches = []\n",
+            "version = 2\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"https\"\ngit_remote_branches = []\n",
             5,
             "git_remote_protocol = \"ssh\"",
         );
@@ -1632,7 +1436,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
     #[test]
     fn rejects_a_remote_branch_wait_without_a_local_remote() {
         assert_error(
-            "version = 1\n[[step]]\nwait.remote_branch = \"feature\"\n",
+            "version = 2\n[[step]]\nwait.remote_branch = \"feature\"\n",
             3,
             "needs `env.git_remote_branches`",
         );
@@ -1658,7 +1462,7 @@ tabs = { box = "Details", names = ["Info"], active = "Info" }
     #[test]
     fn parses_mouse_steps() {
         let s = parse(
-            r#"version = 1
+            r#"version = 2
 [[step]]
 click = { text = "O Lookup", nth = 2, offset = [-1, 3], timeout_ms = 500 }
 [[step]]
@@ -1699,7 +1503,7 @@ move = { at = [100, 1] }
 
     #[test]
     fn rejects_bad_mouse_steps() {
-        let bad = |step: &str, needle: &str| assert_error(&format!("version = 1\n[[step]]\n{step}\n"), 3, needle);
+        let bad = |step: &str, needle: &str| assert_error(&format!("version = 2\n[[step]]\n{step}\n"), 3, needle);
         bad("click = { at = [1, 1], button = \"right\" }", "unknown field `button`");
         bad("click = {}", "needs a target");
         bad("move = { offset = [1, 1] }", "needs a target");
@@ -1718,122 +1522,41 @@ move = { at = [100, 1] }
         bad("wheel = { at = [1, 1] }", "missing field `direction`");
         bad("wheel = { direction = \"up\" }", "needs a target");
         assert_error(
-            "version = 1\n[[step]]\nclick = { at = [1, 1] }\nmove = { at = [1, 1] }\n",
+            "version = 2\n[[step]]\nclick = { at = [1, 1] }\nmove = { at = [1, 1] }\n",
             2,
             "click, move",
         );
     }
 
     #[test]
-    fn a_focus_key_ends_its_step_and_is_followed_by_a_condition_wait() {
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"2\", \"j\"]\n[[step]]\nwait = { text = \"x\" }\n",
-            2,
-            "focus key \"2\" must end its `keys` step",
-        );
-        // A focus key after other keys still has to end the step.
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"escape\", \"5\", \"tab\"]\n",
-            2,
-            "focus key \"5\" must end",
-        );
-        assert_error(
-            "version = 1\n[[step]]\nsleep_ms = 1\n[[step]]\nkeys = [\"3\"]\n[[step]]\nwait = { stable_ms = 500 }\n",
-            4,
-            "must be followed by a `wait`",
-        );
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"1\"]\n[[step]]\ncapture = \"x\"\n",
-            2,
-            "must be followed by a `wait`",
-        );
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"6\"]\n",
-            2,
-            "must be followed by a `wait`",
-        );
-
-        for next in [
-            "wait = { text = \"O Lookup Issue\" }",
-            "wait = { gone = \"x\" }",
-            "wait = { focused = \"[3] Issues\" }",
-            "sleep_ms = 500",
-        ] {
-            let source = format!("version = 1\n[[step]]\nkeys = [\"escape\", \"3\"]\n[[step]]\n{next}\n");
-            parse(&source).unwrap_or_else(|e| panic!("{next}: {e}"));
-        }
-        // Digits that aren't focus keys, and keys after the wait, are fine.
-        parse("version = 1\n[[step]]\nkeys = [\"7\", \"j\"]\n").unwrap();
-        // Rust focuses at once, so a Rust-only scenario may send a focus key with more keys.
-        parse("version = 1\napps = [\"rust\"]\n[[step]]\nkeys = [\"3\", \"enter\"]\n").unwrap();
-    }
-
-    #[test]
-    fn tabs_end_their_step_and_are_followed_by_a_condition_wait() {
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"tab\", \"enter\"]\n[[step]]\nwait = { text = \"x\" }\n",
-            2,
-            "\"tab\" must end its `keys` step, with only tab or shift+tab after it",
-        );
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"shift+tab\", \"backspace\"]\n[[step]]\nwait = { text = \"x\" }\n",
-            2,
-            "(Py bug B121)",
-        );
-        // A key after a run of tabs is still a key sent before the focus lands.
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"tab\", \"shift+tab\", \"j\"]\n",
-            2,
-            "\"tab\" must end its `keys` step",
-        );
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"tab\"]\n[[step]]\ncapture = \"x\"\n",
-            2,
-            "focus-moving key \"tab\" must be followed by a `wait`",
-        );
-        assert_error(
-            "version = 1\n[[step]]\nsleep_ms = 1\n[[step]]\nkeys = [\"tab\"]\n[[step]]\nwait = { stable_ms = 500 }\n",
-            4,
-            "must be followed by a `wait` that shows the focus moved (not `stable_ms`)",
-        );
-        assert_error(
-            "version = 1\n[[step]]\nkeys = [\"shift+tab\"]\n",
-            2,
-            "\"shift+tab\" must be followed by a `wait`",
-        );
-
-        for (keys, next) in [
-            ("\"tab\", \"tab\", \"shift+tab\"", "wait = { focused = \"Save\" }"),
-            ("\"escape\", \"tab\"", "wait = { text = \"x\" }"),
-            ("\"tab\"", "sleep_ms = 500"),
-        ] {
-            let source = format!("version = 1\n[[step]]\nkeys = [{keys}]\n[[step]]\n{next}\n");
-            parse(&source).unwrap_or_else(|e| panic!("{keys}: {e}"));
-        }
-        // Rust moves focus at once, so a Rust-only scenario may send a key right after a tab.
-        parse("version = 1\napps = [\"rust\"]\n[[step]]\nkeys = [\"tab\", \"enter\"]\n").unwrap();
+    fn keys_may_follow_a_focus_key_or_a_tab_in_one_step() {
+        // Version 1 made a focus key or a tab end its step, for Python's late focus (Py bugs B98, B121). The Rust app
+        // moves focus at once.
+        let s = parse("version = 2\n[[step]]\nkeys = [\"3\", \"enter\", \"tab\", \"j\"]\n[[step]]\ncapture = \"x\"\n")
+            .unwrap();
+        assert!(matches!(&s.steps[0], Step::Keys(k) if k == &["3", "enter", "tab", "j"]));
     }
 
     #[test]
     fn parses_the_focused_wait_and_rejects_an_empty_one() {
-        let s = parse("version = 1\n[[step]]\nwait = { focused = \"Description\", timeout_ms = 500 }\n").unwrap();
+        let s = parse("version = 2\n[[step]]\nwait = { focused = \"Description\", timeout_ms = 500 }\n").unwrap();
         assert!(
             matches!(&s.steps[0], Step::Wait(Wait { until: WaitFor::Focused(l), timeout })
             if l == "Description" && *timeout == Duration::from_millis(500))
         );
         assert!(s.uses_focused_wait());
         assert!(
-            !parse("version = 1\n[[step]]\nwait = { text = \"x\" }\n")
+            !parse("version = 2\n[[step]]\nwait = { text = \"x\" }\n")
                 .unwrap()
                 .uses_focused_wait()
         );
         assert_error(
-            "version = 1\n[[step]]\nsleep_ms = 1\n[[step]]\nwait = { focused = \"\" }\n",
+            "version = 2\n[[step]]\nsleep_ms = 1\n[[step]]\nwait = { focused = \"\" }\n",
             5,
             "`wait.focused` can't be empty",
         );
         assert_error(
-            "version = 1\n[[step]]\nwait = { focused = \"x\", text = \"y\" }\n",
+            "version = 2\n[[step]]\nwait = { focused = \"x\", text = \"y\" }\n",
             3,
             "exactly one of text, gone, regex, focused,",
         );
@@ -1842,7 +1565,7 @@ move = { at = [100, 1] }
     #[test]
     fn rejects_two_actions_in_one_step() {
         assert_error(
-            "version = 1\n\n[[step]]\nkeys = [\"j\"]\ncapture = \"x\"\n",
+            "version = 2\n\n[[step]]\nkeys = [\"j\"]\ncapture = \"x\"\n",
             3,
             "keys, capture",
         );
@@ -1851,12 +1574,12 @@ move = { at = [100, 1] }
     #[test]
     fn rejects_a_step_with_no_action() {
         assert_error(
-            "version = 1\n[[step]]\nsleep_ms = 1\n[[step]]\n\n[[step]]\nsleep_ms = 1\n",
+            "version = 2\n[[step]]\nsleep_ms = 1\n[[step]]\n\n[[step]]\nsleep_ms = 1\n",
             4,
             "it has none",
         );
         assert_error(
-            "version = 1\n[[step]]\nchecks = [\"titles\"]\n",
+            "version = 2\n[[step]]\nignore = { boxes = [\"x\"] }\n",
             2,
             "only allowed in a capture step",
         );
@@ -1864,7 +1587,7 @@ move = { at = [100, 1] }
 
     #[test]
     fn parses_mask_patterns_only_in_a_capture_step() {
-        let s = parse("version = 1\n[[step]]\ncapture = \"a\"\nmask = [\"/tmp/\\\\S+\", \"v\\\\d+\"]\n").unwrap();
+        let s = parse("version = 2\n[[step]]\ncapture = \"a\"\nmask = [\"/tmp/\\\\S+\", \"v\\\\d+\"]\n").unwrap();
         let Step::Capture(c) = &s.steps[0] else {
             panic!("not a capture")
         };
@@ -1872,64 +1595,60 @@ move = { at = [100, 1] }
         assert_eq!(patterns, ["/tmp/\\S+", "v\\d+"]);
 
         assert_error(
-            "version = 1\n[[step]]\ncapture = \"a\"\nmask = [\"ok\",\n  \"(unclosed\"]\n",
+            "version = 2\n[[step]]\ncapture = \"a\"\nmask = [\"ok\",\n  \"(unclosed\"]\n",
             5,
             "invalid `mask` regex",
         );
         assert_error(
-            "version = 1\n[[step]]\nsleep_ms = 1\nmask = [\"x\"]\n",
+            "version = 2\n[[step]]\nsleep_ms = 1\nmask = [\"x\"]\n",
             2,
             "only allowed in a capture step",
         );
     }
 
     #[test]
-    fn ignore_writes_is_only_allowed_on_the_last_capture() {
-        let last = "version = 1\n[[step]]\ncapture = \"a\"\n[[step]]\ncapture = \"b\"\n\
-                    ignore = { writes = [\"PUT /repos/o/r/pulls/1/merge\"] }\n";
-        let s = parse(last).unwrap();
-        let Step::Capture(c) = &s.steps[1] else {
-            panic!("not a capture")
-        };
-        assert_eq!(c.ignore.writes, ["PUT /repos/o/r/pulls/1/merge"]);
-        assert!(c.ignore.covers_write("PUT", "/repos/o/r/pulls/1/merge"));
-        assert!(!c.ignore.covers_write("POST", "/repos/o/r/pulls/1/merge"));
-        assert!(!c.ignore.covers_write("PUT", "/repos/o/r/pulls/2/merge"));
+    fn rejects_a_version_1_file_with_one_error() {
+        // Whatever Python key comes first, the error is about the version.
+        assert_error(
+            "version = 1\ngate = true\napps = [\"rust\"]\n",
+            1,
+            "version 1 scenarios had Python keys; this harness reads version 2 (parity/README.md, \"Scenario format\")",
+        );
+        assert_error("\n\nversion = 1\n", 3, "version 1 scenarios had Python keys");
+        assert_error("version = 3\n", 1, "unsupported version 3");
+    }
 
+    #[test]
+    fn rejects_each_removed_python_key() {
+        assert_error("version = 2\ngate = true\n", 2, "unknown field `gate`");
+        assert_error("version = 2\napps = [\"rust\"]\n", 2, "unknown field `apps`");
         assert_error(
-            "version = 1\n[[step]]\ncapture = \"a\"\nignore = { writes = [\"POST /x\"] }\n[[step]]\ncapture = \"b\"\n",
-            2,
-            "only allowed on the scenario's last capture",
+            "version = 2\n[[step]]\ncapture = \"a\"\nchecks = [\"titles\"]\n",
+            4,
+            "unknown field `checks`",
         );
         assert_error(
-            "version = 1\n[[step]]\nsleep_ms = 1\nignore = { writes = [\"POST /x\"] }\n",
-            2,
-            "only allowed in a capture step",
+            "version = 2\n[[step]]\ncapture = \"a\"\nignore = { writes = [\"POST /x\"] }\n",
+            4,
+            "unknown field `writes`",
         );
-        for bad in ["GET /x", "post /x", "POST x", "POST /x?a=1", "POST"] {
-            assert_error(
-                &format!("version = 1\n[[step]]\ncapture = \"a\"\nignore = {{ writes = [\"{bad}\"] }}\n"),
-                2,
-                "must be \"METHOD /path\"",
-            );
-        }
     }
 
     #[test]
     fn rejects_unknown_keys() {
         assert_error(
-            "version = 1\n\n[[step]]\nwait = { txt = \"x\" }\n",
+            "version = 2\n\n[[step]]\nwait = { txt = \"x\" }\n",
             4,
             "unknown field `txt`",
         );
-        assert_error("version = 1\nsize = [[1, 1]]\n", 2, "unknown field `size`");
-        assert_error("version = 1\n[[step]]\npress = [\"j\"]\n", 3, "unknown field `press`");
+        assert_error("version = 2\nsize = [[1, 1]]\n", 2, "unknown field `size`");
+        assert_error("version = 2\n[[step]]\npress = [\"j\"]\n", 3, "unknown field `press`");
     }
 
     #[test]
     fn rejects_expect_for_a_missing_capture() {
         assert_error(
-            "version = 1\n[[step]]\ncapture = \"main\"\n\n[expect.mian]\ncontains = [\"x\"]\n",
+            "version = 2\n[[step]]\ncapture = \"main\"\n\n[expect.mian]\ncontains = [\"x\"]\n",
             5,
             "[expect.mian] names no capture",
         );
@@ -1938,7 +1657,7 @@ move = { at = [100, 1] }
     #[test]
     fn rejects_duplicate_capture_names() {
         assert_error(
-            "version = 1\n[[step]]\ncapture = \"a\"\n[[step]]\ncapture = \"a\"\n",
+            "version = 2\n[[step]]\ncapture = \"a\"\n[[step]]\ncapture = \"a\"\n",
             4,
             "duplicate capture",
         );
@@ -1946,39 +1665,36 @@ move = { at = [100, 1] }
 
     #[test]
     fn rejects_indistinct_keys() {
-        assert_error("version = 1\n[[step]]\nkeys = [\"j\",\n  \"ctrl+m\"]\n", 4, "ctrl+m");
-        assert_error("version = 1\n[[step]]\nkeys = [\"hyper+x\"]\n", 3, "unknown key");
+        assert_error("version = 2\n[[step]]\nkeys = [\"j\",\n  \"ctrl+m\"]\n", 4, "ctrl+m");
+        assert_error("version = 2\n[[step]]\nkeys = [\"hyper+x\"]\n", 3, "unknown key");
     }
 
     #[test]
     fn rejects_other_invalid_values() {
-        assert_error("version = 2\n", 1, "unsupported version 2");
-        assert_error("version = 1\n[[step]]\ncapture = \"Main\"\n", 3, "[a-z0-9-]+");
+        assert_error("version = 2\n[[step]]\ncapture = \"Main\"\n", 3, "[a-z0-9-]+");
         assert_error(
-            "version = 1\n[[step]]\nwait = { text = \"a\", gone = \"b\" }\n",
+            "version = 2\n[[step]]\nwait = { text = \"a\", gone = \"b\" }\n",
             3,
             "exactly one of",
         );
         assert_error(
-            "version = 1\n[[step]]\nwait = { timeout_ms = 5 }\n",
+            "version = 2\n[[step]]\nwait = { timeout_ms = 5 }\n",
             3,
             "exactly one of",
         );
-        assert_error("version = 1\n[[step]]\nwait = { regex = \"(\" }\n", 3, "invalid regex");
-        assert_error("version = 1\nsizes = [[0, 48]]\n", 2, "sizes");
-        assert_error("version = 1\napps = [\"python\", \"python\"]\n", 2, "apps");
-        assert_error("version = 1\napps = [\"go\"]\n", 2, "unknown variant `go`");
-        assert_error("version = 1\n[env]\nfixtures = [\"no-such-set\"]\n", 3, "no-such-set");
-        assert_error("version = 1\n[env]\nfixtures = [\"../base\"]\n", 3, "../base");
-        assert_error("version = 1\n[env]\ngit_remote = \"just-a-name\"\n", 3, "owner/name");
+        assert_error("version = 2\n[[step]]\nwait = { regex = \"(\" }\n", 3, "invalid regex");
+        assert_error("version = 2\nsizes = [[0, 48]]\n", 2, "sizes");
+        assert_error("version = 2\n[env]\nfixtures = [\"no-such-set\"]\n", 3, "no-such-set");
+        assert_error("version = 2\n[env]\nfixtures = [\"../base\"]\n", 3, "../base");
+        assert_error("version = 2\n[env]\ngit_remote = \"just-a-name\"\n", 3, "owner/name");
         assert_error(
-            "version = 1\n[env]\ngh_auth = \"maybe\"\n",
+            "version = 2\n[env]\ngh_auth = \"maybe\"\n",
             3,
             "unknown variant `maybe`",
         );
-        assert_error("version = 1\n[[step]]\nresize = [0, 1]\n", 3, "resize");
+        assert_error("version = 2\n[[step]]\nresize = [0, 1]\n", 3, "resize");
         assert_error(
-            "version = 1\n[[step]]\ncapture = \"a\"\n[expect.a]\npane_title = []\n",
+            "version = 2\n[[step]]\ncapture = \"a\"\n[expect.a]\npane_title = []\n",
             5,
             "pane_title",
         );
@@ -1996,19 +1712,19 @@ move = { at = [100, 1] }
             "a b.toml",
         ] {
             let path = Path::new("parity/scenarios").join(file);
-            let err = Scenario::parse(&path, "version = 1\n", &roots()).expect_err(file);
+            let err = Scenario::parse(&path, "version = 2\n", &roots()).expect_err(file);
             assert_eq!(err.line, 0, "{err}");
             assert!(err.message.contains("[a-z0-9][a-z0-9-]*"), "{err}");
         }
         for file in ["startup.toml", "pr-merge.toml", "2col.toml"] {
             let path = Path::new("parity/scenarios").join(file);
-            Scenario::parse(&path, "version = 1\n", &roots()).unwrap_or_else(|e| panic!("{e}"));
+            Scenario::parse(&path, "version = 2\n", &roots()).unwrap_or_else(|e| panic!("{e}"));
         }
     }
 
     #[test]
     fn reports_a_missing_config_file() {
-        let err = parse("version = 1\n[env]\nconfig = \"nope\"\n").unwrap_err();
+        let err = parse("version = 2\n[env]\nconfig = \"nope\"\n").unwrap_err();
         assert!(err.message.contains("nope.json"), "{err}");
     }
 

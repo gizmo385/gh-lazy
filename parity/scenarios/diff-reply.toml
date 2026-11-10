@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "Diff tab thread reply (#385): r on parity-friend's reply in thread 9001 opens New comment quoting it, ctrl+s posts to the thread's root 9001, the thread stays expanded with the reply last and the cursor kept; r on the outdated thread quotes its root"
 # Rust-only: Python can't reply from the Diff tab, which shows no review comments (decision diff-inline-comments,
 # #385 D1-D3 a). The captures check the cursor through the position row under the body (`<path>  Comment n/m` on a
 # thread), waited on with a regex. Checked by eye at 160x48 and 100x30.
-gate = true
-apps = ["rust"]
 parity_rows = ["diff-viewer.thread-reply", "keybindings.diff-reply-to-thread"]
 sizes = [[160, 48]]
 

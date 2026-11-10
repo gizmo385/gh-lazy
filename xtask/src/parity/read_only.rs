@@ -1,7 +1,4 @@
 //! `env.config_dir_read_only`: the run's config folder made read-only for the app run.
-//!
-//! This lives outside `env.rs` on purpose: `env.rs` is a [`super::reference::HARNESS_INPUTS`] file, and changing it
-//! makes every recorded reference stale. Only Rust-only scenarios use it, and the flag is in the capture key.
 
 use std::path::{Path, PathBuf};
 

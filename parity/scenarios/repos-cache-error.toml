@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "A seeded repos.json and a failed repos list: the cached rows stay, with one error line in the command log"
-gate = true
 parity_rows = ["caches-drafts.repos-json", "repositories.loading"]
 sizes = [[160, 48]]
 
@@ -13,11 +12,8 @@ config_overrides = { appearance = { show_command_log = true } }
 [[step]]
 wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Error fetching repositories from Github API', timeout_ms = 15000 }
 
-# The log's lines carry the time, which differs between the apps.
 [[step]]
 capture = "error"
-checks = ["titles", "headers", "rows", "focus"]
-ignore = { boxes = ["Command Log"] }
 
 [expect.error]
 contains = ["cached-only", "dotfiles", "Error fetching repositories from Github API"]

@@ -1,11 +1,10 @@
-version = 1
+version = 2
 description = "Edit issue modal (E) from the Issues table: the prefilled title, Status select and description; a new title, Closed picked in the select, Save, and the updated row replacing the old one; then E on the Issue Overview, closed with escape"
-# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 30 modal with labels above tall fields and Save / Cancel buttons, Rust's content-sized sheet with
 # one-row fields, the title focused at open and footer keys), and [expect] checks the text both show. The sheet's own
-# texts (its heading, `^s Save`, `Saving…`) are checked by the Rust-only compose-issue scenario. The write is compared
-# as before.
-gate = true
+# texts (its heading, `^s Save`, `Saving…`) are checked by the Rust-only compose-issue scenario. The write is in the
+# snapshot's effects.
 parity_rows = [
     "modals.edit-issue",
     "modals.form-widgets",
@@ -52,7 +51,6 @@ wait.regex = 'shift\+⏎ (Submit|Save)'
 
 [[step]]
 capture = "open"
-checks = []
 
 # A click past the title's end focuses Python's input with the cursor at its end (Rust's title has focus already),
 # and ctrl+u deletes everything to its left in both.
@@ -73,7 +71,6 @@ wait.text = "Crash when the config file is blank"
 
 [[step]]
 capture = "title-typed"
-checks = []
 
 # Status, whose closed select types nothing, so the footer offers `q`: Python's `q Close`, Rust's `q Leave`. Python
 # moves focus a tick after a tab (Py bug B121): the next key waits for it.
@@ -91,7 +88,6 @@ wait.text = "Closed"
 
 [[step]]
 capture = "status-open"
-checks = []
 
 [[step]]
 keys = ["down", "enter"]
@@ -101,7 +97,6 @@ wait.gone = "Dismiss menu"
 
 [[step]]
 capture = "status-closed"
-checks = []
 
 # Rust's compose sheet has no Save button (decision compose-dialogs): the click lands on Python's button and on Rust's
 # footer `^s Save`, the first "Save" on each screen. (Python's shift+enter saves too, but its 1 s "Updating issue
@@ -119,7 +114,6 @@ wait.text = "Updating issue #12..."
 
 [[step]]
 capture = "saving"
-checks = []
 
 [[step]]
 wait.log.method = "PATCH"
@@ -133,7 +127,6 @@ wait.text = "Successfully updated issue #12"
 
 [[step]]
 capture = "updated"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # From the Issue Overview: select issue 11, move into the Overview's content and press E.
 [[step]]
@@ -164,7 +157,6 @@ wait.regex = 'shift\+⏎ (Submit|Save)'
 
 [[step]]
 capture = "from-overview"
-checks = []
 
 # escape closes Python's modal. In Rust's sheet the first escape leaves the title and the second closes; in Python the
 # second reaches the main screen, where escape only clears a text selection.
@@ -176,7 +168,6 @@ wait.gone = "Description"
 
 [[step]]
 capture = "overview-closed"
-checks = ["titles", "focus"]
 
 [expect.open]
 contains = ["Title", "Crash when the config file is empty", "Status", "Open", "Description", "## Steps to reproduce"]

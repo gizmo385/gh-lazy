@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Notifications: enter on an issue notification from another repo selects that repo, then opens the issue in Details with its tab strip focused and the toast \"Opening issue for notification\" (#405)"
 # Rust-only: Python opens only the repo for an issue subject (decision notification-opens-issue).
-gate = true
-apps = ["rust"]
 parity_rows = ["modals.notifications-open-issue", "toasts.opening-issue-for-notification"]
 sizes = [[160, 48]]
 
@@ -63,7 +61,6 @@ wait = { text = "Opening issue for notification" }
 
 [[step]]
 capture = "issue-cross-repo"
-checks = ["titles", "tabs", "focus"]
 
 [expect.issue-cross-repo]
 contains = ["Current repo: parity-bot/pr-details", "Issue #7", "Typo in the install docs", "Opening issue for notification"]

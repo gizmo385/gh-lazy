@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "PR Diff tab review threads (#390): PR 5's threads collapsed under their lines with a flag in the gutter and a comment count on each file header, n to the next thread and enter to expand it, n onto the thread on a removed line, n into src/viewer.rs's outdated group and enter to show the line it was written on, and z folding every file with the counts kept"
 # Rust-only: Python shows no review comment in the Diff tab (decision diff-inline-comments). The captures check the
 # cursor through the position row under the body (`<path>  Comment n/m` on a thread), waited on with a regex.
-gate = true
-apps = ["rust"]
 parity_rows = [
     "diff-viewer.review-threads",
     "diff-viewer.outdated-threads",

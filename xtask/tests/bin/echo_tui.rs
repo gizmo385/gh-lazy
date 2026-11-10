@@ -109,6 +109,28 @@ fn main() -> io::Result<()> {
                     out.flush()?;
                     continue;
                 }
+                // A pane outlined in `ECHO_TUI_BORDER` (`#rrggbb`), for `wait.focused` in a theme's colors.
+                if key.code == KeyCode::Char('g') && key.modifiers.contains(KeyModifiers::CONTROL) {
+                    let hex = std::env::var("ECHO_TUI_BORDER").unwrap_or_default();
+                    let channel = |i: usize| u8::from_str_radix(hex.get(i..i + 2).unwrap_or("00"), 16).unwrap_or(0);
+                    let color = style::Color::Rgb {
+                        r: channel(1),
+                        g: channel(3),
+                        b: channel(5),
+                    };
+                    for (row, text) in [(10, "┌─ Themed ──┐"), (11, "│ inside    │"), (12, "└───────────┘")]
+                    {
+                        queue!(
+                            out,
+                            cursor::MoveTo(2, row),
+                            style::SetForegroundColor(color),
+                            style::Print(text)
+                        )?;
+                    }
+                    queue!(out, style::ResetColor)?;
+                    out.flush()?;
+                    continue;
+                }
                 if key.code == KeyCode::Char('b') && key.modifiers.contains(KeyModifiers::CONTROL) {
                     let title = format!("┌─ pid {} ", std::process::id());
                     let pad = 23usize.saturating_sub(title.chars().count());

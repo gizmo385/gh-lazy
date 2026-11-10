@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "The repos list fails: the loading overlay, then an empty table, one error line in the command log and no toast"
-gate = true
 parity_rows = ["repositories.loading", "main-layout.loading-spinner"]
 sizes = [[160, 48]]
 
@@ -16,16 +15,13 @@ wait = { text = "Loading...", timeout_ms = 15000 }
 
 [[step]]
 capture = "loading"
-checks = ["titles", "focus"]
 
 [[step]]
 wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Error fetching repositories from Github API' }
 
-# The log's lines carry the time, which differs between the apps; the expectation checks the line.
+# The expectation checks the log's line.
 [[step]]
 capture = "error"
-checks = ["titles", "headers", "rows", "focus"]
-ignore = { boxes = ["Command Log"] }
 
 [expect.loading]
 contains = ["Loading..."]

@@ -1,9 +1,8 @@
-version = 1
+version = 2
 description = "Issue details: selecting an issue opens its Overview and Comments tabs; switching tabs, the comment blocks, focus inside the Comments tab, no body, no comments and the comments loading state"
 # Gated since #246. The Details box's text isn't compared across apps, so [expect] carries the Overview and comment
-# text. The footer is left out of the cross-app checks wherever it isn't
+# text. The footer is left out of the old cross-app checks wherever it isn't
 # cut off at the right edge: Python spells `^p Command Pallete` (Py bug B14), and Rust fixes the spelling on purpose.
-gate = true
 parity_rows = [
     "issues.select",
     "issues.details",
@@ -49,7 +48,6 @@ wait = { text = "Workaround: delete the file", timeout_ms = 15000 }
 
 [[step]]
 capture = "overview"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # The Overview's content: `E Edit Issue` joins the footer. Python moves focus a tick after a tab (Py bug B121), so
 # the capture waits for the footer to lead with it.
@@ -61,7 +59,6 @@ wait = { regex = '(?m)^ E Edit Issue  ' }
 
 [[step]]
 capture = "overview-content"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Back to the tab strip, and right to Comments.
 [[step]]
@@ -78,7 +75,6 @@ wait = { text = "A comment from a deleted account.", timeout_ms = 15000 }
 
 [[step]]
 capture = "comments"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Tab: the comments' scroll area, then the first comment, drawn with a dashed border.
 [[step]]
@@ -89,7 +85,6 @@ wait = { focused = "I can reproduce it on main" }
 
 [[step]]
 capture = "comment-focused"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Right from the strip wraps around to Overview.
 [[step]]
@@ -103,7 +98,6 @@ keys = ["right"]
 
 [[step]]
 capture = "wrapped"
-checks = ["titles", "tabs", "focus"]
 
 # Issue 11: closed, no body, no comments.
 [[step]]
@@ -120,7 +114,6 @@ wait = { text = "Closed without a body (#11)", timeout_ms = 15000 }
 
 [[step]]
 capture = "no-body"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -130,7 +123,6 @@ wait = { text = "No comments available", timeout_ms = 15000 }
 
 [[step]]
 capture = "no-comments"
-checks = ["titles", "tabs", "focus"]
 
 # Issue 10: its comments take 2 s, so the Comments tab shows the loading overlay first.
 [[step]]
@@ -153,14 +145,12 @@ wait = { text = "Loading...", timeout_ms = 15000 }
 
 [[step]]
 capture = "comments-loading"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 wait = { text = "This one took a while.", timeout_ms = 15000 }
 
 [[step]]
 capture = "comments-loaded"
-checks = ["titles", "tabs", "focus"]
 
 [expect.overview]
 contains = ["Overview  Comments", "Open Crash when the config file is empty (#12) by parity-friend", "Steps to reproduce", "Create an empty config.json", "parity-bot/dotfiles#3", "Error: the config file is empty (see #9)", "Workaround: delete the file and start again."]

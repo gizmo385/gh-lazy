@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Selecting a repo fills the Pull Requests table from the issues endpoint: the PRs of a mixed page, newest first, maximized, and the next page on G"
-gate = true
 parity_rows = [
   "pull-requests.table",
   "pull-requests.columns",
@@ -27,11 +26,8 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Browse fixture pull request 99", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a selection (#209).
 [[step]]
 capture = "loaded"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
-ignore = { boxes = ["Details"] }
 
 # The Issues table's 20 issues from the shared first page: G puts the cursor on issue 71 (row 20 of 20), which asks for
 # page 2 with the default `issues.*` filters. These steps come before the PR ones because they send the first page-2
@@ -50,8 +46,6 @@ wait = { log = { method = "GET", path = "/repos/parity-bot/browse-fixture/issues
 
 [[step]]
 capture = "issues-page-2"
-checks = ["rows", "cursor"]
-ignore = { boxes = ["Details"] }
 
 # Page 2 doesn't move the cursor (row 20 of 40); the new bottom row asks for page 3.
 [[step]]
@@ -62,8 +56,6 @@ wait = { log = { method = "GET", path = "/repos/parity-bot/browse-fixture/issues
 
 [[step]]
 capture = "issues-page-3"
-checks = ["rows", "cursor"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["2"]
@@ -79,7 +71,6 @@ wait = { gone = "[1] Repositories" }
 
 [[step]]
 capture = "prs-maximized"
-checks = ["rows", "cursor", "focus"]
 
 # Wait for the layout to come back: an escape followed at once by the next key reaches the app as alt+G.
 [[step]]
@@ -98,8 +89,6 @@ wait = { text = "Browse fixture pull request 69", timeout_ms = 15000 }
 
 [[step]]
 capture = "prs-page-2"
-checks = ["rows", "cursor"]
-ignore = { boxes = ["Details"] }
 
 [expect.loaded]
 contains = ["Browse fixture pull request 99"]

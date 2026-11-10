@@ -1,11 +1,10 @@
-version = 1
+version = 2
 description = "Maximize from the Diff tab's review form: the review summary through the palette's Maximize, the Review Status select and the Submit Review button with M; each maximizes the details tab area, and escape restores it with focus kept"
 # The summary is an input, so M types into it (Py bug B38); the palette's Maximize is how Python reaches its nearest
 # maximizable ancestor. The filter's captures moved to the Rust-only `diff-navigation` (#388): Python's filter is
 # reached through its scroll area, which Rust's Diff tab no longer has. A rebound maximize key works on the inputs in
 # Rust only (B38's answer), so it's unit-tested rather than captured here. A maximized tab area has no boxes, so those
 # captures are checked through [expect] `contains` and `not_contains`.
-gate = true
 parity_rows = ["main-layout.maximize"]
 sizes = [[160, 48]]
 
@@ -73,7 +72,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "submit"
-checks = ["titles"]
 
 [[step]]
 keys = ["escape"]
@@ -112,7 +110,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "summary"
-checks = ["titles"]
 
 [[step]]
 keys = ["escape"]
@@ -135,7 +132,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "review-status"
-checks = ["titles"]
 
 [expect.submit]
 pane_titles = []

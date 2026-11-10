@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Searchable table: lazy loading asks for the next page when the cursor nears the end of a 70-PR table (30, 30, 10)"
-gate = true
 parity_rows = [
   "searchable-tables.lazy-loading",
   "pull-requests.table",
@@ -57,12 +56,8 @@ keys = ["G"]
 [[step]]
 wait = { text = "Lazy fixture pull request 11", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it.
-# These captures are about the PR table, so the Details box is ignored: a re-record keeps the stored screen.
 [[step]]
 capture = "after-page-2"
-checks = ["rows", "cursor"]
-ignore = { boxes = ["Details"] }
 
 # Page 3 doesn't move the cursor (row 59 of 70); G reaches its bottom row, which asks for page 4.
 [[step]]
@@ -76,8 +71,6 @@ wait = { regex = 'Lazy fixture pull request 1\s', timeout_ms = 15000 }
 
 [[step]]
 capture = "after-page-3"
-checks = ["rows", "cursor"]
-ignore = { boxes = ["Details"] }
 
 [expect.after-page-2]
 not_contains = ["Traceback"]

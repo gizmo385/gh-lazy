@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "A full first page of 50 unread notifications shows 50+"
-gate = true
 parity_rows = ["main-layout.status-summary", "main-layout.status-unread", "main-layout.unread-refresh", "main-layout.fixed-accent-colors"]
 sizes = [[160, 48]]
 
@@ -14,10 +13,9 @@ notifications = { enabled = true }
 wait = { text = "• Unread Notifications: 50+", timeout_ms = 15000 }
 
 # The section tables are M2 (#78 only drew the shell), so only titles and focus are compared; the bar's text is
-# checked per app with `[expect]`.
+# checked with `[expect]`.
 [[step]]
 capture = "main"
-checks = ["titles", "focus"]
 
 [expect.main]
 contains = ["No repository selected", "• Unread Notifications: 50+"]

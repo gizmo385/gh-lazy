@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Notifications: enter on a PR notification marks it read, closes, selects its repo and opens the PR; a PR that fails to load and a subject with no URL open only the repo; the count refreshes on every close (issue subjects: notifications-open-issue)"
-gate = true
 parity_rows = [
     "modals.notifications-select",
     "keybindings.notifications-open",
@@ -37,7 +36,6 @@ wait = { text = "• Unread Notifications: 3" }
 
 [[step]]
 capture = "pull-request"
-checks = ["titles", "tabs", "focus"]
 
 # 9100002, an issue, isn't opened here: the Rust app opens the issue where Python opens only the repo (decision
 # notification-opens-issue, scenario notifications-open-issue).
@@ -69,7 +67,6 @@ wait = { log = { method = "GET", path = "/repos/parity-bot/pr-details/pulls/2" }
 
 [[step]]
 capture = "pr-fails"
-checks = ["titles", "tabs", "focus"]
 
 # 9100004: a CheckSuite with no subject URL, in parity-bot/dotfiles.
 [[step]]
@@ -91,7 +88,6 @@ wait = { text = "Current repo: parity-bot/dotfiles" }
 
 [[step]]
 capture = "no-url"
-checks = ["titles", "tabs", "focus"]
 
 [expect.pull-request]
 contains = ["Current repo: parity-bot/pr-details", "Opening pull request for notification", "Add a cursor to the viewer (#5)"]

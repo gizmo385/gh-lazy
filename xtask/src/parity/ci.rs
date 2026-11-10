@@ -1,84 +1,63 @@
 //! `--ci` output: GitHub Actions workflow commands (`::error` and `::warning`) for the results of a run.
 //!
-//! Errors mark what fails the job: every mismatch that counts against the gate (drift included), every app run that
-//! fails it, and any harness error (an invalid scenario file included).
-//! Warnings mark what doesn't: a `rust-not-ready` scenario (one annotation per scenario) and a run that only passed on
-//! retry.
+//! Errors mark what fails the job: every mismatch, every run that fails, and any harness error (an invalid scenario
+//! file included). Warnings mark what doesn't: a run that only passed on retry.
 
 use std::fmt;
 use std::path::Path;
 
 use super::check::Mismatch;
-use super::scenario::{App, ScenarioError};
-use super::summary::{ScenarioResult, ScenarioSummary};
+use super::scenario::ScenarioError;
+use super::summary::ScenarioSummary;
 
 /// Which check found a mismatch.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Source {
-    /// The capture's `[expect]` table, checked against one app's screen.
+    /// The capture's `[expect]` table.
     Expect,
-    /// The Python-vs-Rust comparison.
-    Cross,
-    /// A live Python run against its fresh reference.
-    Drift,
-    /// A Rust run against its committed snapshot.
+    /// The committed snapshot.
     Snapshot,
 }
 
-/// A structural mismatch from one capture at one size, and the app it counts against.
+/// A mismatch from one capture at one size.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Finding {
     pub size: String,
     pub capture: String,
     pub source: Source,
-    pub against: App,
     pub mismatch: Mismatch,
 }
 
 impl Finding {
-    /// A mismatch between `app`'s screen and the capture's `[expect]` table.
-    pub fn expect(size: &str, capture: &str, app: App, mismatch: &Mismatch) -> Self {
-        Self::new(size, capture, Source::Expect, app, mismatch)
+    /// A mismatch between the screen and the capture's `[expect]` table.
+    pub fn expect(size: &str, capture: &str, mismatch: &Mismatch) -> Self {
+        Self::new(size, capture, Source::Expect, mismatch)
     }
 
-    /// A cross-app mismatch, which always counts against Rust: Python is the reference.
-    pub fn cross(size: &str, capture: &str, mismatch: &Mismatch) -> Self {
-        Self::new(size, capture, Source::Cross, App::Rust, mismatch)
-    }
-
-    /// A live Python run that disagrees with its reference, which counts against Python: the reference is wrong.
-    pub fn drift(size: &str, capture: &str, mismatch: &Mismatch) -> Self {
-        Self::new(size, capture, Source::Drift, App::Python, mismatch)
-    }
-
-    /// A Rust run that differs from its committed snapshot, which counts against Rust.
+    /// A run that differs from its committed snapshot.
     pub fn snapshot(size: &str, capture: &str, mismatch: &Mismatch) -> Self {
-        Self::new(size, capture, Source::Snapshot, App::Rust, mismatch)
+        Self::new(size, capture, Source::Snapshot, mismatch)
     }
 
-    fn new(size: &str, capture: &str, source: Source, against: App, mismatch: &Mismatch) -> Self {
+    fn new(size: &str, capture: &str, source: Source, mismatch: &Mismatch) -> Self {
         Self {
             size: size.to_owned(),
             capture: capture.to_owned(),
             source,
-            against,
             mismatch: mismatch.clone(),
         }
     }
 
-    /// The check that failed, worded like `check_size`'s console lines: `python expect titles [5] Details` or
-    /// `cross titles [5] Details`.
+    /// The check that failed, worded like `check_size`'s console lines: `expect titles [5] Details` or `snapshot`.
     fn target(&self) -> String {
         let m = &self.mismatch;
-        let source = match self.source {
-            Source::Expect => format!("{} expect", self.against),
-            Source::Cross => "cross".to_owned(),
-            Source::Drift => "drift".to_owned(),
-            Source::Snapshot => "rust".to_owned(),
+        let check = match self.source {
+            Source::Expect => format!("expect {}", m.check.as_str()),
+            Source::Snapshot => m.check.as_str().to_owned(),
         };
         match &m.in_box {
-            Some(b) => format!("{source} {} {b}", m.check.as_str()),
-            None => format!("{source} {}", m.check.as_str()),
+            Some(b) => format!("{check} {b}"),
+            None => check,
         }
     }
 }
@@ -157,11 +136,6 @@ pub fn scenario_file(repo: &Path, path: &Path) -> String {
         .join("/")
 }
 
-/// Whether a failure of `app` fails the job: the Python side always does, the Rust side only in a gated scenario.
-pub fn gates(gate: bool, app: App) -> bool {
-    gate || app == App::Python
-}
-
 /// The annotations for one scenario's results.
 pub fn annotations(file: &str, summary: &ScenarioSummary, findings: &[Finding]) -> Vec<Annotation> {
     let name = &summary.name;
@@ -175,53 +149,24 @@ pub fn annotations(file: &str, summary: &ScenarioSummary, findings: &[Finding]) 
     if let Some(error) = &summary.error {
         out.push(at(Level::Error, format!("{name}: harness error: {error}")));
     }
-
-    let mut not_ready = Vec::new();
     for size in &summary.sizes {
-        for (&app, status) in &size.apps {
-            let where_ = format!("{name}/{}/{app}", size.size);
-            if !status.passed() {
-                if gates(summary.gate, app) {
-                    out.push(at(Level::Error, format!("{where_}: {}", status.describe())));
-                } else {
-                    not_ready.push(format!("{} {app}: {}", size.size, status.describe()));
-                }
-            } else if status.flaky {
-                out.push(at(Level::Warning, format!("{where_}: flaky, passed on retry")));
-            }
+        let where_ = format!("{name}/{}", size.size);
+        if !size.status.passed() {
+            out.push(at(Level::Error, format!("{where_}: {}", size.status.describe())));
+        } else if size.status.flaky {
+            out.push(at(Level::Warning, format!("{where_}: flaky, passed on retry")));
         }
     }
-
-    let mut ungated_mismatches = 0;
     for f in findings {
-        if gates(summary.gate, f.against) {
-            out.push(at(
-                Level::Error,
-                format!(
-                    "{name}/{}/{}: {}: {}",
-                    f.size,
-                    f.capture,
-                    f.target(),
-                    f.mismatch.message
-                ),
-            ));
-        } else {
-            ungated_mismatches += 1;
-        }
-    }
-
-    if summary.result == ScenarioResult::RustNotReady {
-        if ungated_mismatches > 0 {
-            not_ready.push(format!("{ungated_mismatches} structural mismatch(es)"));
-        }
-        let detail = if not_ready.is_empty() {
-            String::new()
-        } else {
-            format!(" ({})", not_ready.join("; "))
-        };
         out.push(at(
-            Level::Warning,
-            format!("{name}: rust-not-ready, gate = false{detail}"),
+            Level::Error,
+            format!(
+                "{name}/{}/{}: {}: {}",
+                f.size,
+                f.capture,
+                f.target(),
+                f.mismatch.message
+            ),
         ));
     }
     out
@@ -229,14 +174,12 @@ pub fn annotations(file: &str, summary: &ScenarioSummary, findings: &[Finding]) 
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-
     use serde_json::Value;
 
     use super::*;
     use crate::parity::check::Kind;
     use crate::parity::runner::{AppRunStatus, RunState};
-    use crate::parity::summary::SizeSummary;
+    use crate::parity::summary::{ScenarioResult, SizeSummary};
 
     fn status(state: RunState) -> AppRunStatus {
         serde_json::from_value(serde_json::json!({
@@ -246,18 +189,18 @@ mod tests {
         .unwrap()
     }
 
-    fn summary(gate: bool, rust: RunState, result: ScenarioResult) -> ScenarioSummary {
+    fn summary(state: RunState) -> ScenarioSummary {
+        let sizes = vec![SizeSummary {
+            size: "160x48".into(),
+            status: status(state),
+            captures: Vec::new(),
+        }];
         ScenarioSummary {
             name: "startup".into(),
             description: String::new(),
-            gate,
             parity_rows: Vec::new(),
-            result,
-            sizes: vec![SizeSummary {
-                size: "160x48".into(),
-                apps: BTreeMap::from([(App::Python, status(RunState::Ok)), (App::Rust, status(rust))]),
-                captures: Vec::new(),
-            }],
+            result: ScenarioResult::from_sizes(&sizes),
+            sizes,
             error: None,
         }
     }
@@ -266,15 +209,10 @@ mod tests {
         Mismatch {
             check: Kind::Titles,
             in_box: Some("[5] Details".into()),
-            python: Value::Null,
-            rust: Value::Null,
+            actual: Value::Null,
             expected: None,
             message: "expected \"Overview\", got \"Details\"".into(),
         }
-    }
-
-    fn finding(against: App) -> Finding {
-        Finding::expect("160x48", "main", against, &mismatch())
     }
 
     const FILE: &str = "parity/scenarios/startup.toml";
@@ -284,66 +222,41 @@ mod tests {
     }
 
     #[test]
-    fn a_gated_mismatch_is_an_error() {
-        let s = summary(true, RunState::Ok, ScenarioResult::Fail);
-        assert_eq!(
-            lines(&annotations(FILE, &s, &[finding(App::Rust)])),
-            [
-                "::error file=parity/scenarios/startup.toml::startup/160x48/main: rust expect titles [5] Details: \
-                 expected \"Overview\", got \"Details\""
-            ]
-        );
-    }
-
-    #[test]
-    fn mismatch_errors_name_the_app_and_the_check() {
-        let s = summary(true, RunState::Ok, ScenarioResult::Fail);
-        let mut whole_screen = Finding::cross("160x48", "main", &mismatch());
+    fn an_expect_mismatch_is_an_error_naming_the_check() {
+        let s = summary(RunState::Ok);
+        let mut whole_screen = Finding::expect("160x48", "main", &mismatch());
         whole_screen.mismatch.in_box = None;
-        let findings = [
-            finding(App::Python),
-            Finding::cross("160x48", "main", &mismatch()),
-            whole_screen,
-        ];
-        let messages: Vec<_> = annotations(FILE, &s, &findings)
-            .into_iter()
-            .map(|a| a.message)
-            .collect();
         assert_eq!(
-            messages,
+            lines(&annotations(
+                FILE,
+                &s,
+                &[Finding::expect("160x48", "main", &mismatch()), whole_screen]
+            )),
             [
-                "startup/160x48/main: python expect titles [5] Details: expected \"Overview\", got \"Details\"",
-                "startup/160x48/main: cross titles [5] Details: expected \"Overview\", got \"Details\"",
-                "startup/160x48/main: cross titles: expected \"Overview\", got \"Details\"",
+                "::error file=parity/scenarios/startup.toml::startup/160x48/main: expect titles [5] Details: \
+                 expected \"Overview\", got \"Details\"",
+                "::error file=parity/scenarios/startup.toml::startup/160x48/main: expect titles: expected \
+                 \"Overview\", got \"Details\"",
             ]
         );
     }
 
     #[test]
-    fn snapshot_mismatches_are_rust_errors() {
-        let s = summary(true, RunState::Ok, ScenarioResult::Fail);
+    fn a_snapshot_mismatch_is_an_error() {
+        let s = summary(RunState::Ok);
         let m = Mismatch::snapshot(
             Kind::Snapshot,
             "rows 12-14 differ; run cargo xtask parity --accept startup and review the diff".into(),
         );
         let f = Finding::snapshot("160x48", "main", &m);
-        assert_eq!((f.source, f.against), (Source::Snapshot, App::Rust));
+        assert_eq!(f.source, Source::Snapshot);
         assert_eq!(
             lines(&annotations(FILE, &s, &[f])),
             [
-                "::error file=parity/scenarios/startup.toml::startup/160x48/main: rust snapshot: rows 12-14 differ; \
+                "::error file=parity/scenarios/startup.toml::startup/160x48/main: snapshot: rows 12-14 differ; \
                  run cargo xtask parity --accept startup and review the diff"
             ]
         );
-    }
-
-    #[test]
-    fn cross_mismatches_count_against_rust() {
-        let f = Finding::cross("160x48", "main", &mismatch());
-        assert_eq!((f.source, f.against), (Source::Cross, App::Rust));
-        let s = summary(false, RunState::Ok, ScenarioResult::RustNotReady);
-        let out = annotations(FILE, &s, &[f]);
-        assert!(out.iter().all(|a| a.level == Level::Warning), "{out:?}");
     }
 
     #[test]
@@ -369,38 +282,29 @@ mod tests {
     }
 
     #[test]
-    fn an_ungated_rust_failure_is_one_warning() {
-        let s = summary(false, RunState::Timeout, ScenarioResult::RustNotReady);
+    fn a_failed_run_is_an_error() {
+        let s = summary(RunState::Timeout);
         assert_eq!(
-            lines(&annotations(FILE, &s, &[finding(App::Rust)])),
-            [
-                "::warning file=parity/scenarios/startup.toml::startup: rust-not-ready, gate = false (160x48 rust: \
-                 timeout at step 0 (15.0s); 1 structural mismatch(es))"
-            ]
+            lines(&annotations(FILE, &s, &[])),
+            ["::error file=parity/scenarios/startup.toml::startup/160x48: timeout at step 0 (15.0s)"]
         );
-    }
-
-    #[test]
-    fn python_failures_always_gate() {
-        let mut s = summary(false, RunState::Ok, ScenarioResult::Fail);
-        let python = s.sizes[0].apps.get_mut(&App::Python).unwrap();
-        python.fixture_problems = true;
-        let out = annotations(FILE, &s, &[finding(App::Python)]);
-        assert_eq!(out.len(), 2, "{out:?}");
-        assert!(out.iter().all(|a| a.level == Level::Error), "{out:?}");
+        let mut s = summary(RunState::Ok);
+        s.sizes[0].status.fixture_problems = true;
+        let out = annotations(FILE, &s, &[]);
+        assert_eq!(out.len(), 1, "{out:?}");
         assert!(
-            out[0].message.starts_with("startup/160x48/python: fixture problems"),
+            out[0].message.starts_with("startup/160x48: fixture problems"),
             "{out:?}"
         );
     }
 
     #[test]
     fn flaky_runs_and_harness_errors_are_annotated() {
-        let mut s = summary(true, RunState::Ok, ScenarioResult::Pass);
-        s.sizes[0].apps.get_mut(&App::Rust).unwrap().flaky = true;
+        let mut s = summary(RunState::Ok);
+        s.sizes[0].status.flaky = true;
         assert_eq!(
             lines(&annotations(FILE, &s, &[])),
-            ["::warning file=parity/scenarios/startup.toml::startup/160x48/rust: flaky, passed on retry"]
+            ["::warning file=parity/scenarios/startup.toml::startup/160x48: flaky, passed on retry"]
         );
         s.error = Some("wiping out: denied".into());
         assert_eq!(

@@ -1,7 +1,5 @@
-version = 1
+version = 2
 description = "A rate limit on a paginated call: the repos list (gh api --paginate, which prints no headers) gets a 403 whose message says the API rate limit is exceeded, so the app shows the \"Rate limited\" toast with the one-minute fallback window and logs the message"
-gate = true
-apps = ["rust"]
 parity_rows = ["toasts.rate-limited"]
 sizes = [[160, 48]]
 

@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Open Bug Report when gizmo385/gh-lazy can't be loaded: the error toast, no repo selected and no New issue modal"
-gate = true
 parity_rows = [
     "command-palette.open-bug-report",
     "toasts.bug-report-error",
@@ -36,7 +35,6 @@ wait = { text = "Error opening bug report" }
 
 [[step]]
 capture = "error"
-checks = ["titles", "headers", "rows", "cursor", "focus", "footer"]
 
 [expect.error]
 focused = ["[1] Repositories"]

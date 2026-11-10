@@ -1,5 +1,5 @@
 //! `git_remote_branches`: the bare repo the harness makes, git in the work dir reaching it over fake-ssh with the
-//! app's environment, and `wait.remote_branch`. Uses real git; needs no Python.
+//! app's environment, and `wait.remote_branch`. Uses real git; runs no app.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -8,7 +8,7 @@ use std::time::Duration;
 use portable_pty::CommandBuilder;
 use xtask::parity::env::{self, LocalRemote, Paths, RunEnv};
 use xtask::parity::runner::{self, RunState};
-use xtask::parity::scenario::{App, Roots, Scenario, Size};
+use xtask::parity::scenario::{Roots, Scenario, Size};
 
 /// `cargo test` builds the examples next to the test binaries, in `target/<profile>/examples/`.
 fn example(name: &str) -> PathBuf {
@@ -36,7 +36,7 @@ fn roots() -> Roots {
 
 fn scenario(branches: &str, steps: &str) -> Scenario {
     let source = format!(
-        "version = 1\nsizes = [[80, 24]]\ntimeout_ms = 15000\n[env]\ngit_remote = \"o/n\"\n\
+        "version = 2\nsizes = [[80, 24]]\ntimeout_ms = 15000\n[env]\ngit_remote = \"o/n\"\n\
          git_remote_protocol = \"ssh\"\ngit_branch = \"topic\"\ngit_remote_branches = {branches}\n{steps}"
     );
     Scenario::parse(Path::new("local-remote.toml"), &source, &roots()).unwrap_or_else(|e| panic!("{e}"))
@@ -50,12 +50,11 @@ fn prepare(scenario: &Scenario, out: &Path) -> RunEnv {
     example("fake-ssh");
     let paths = Paths {
         fake_gh: echo.clone(),
-        rust_app: echo.clone(),
-        python: echo,
+        app: echo,
         roots: roots(),
     };
     std::fs::create_dir_all(out).unwrap();
-    env::prepare(scenario, App::Rust, Size { cols: 80, rows: 24 }, &paths, out, false).unwrap()
+    env::prepare(scenario, Size { cols: 80, rows: 24 }, &paths, out, false).unwrap()
 }
 
 /// `git <args>` in the run's work dir with exactly the environment the app gets.
@@ -173,7 +172,7 @@ fn an_empty_branch_list_makes_a_bare_repo_with_no_branches() {
 #[test]
 fn without_the_key_there_is_no_remote_and_no_ssh_env() {
     let tmp = tempfile::tempdir().unwrap();
-    let source = "version = 1\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"ssh\"\n";
+    let source = "version = 2\n[env]\ngit_remote = \"o/n\"\ngit_remote_protocol = \"ssh\"\n";
     let s = Scenario::parse(Path::new("plain.toml"), source, &roots()).unwrap();
     let run = prepare(&s, &tmp.path().join("out"));
     assert!(run.remote.is_none());
@@ -211,12 +210,11 @@ fn keep_home_copies_the_remotes() {
     let echo = example("echo_tui");
     let paths = Paths {
         fake_gh: echo.clone(),
-        rust_app: echo.clone(),
-        python: echo,
+        app: echo,
         roots: roots(),
     };
     std::fs::create_dir_all(&out).unwrap();
-    let run = env::prepare(&s, App::Rust, Size { cols: 80, rows: 24 }, &paths, &out, true).unwrap();
+    let run = env::prepare(&s, Size { cols: 80, rows: 24 }, &paths, &out, true).unwrap();
     run.finish().unwrap();
     assert!(out.join("remotes").join("o").join("n.git").join("HEAD").is_file());
     assert!(out.join("work").join(".git").is_dir());

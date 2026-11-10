@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "With notifications.enabled, the footer lists ^n Notifications after P New PR"
-gate = true
 parity_rows = ["main-layout.footer", "keybindings.notifications-open"]
 sizes = [[260, 40]]
 
@@ -17,7 +16,6 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 # in full: Py bug B14, fixed on purpose. The footer is checked with `contains` instead of the footer check.
 [[step]]
 capture = "start"
-checks = ["titles", "focus"]
 
 [expect.start]
 focused = ["[1] Repositories"]

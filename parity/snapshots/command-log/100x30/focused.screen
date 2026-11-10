@@ -22,14 +22,14 @@ cursor 0 0 hidden
 │ #  Status  Author  Title             ││  Issues, pull requests, and action lists can also be     │
 │                                      │└──────────────────────────────────────────────────────────┘
 │                                      │┌─ [6] Command Log ────────────────────────────────────────┐
-│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-└──────────────────────────────────────┘│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-┌─ [4] Workflows ──────────────────────┐│░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│ Time  Result  Job Name  Run Name  Run││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                   ▎  ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                      ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                      ││ERROR 2026-01-01 00:00:00 - Cannot load notifications -   │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows ──────────────────────┐│                                                          │
+│ Time  Result  Job Name  Run Name  Run││                                                          │
+│                                   ▎  ││        ▌                                                 │
+│                                      ││        ▌ Failed to Load Notifications                    │
+│                                      ││        ▌ Cannot load notifications - please login to     │
+│                                      ││        ▌ the gh CLI: gh auth login                       │
 └──────────────────────────────────────┘└────────▌                                                ─┘
  ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette
 --- styles
@@ -53,16 +53,16 @@ bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.......................................
 bccccccccccccccccccccccccccccccccccccccbb..mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm...llb
 b......................................bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 b......................................bnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
-b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-bccccccccccccccccccccccccccccccccccccccbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-bpppppppppppppppppppppppppppppppppppqllbnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-b......................................bnoooooooooooooooooooooooooooooooooooooooooooooooooooooooooon
-bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnnnnnnnnnrssssssssssssssssssssssssssssssssssssssssssssssssnn
-ttttuuuuuuuuuuuuuuttttuuuuuuuuuuutttuuuuuuuuuuuutttuuuuuuuuuuuuuuuuuuuuuutttuuuuuttttuuuuuuuuuuuuuuu
+b......................................bnooooooooooooooooooooooooooooooooooooooooooooooooooooooooppn
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnooooooooooooooooooooooooooooooooooooooooooooooooooooooooppn
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnooooooooooooooooooooooooooooooooooooooooooooooooooooooooppn
+bccccccccccccccccccccccccccccccccccccccbnooooooooooooooooooooooooooooooooooooooooooooooooooooooooppn
+bqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrllbnoooooooosttttttttttttttttttttttttttttttttttttttttttttttttpn
+b......................................bnoooooooostuuuuuuuuuuuuuuuuuuuuuuuuuuuutttttttttttttttttttpn
+b......................................bnoooooooosttttttttttttttttttttttttttttttttttttttttttttttttpn
+b......................................bnvvvvvvvvsttttttttttttttttttttttttttttttttttttttttttttttttwn
+bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbnnnnnnnnnsttttttttttttttttttttttttttttttttttttttttttttttttnn
+xxxxyyyyyyyyyyyyyyxxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyyyy
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -79,10 +79,14 @@ k fg=#003054 bg=#000000 inverse
 l fg=#e0e0e0 bg=#000000
 m fg=#e0e0e0 bg=#121212 bold
 n fg=#4ebf71 bg=#121212
-o default
-p fg=#003054 bg=#1e1e1e inverse
-q fg=#003054 bg=#000000
-r fg=#b93c5b bg=#343f49
-s fg=#e0e0e0 bg=#343f49
-t fg=#ffa62b bg=#242f38 bold
-u fg=#e0e0e0 bg=#242f38
+o fg=#e2e2e2 bg=#272727
+p fg=#e2e2e2 bg=#000000
+q fg=#003054 bg=#1e1e1e inverse
+r fg=#003054 bg=#000000
+s fg=#b93c5b bg=#343f49
+t fg=#e0e0e0 bg=#343f49
+u fg=#d17e92 bg=#343f49 bold
+v fg=#003054 bg=#272727 inverse
+w bg=#000000
+x fg=#ffa62b bg=#242f38 bold
+y fg=#e0e0e0 bg=#242f38

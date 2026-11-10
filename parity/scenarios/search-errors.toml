@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Search modal errors: an invalid date shows GitHub's 422 message, a 500 says the search failed, a search-bucket 403 says when to try again with its own toast, and an empty query with all of GitHub sends nothing (#394)"
 # Rust-only: Python has no search (decision search-issues-and-prs). The modal is loose text, checked with [expect].
-gate = true
-apps = ["rust"]
 parity_rows = ["modals.search-states", "toasts.search-rate-limited"]
 sizes = [[160, 48], [100, 30]]
 

@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Main screen layout with show_pull_requests and show_workflows off: the shown sections take the space, and a hidden section still takes focus with its key (Py bug B31): no border is focused, and Tab goes to the repos table"
-gate = true
 parity_rows = [
     "main-layout.layout",
     "main-layout.sections-hidden",
@@ -29,7 +28,6 @@ wait = { regex = "╸━+╺" }
 
 [[step]]
 capture = "start"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["2"]
@@ -42,7 +40,6 @@ wait = { gone = "O Lookup Repository" }
 # #76 adds contains = ["O Lookup Pull Request"] and the footer check
 [[step]]
 capture = "hidden-prs"
-checks = ["titles", "focus"]
 
 # Python moves focus a tick after a tab (Py bug B121).
 [[step]]
@@ -53,7 +50,6 @@ wait = { focused = "[1] Repositories" }
 
 [[step]]
 capture = "tab"
-checks = ["titles", "tabs", "focus"]
 
 [expect.start]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[3] Issues"]

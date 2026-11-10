@@ -42,12 +42,12 @@ cursor 0 0 hidden
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [4] Workflows ──────────────────────────────────────────────┐└──────────────────────────────────────────────────────────────────────────────────────────────┘
 │ Time  Result  Job Name  Run Name  Run #                      │┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││ERROR 2026-01-01 00:00:00 - Failed to retrieve notifications from the Github API              │
+│                                                              ││ERROR 2026-01-01 00:00:00 - Failed to retrieve notifications from the Github API              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)
 --- styles
@@ -91,14 +91,14 @@ d..............................................................dd...............
 ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd..............................................................................................d
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 dnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
-d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
-d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
-d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
-d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
-d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooood
+d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppd
+d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppd
+d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppd
+d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppd
+d..............................................................ddooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooppd
+d..............................................................ddppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppqqd
 dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-pppqqqqqqqppppqqqqqqqqqqqqqqqqpppqqqqqqqqqqqqqqqqqqpppqqqqqqqqqqpppqqqqqqqqqqpppqqqqqqqppppqqqqqqqqqqqqqqppppqqqqqqqqqqqpppqqqqqqqqqqqqpppqqqqqqqqqqqqqqqqqqqqqq
+rrrsssssssrrrrssssssssssssssssrrrssssssssssssssssssrrrssssssssssrrrssssssssssrrrsssssssrrrrssssssssssssssrrrrsssssssssssrrrssssssssssssrrrssssssssssssssssssssss
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -115,6 +115,8 @@ k fg=#0178d4 bg=#121212 bold
 l fg=#e0e0e0 bg=#121212 bold
 m fg=#0178d4 bg=#121212 underline
 n fg=#e0e0e0 bg=#242f38 bold
-o default
-p fg=#ffa62b bg=#242f38 bold
-q fg=#e0e0e0 bg=#242f38
+o fg=#e1e1e1 bg=#1e1e1e
+p fg=#e1e1e1 bg=#000000
+q bg=#000000
+r fg=#ffa62b bg=#242f38 bold
+s fg=#e0e0e0 bg=#242f38

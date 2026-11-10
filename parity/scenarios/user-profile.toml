@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "User profile modal (u) from the repos table: a user with every field and four repos, picking a repo that isn't listed yet, an organization with none, and an owner whose profile 404s"
-gate = true
 parity_rows = [
     "repositories.user-profile",
     "modals.user-profile",
@@ -28,7 +27,6 @@ wait = { text = "Parity Bot (@parity-bot)" }
 
 [[step]]
 capture = "open"
-checks = ["titles", "headers", "rows", "cursor"]
 
 [[step]]
 keys = ["tab"]
@@ -39,7 +37,6 @@ wait = { focused = "Shell configuration" }
 
 [[step]]
 capture = "tabbed"
-checks = ["rows", "cursor"]
 
 # The second repo, which isn't in the repos table: it's added and selected.
 [[step]]
@@ -62,7 +59,6 @@ wait = { text = "No public repositories." }
 # title isn't read there, while Rust draws the usual footer row below it.
 [[step]]
 capture = "organization"
-checks = ["rows"]
 
 [[step]]
 keys = ["escape"]

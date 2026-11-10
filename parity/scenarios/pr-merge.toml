@@ -1,9 +1,8 @@
-version = 1
+version = 2
 description = "PR Overview merge (ctrl+m): a PR GitHub refuses to merge (error), an already-merged PR (warning, no request), and an open PR merged with the preferred method and its head sha"
 # ctrl+m is sent in the kitty keyboard protocol's encoding (CSI 109;5 u), which both apps read; a terminal without the
 # protocol sends Enter for it (terminal-caveats.ctrl-m-enter). After the merge Rust refetches the PR (Py bug B15's
 # recommendation) and Python redraws the stale one, so the Overview text after the merge isn't in [expect].
-gate = true
 parity_rows = [
     "pull-requests.overview-merge",
     "keybindings.pull-request-merge",
@@ -53,7 +52,7 @@ wait.timeout_ms = 15000
 wait.text = "Superseded by the new renderer."
 
 # Into the Overview's content, where the merge key is bound. The footer shows far enough at 160 columns to tell
-# `^p Command Pallete` (Python) from `^p Command Palette` (Rust, Py bug B14 fixed on purpose), so the cross-app footer
+# `^p Command Pallete` (Python) from `^p Command Palette` (Rust, Py bug B14 fixed on purpose), so the old cross-app footer
 # check is left out and [expect] matches the footer's text up to there with `contains`.
 [[step]]
 keys = ["tab"]
@@ -64,7 +63,6 @@ wait = { text = "^m Merge PR" }
 
 [[step]]
 capture = "overview-content"
-checks = ["titles", "focus"]
 
 [[step]]
 type = "\u001b[109;5u"
@@ -78,7 +76,6 @@ wait.text = "Pull request 4 could not be merged"
 
 [[step]]
 capture = "merge-failed"
-checks = ["titles", "focus"]
 
 # PR 3 is already merged: a warning, and nothing is sent.
 [[step]]
@@ -114,7 +111,6 @@ wait.text = "PR has already been merged!"
 
 [[step]]
 capture = "already-merged"
-checks = ["titles", "focus"]
 
 # PR 5 is open: merged with squash and its head sha.
 [[step]]
@@ -159,7 +155,6 @@ wait.text = "PR Merged"
 
 [[step]]
 capture = "merged"
-checks = ["titles", "focus"]
 
 [expect.overview-content]
 focused = ["[5] PR #4 Details"]

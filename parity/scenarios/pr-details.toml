@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "PR details: selecting a PR shows the Overview, Diff and Conversation tabs; the Overview's header, collapsible reactions, checks and reviews; the Conversation's reviews, threads and comments; a closed PR with nothing; a PR that fails to load"
-# The footer is left out of the cross-app checks: at 160 columns it isn't cut off, and Python spells
+# The footer is left out of the old cross-app checks: at 160 columns it isn't cut off, and Python spells
 # `^p Command Pallete` (Py bug B14), which Rust fixes on purpose.
-gate = true
 parity_rows = [
     "pull-requests.select",
     "pull-requests.select-loading",
@@ -71,7 +70,6 @@ wait = { text = "👍 2", timeout_ms = 5000 }
 # underline zero-width then (#209), so the tab names are in [expect] `contains`.
 [[step]]
 capture = "overview"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Tab: the body, then the reactions title; enter opens it. (Further stops depend on load order in Python, so the
 # scenario stops here; the unit tests cover the rest of the ring.) Python moves focus a tick after a tab (Py bug
@@ -91,7 +89,6 @@ wait = { text = "👀: parity-bot", timeout_ms = 5000 }
 
 [[step]]
 capture = "overview-expanded"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Python moves focus a tick after a focus key (Py bug B98), so wait for the reactions title's bindings to leave the
 # footer before the arrows go to the tab strip.
@@ -115,7 +112,6 @@ wait = { regex = "│━{16}╸━{12}╺", timeout_ms = 5000 }
 
 [[step]]
 capture = "conversation"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Tab: the conversation's scroll area, then the first review's title, which draws a border around the review.
 [[step]]
@@ -128,7 +124,6 @@ wait = { regex = "│││\\s+▼ Review from parity-bot", timeout_ms = 5000 }
 
 [[step]]
 capture = "conversation-review-focused"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Then the first comment of its thread.
 [[step]]
@@ -139,7 +134,6 @@ wait = { text = "r Reply to Comment", timeout_ms = 5000 }
 
 [[step]]
 capture = "conversation-comment-focused"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # PR 4: closed, no checks, reactions or reviews, a diff too large to fetch, no conversation.
 [[step]]
@@ -156,7 +150,6 @@ wait = { text = "Drop the legacy renderer (#4)", timeout_ms = 15000 }
 
 [[step]]
 capture = "overview-closed"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -168,7 +161,6 @@ wait = { regex = "Error fetching diff|Diff too large", timeout_ms = 5000 }
 # The footer isn't cut off: Python spells `^p Command Pallete` (Py bug B14).
 [[step]]
 capture = "diff-error"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -178,7 +170,6 @@ wait = { text = "No reviews or comments available", timeout_ms = 5000 }
 
 [[step]]
 capture = "conversation-empty"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # PR 3: merged, checks passed, approved.
 [[step]]
@@ -201,7 +192,6 @@ wait = { text = "Status checks:", timeout_ms = 5000 }
 
 [[step]]
 capture = "overview-merged"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # PR 2 fails to load: a toast, and the details keep showing PR 3.
 [[step]]
@@ -218,7 +208,6 @@ wait = { text = "Error fetching pull request!", timeout_ms = 15000 }
 
 [[step]]
 capture = "fetch-error"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [expect.overview]
 contains = [

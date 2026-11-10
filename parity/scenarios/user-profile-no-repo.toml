@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "User profile (u) on an empty repos table: the error toast, and no request"
-gate = true
 parity_rows = [
     "repositories.user-profile",
     "toasts.nothing-selected",
@@ -23,7 +22,6 @@ wait = { text = "No repository currently selected" }
 
 [[step]]
 capture = "no-repo"
-checks = ["titles", "rows", "focus"]
 
 [expect.no-repo]
 contains = ["No repository currently selected"]

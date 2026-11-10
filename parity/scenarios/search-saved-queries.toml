@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "Search recent and saved queries: ctrl+s saves the query with a toast, the palette lists it as Search: <query> and running it searches at once, the input suggests it, and up steps back through the recent queries (#395)"
 # Rust-only: Python has no search history or saved filters (decision search-issues-and-prs). The modal is loose text,
 # checked with [expect]. The harness's isolated HOME starts with no history and no saved queries.
-gate = true
-apps = ["rust"]
 parity_rows = [
     "modals.search-history",
     "modals.search-saved-queries",

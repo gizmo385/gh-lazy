@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "An Issues table whose first pages hold only PRs asks for the next page at once while it's empty, up to 5 pages in all (#399)"
-gate = true
 # Rust-only: Python's Issues table stays empty here and never pages (Py bug B181); fetching ahead is decision
 # issues-fetch-ahead.
-apps = ["rust"]
 parity_rows = ["issues.filters"]
 sizes = [[160, 48]]
 

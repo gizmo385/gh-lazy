@@ -1,6 +1,6 @@
 //! Drives `--accept` with the `echo_tui` example standing in for the Rust app, in a temp repo: two agreeing runs write
 //! a snapshot, a second accept leaves it unchanged, two disagreeing runs write nothing and print the diff, orphans are
-//! deleted, and a normal run then fails with a `snapshot` mismatch once the screen no longer matches. Needs no Python.
+//! deleted, and a normal run then fails with a `snapshot` mismatch once the screen no longer matches. Runs no real app.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
@@ -10,7 +10,6 @@ use xtask::parity::cli::{self, EXIT_FAILED, EXIT_OK, ParityArgs};
 use xtask::parity::env::Paths;
 use xtask::parity::scenario::{Roots, Scenario};
 use xtask::parity::snapshot::{self, AcceptOptions, AcceptOutcome, AcceptReport};
-use xtask::parity::structure::Themes;
 
 /// `cargo test` builds examples next to the test binaries.
 fn echo_tui() -> PathBuf {
@@ -44,7 +43,7 @@ fn read_json(path: &Path) -> serde_json::Value {
     serde_json::from_str(&text).unwrap()
 }
 
-/// A git repo with what scenarios need, and the Rust-only scenarios `steady` and `differs`.
+/// A git repo with what scenarios need, and the scenarios `steady` and `differs`.
 struct Repo {
     dir: tempfile::TempDir,
 }
@@ -64,8 +63,7 @@ impl Repo {
         assert!(status.success());
         repo.write("parity/configs/default.json", "{}\n");
         std::fs::create_dir_all(repo.path().join("parity/fixtures/base")).unwrap();
-        let scenario =
-            |steps: &str| format!("version = 1\ngate = true\napps = [\"rust\"]\nsizes = [[80, 24]]\n{steps}");
+        let scenario = |steps: &str| format!("version = 2\nsizes = [[80, 24]]\n{steps}");
         repo.write(
             "parity/scenarios/steady.toml",
             &scenario(
@@ -125,41 +123,29 @@ impl Repo {
         let echo = echo_tui();
         Paths {
             fake_gh: echo.clone(),
-            rust_app: echo.clone(),
-            python: echo,
+            app: echo,
             roots: self.roots(),
         }
     }
 
     fn accept(&self, names: &[&str], all: bool) -> AcceptReport {
-        let themes = Themes::default();
         let options = AcceptOptions {
             all,
             jobs: 2,
             keep_home: false,
-            themes: &themes,
         };
         let out = self.path().join("out");
         snapshot::accept(self.path(), &self.scenarios(names), &self.paths(), &out, &options).unwrap()
     }
 
-    /// A normal run of `steady` (Rust only), returning the exit code and the report directory.
+    /// A normal run of `steady`, returning the exit code and the report directory.
     fn run(&self) -> (u8, PathBuf) {
         let out = self.path().join("report");
-        let argv = [
-            "steady",
-            "--no-build",
-            "--no-sync",
-            "--jobs",
-            "1",
-            "--out",
-            out.to_str().unwrap(),
-        ];
+        let argv = ["steady", "--no-build", "--jobs", "1", "--out", out.to_str().unwrap()];
         let code = cli::run_scenarios(
             self.path(),
             &self.scenarios(&["steady"]),
             &self.roots(),
-            &Themes::default(),
             &args(&argv),
             Some(self.paths()),
         )
@@ -212,10 +198,7 @@ fn accepts_from_two_agreeing_runs_and_leaves_an_unchanged_snapshot_alone() {
     assert_eq!(code, EXIT_OK);
     let check = read_json(&out.join("steady/80x24/main.check.json"));
     assert!(check.get("snapshot").is_none(), "{check:#}");
-    assert_eq!(
-        read_json(&out.join("summary.json"))["scenarios"][0]["result"],
-        "rust-only"
-    );
+    assert_eq!(read_json(&out.join("summary.json"))["scenarios"][0]["result"], "pass");
 }
 
 #[test]
@@ -277,17 +260,19 @@ fn a_run_that_no_longer_matches_its_snapshot_fails() {
     let summary = read_json(&out.join("summary.json"));
     let scenario = &summary["scenarios"][0];
     assert_eq!(scenario["result"], "fail");
+    assert_eq!(scenario["sizes"][0]["captures"][0]["check"], "fail");
+    // What the run saw, and the snapshot it was compared with, next to its dumps.
+    let run = out.join("steady/80x24");
     assert_eq!(
-        scenario["sizes"][0]["captures"][0]["against"],
-        serde_json::json!(["rust"])
+        std::fs::read_to_string(run.join("main.screen.snapshot")).unwrap(),
+        repo.read(&path)
     );
-    // What the run saw, next to its dumps.
-    let rust = out.join("steady/80x24/rust");
-    assert_eq!(std::fs::read_to_string(rust.join("main.screen.new")).unwrap(), screen);
-    assert!(rust.join("main.svg.new").is_file());
-    let diff = std::fs::read_to_string(rust.join("main.snapshot.diff.txt")).unwrap();
+    assert_eq!(std::fs::read_to_string(run.join("main.screen.new")).unwrap(), screen);
+    assert!(run.join("main.svg.new").is_file());
+    let diff = std::fs::read_to_string(run.join("main.snapshot.diff.txt")).unwrap();
     assert!(diff.contains("-settles\n+settled\n"), "{diff}");
-    assert!(!rust.join("effects.txt.new").exists());
+    assert!(!run.join("effects.txt.new").exists());
     let page = std::fs::read_to_string(out.join("steady/report.html")).unwrap();
-    assert!(page.contains("80x24/rust/main.snapshot.diff.txt"), "{page}");
+    assert!(page.contains("80x24/main.snapshot.diff.txt"), "{page}");
+    assert!(page.contains("<figcaption>Snapshot</figcaption>"), "{page}");
 }

@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Main screen layout with appearance.show_command_log: the command log docked under details, and 6 focuses it and grows its pane to 40%"
-gate = true
 parity_rows = ["main-layout.layout", "main-layout.command-log", "main-layout.focus-switching", "keybindings.main-command-log-focus"]
 sizes = [[160, 48], [100, 30]]
 
@@ -15,7 +14,6 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 
 [[step]]
 capture = "start"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["6"]
@@ -25,7 +23,6 @@ wait = { focused = "Command Log" }
 
 [[step]]
 capture = "log"
-checks = ["titles", "tabs", "focus"]
 
 # Pre-order by (row, col): the log's top row is below the Workflows title at both sizes.
 [expect.start]

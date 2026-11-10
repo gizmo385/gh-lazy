@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "bindings.overrides: rebound pane focus keys in titles and dispatch, a punctuation name and an unknown key in the footer"
-gate = true
 parity_rows = ["keybindings.all-ids", "config.bindings-overrides", "main-layout.section-titles", "main-layout.footer", "startup-auth.theme-keymap-on-mount"]
 sizes = [[160, 48]]
 
@@ -18,7 +17,6 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 
 [[step]]
 capture = "start"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["x"]
@@ -27,7 +25,6 @@ keys = ["x"]
 # (Py bug B14, fixed on purpose). `start` checks the footer.
 [[step]]
 capture = "after-x"
-checks = ["titles", "focus"]
 
 # Every box title in pre-order by (row, col), as #93 compares them: Details shares the Repositories row.
 [expect.start]

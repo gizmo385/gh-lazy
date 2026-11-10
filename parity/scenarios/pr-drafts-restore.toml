@@ -1,10 +1,9 @@
-version = 1
+version = 2
 description = "Create PR (P) restores a saved draft over the template prefill: every field filled in, the reviewer listed, and the toast"
-# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
 # and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
 # the second closes; in Python the second reaches the main screen, where it does nothing.
-gate = true
 parity_rows = ["modals.pr-drafts", "caches-drafts.pr-drafts"]
 sizes = [[160, 48]]
 
@@ -39,7 +38,6 @@ wait.text = "Restored saved PR draft"
 
 [[step]]
 capture = "restored"
-checks = []
 
 # Focusing the list (title, description, reviewers input, list): Python scrolls it into view from below the fold,
 # Rust's Reviewers section expands into its input and the reviewers' items.
@@ -51,7 +49,6 @@ wait.regex = 'Current Reviewers - Click/Select them to remove|parity-friend ✕'
 
 [[step]]
 capture = "reviewers"
-checks = []
 
 [expect.reviewers]
 contains = ["parity-friend"]

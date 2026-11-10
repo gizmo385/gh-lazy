@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Refresh from GitHub (#407): ctrl+r with PR #5's Conversation shown fetches everything again in place (the PR list gets a new PR and PR 5's new title, the Conversation a new comment) with the tab, focus and footer unchanged; the palette's \"Refresh from GitHub\" does it again"
-gate = true
 # Rust-only: Python has no refresh (decision cache-ttl-defaults-and-refresh).
-apps = ["rust"]
 parity_rows = ["main-layout.refresh", "keybindings.main-refresh", "command-palette.refresh-from-github"]
 sizes = [[160, 48], [100, 30]]
 

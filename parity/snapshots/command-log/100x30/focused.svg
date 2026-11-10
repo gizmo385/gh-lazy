@@ -12,10 +12,11 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s7 { fill: #0178d4; font-weight: bold; }
 .s8 { fill: #000000; }
 .s9 { fill: #4ebf71; }
-.s10 { fill: #d4d4d4; }
+.s10 { fill: #e2e2e2; }
 .s11 { fill: #003054; }
 .s12 { fill: #b93c5b; }
-.s13 { fill: #ffa62b; font-weight: bold; }
+.s13 { fill: #d17e92; font-weight: bold; }
+.s14 { fill: #ffa62b; font-weight: bold; }
 </style>
 <rect width="1000" height="600" fill="#1e1e1e"/>
 <g shape-rendering="crispEdges">
@@ -74,25 +75,45 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="360" width="1000" height="20" fill="#121212"/>
 <rect x="0" y="380" width="1000" height="20" fill="#121212"/>
 <rect x="0" y="400" width="410" height="20" fill="#121212"/>
+<rect x="410" y="400" width="560" height="20" fill="#272727"/>
+<rect x="970" y="400" width="20" height="20" fill="#000000"/>
 <rect x="990" y="400" width="10" height="20" fill="#121212"/>
 <rect x="0" y="420" width="410" height="20" fill="#121212"/>
+<rect x="410" y="420" width="560" height="20" fill="#272727"/>
+<rect x="970" y="420" width="20" height="20" fill="#000000"/>
 <rect x="990" y="420" width="10" height="20" fill="#121212"/>
 <rect x="0" y="440" width="410" height="20" fill="#121212"/>
+<rect x="410" y="440" width="560" height="20" fill="#272727"/>
+<rect x="970" y="440" width="20" height="20" fill="#000000"/>
 <rect x="990" y="440" width="10" height="20" fill="#121212"/>
 <rect x="0" y="460" width="10" height="20" fill="#121212"/>
 <rect x="10" y="460" width="380" height="20" fill="#242f38"/>
 <rect x="390" y="460" width="20" height="20" fill="#121212"/>
+<rect x="410" y="460" width="560" height="20" fill="#272727"/>
+<rect x="970" y="460" width="20" height="20" fill="#000000"/>
 <rect x="990" y="460" width="10" height="20" fill="#121212"/>
 <rect x="0" y="480" width="10" height="20" fill="#121212"/>
 <rect x="10" y="480" width="350" height="20" fill="#003054"/>
 <rect x="360" y="480" width="30" height="20" fill="#000000"/>
 <rect x="390" y="480" width="20" height="20" fill="#121212"/>
+<rect x="410" y="480" width="80" height="20" fill="#272727"/>
+<rect x="490" y="480" width="490" height="20" fill="#343f49"/>
+<rect x="980" y="480" width="10" height="20" fill="#000000"/>
 <rect x="990" y="480" width="10" height="20" fill="#121212"/>
 <rect x="0" y="500" width="410" height="20" fill="#121212"/>
+<rect x="410" y="500" width="80" height="20" fill="#272727"/>
+<rect x="490" y="500" width="490" height="20" fill="#343f49"/>
+<rect x="980" y="500" width="10" height="20" fill="#000000"/>
 <rect x="990" y="500" width="10" height="20" fill="#121212"/>
 <rect x="0" y="520" width="410" height="20" fill="#121212"/>
+<rect x="410" y="520" width="80" height="20" fill="#272727"/>
+<rect x="490" y="520" width="490" height="20" fill="#343f49"/>
+<rect x="980" y="520" width="10" height="20" fill="#000000"/>
 <rect x="990" y="520" width="10" height="20" fill="#121212"/>
 <rect x="0" y="540" width="410" height="20" fill="#121212"/>
+<rect x="410" y="540" width="80" height="20" fill="#003054"/>
+<rect x="490" y="540" width="490" height="20" fill="#343f49"/>
+<rect x="980" y="540" width="10" height="20" fill="#000000"/>
 <rect x="990" y="540" width="10" height="20" fill="#121212"/>
 <rect x="0" y="560" width="490" height="20" fill="#121212"/>
 <rect x="490" y="560" width="490" height="20" fill="#343f49"/>
@@ -171,57 +192,57 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s2" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="390" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s9" x="400" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="415" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s10" x="410" y="415" textLength="580" lengthAdjust="spacingAndGlyphs">ERROR 2026-01-01 00:00:00 - Cannot load notifications -   </text>
 <text class="s9" x="990" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="435" textLength="400" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────┘</text>
 <text class="s9" x="400" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="435" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s9" x="990" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="455" textLength="400" lengthAdjust="spacingAndGlyphs">┌─ [4] Workflows ──────────────────────┐</text>
 <text class="s9" x="400" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="455" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s9" x="990" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="10" y="475" textLength="380" lengthAdjust="spacingAndGlyphs"> Time  Result  Job Name  Run Name  Run</text>
 <text class="s2" x="390" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s9" x="400" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="475" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s9" x="990" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s11" x="360" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">▎</text>
 <text class="s2" x="390" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s9" x="400" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="495" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s12" x="490" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s9" x="990" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="390" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s9" x="400" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="515" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s12" x="490" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s13" x="510" y="515" textLength="280" lengthAdjust="spacingAndGlyphs">Failed to Load Notifications</text>
 <text class="s9" x="990" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="390" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s9" x="400" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="535" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s12" x="490" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s1" x="500" y="535" textLength="480" lengthAdjust="spacingAndGlyphs"> Cannot load notifications - please login to    </text>
 <text class="s9" x="990" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="390" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s9" x="400" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s10" x="410" y="555" textLength="580" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s12" x="490" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
+<text class="s1" x="500" y="555" textLength="480" lengthAdjust="spacingAndGlyphs"> the gh CLI: gh auth login                      </text>
 <text class="s9" x="990" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s2" x="0" y="575" textLength="400" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────┘</text>
 <text class="s9" x="400" y="575" textLength="90" lengthAdjust="spacingAndGlyphs">└────────</text>
 <text class="s12" x="490" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s9" x="980" y="575" textLength="20" lengthAdjust="spacingAndGlyphs">─┘</text>
-<text class="s13" x="0" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^n </text>
+<text class="s14" x="0" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^n </text>
 <text class="s1" x="40" y="595" textLength="140" lengthAdjust="spacingAndGlyphs">Notifications </text>
-<text class="s13" x="180" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
+<text class="s14" x="180" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^v </text>
 <text class="s1" x="220" y="595" textLength="110" lengthAdjust="spacingAndGlyphs">Paste link </text>
-<text class="s13" x="330" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
+<text class="s14" x="330" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> f </text>
 <text class="s1" x="360" y="595" textLength="120" lengthAdjust="spacingAndGlyphs">Follow link </text>
-<text class="s13" x="480" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
+<text class="s14" x="480" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> F </text>
 <text class="s1" x="510" y="595" textLength="220" lengthAdjust="spacingAndGlyphs">Follow link (browser) </text>
-<text class="s13" x="730" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
+<text class="s14" x="730" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> q </text>
 <text class="s1" x="760" y="595" textLength="50" lengthAdjust="spacingAndGlyphs">Quit </text>
-<text class="s13" x="810" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
+<text class="s14" x="810" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^p </text>
 <text class="s1" x="850" y="595" textLength="150" lengthAdjust="spacingAndGlyphs">Command Palette</text>
 </svg>

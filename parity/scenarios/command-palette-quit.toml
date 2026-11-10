@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Command palette's Quit: typed into the palette it's listed with its help, and enter quits the app with exit code 0"
-# Palette text is loose text (see command-palette.toml), checked per app with [expect]. Nothing can be captured once
+# Palette text is loose text (see command-palette.toml), checked with [expect]. Nothing can be captured once
 # the app is gone, so the last step asserts the exit itself.
-gate = true
 parity_rows = [
     "command-palette.quit",
 ]
@@ -25,7 +24,6 @@ wait = { text = "Quit the application as soon as possible" }
 
 [[step]]
 capture = "query-quit"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]

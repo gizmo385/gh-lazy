@@ -1,11 +1,10 @@
-version = 1
+version = 2
 description = "Repo Overview tab: header lines, the README rendered as markdown, its loading state, scrolling, and the no-README fallback"
 # Gated once #172 and #173 drew the empty Issues and Workflows sections as ` (empty)`, as the titles check needs. No
 # capture checks `tabs`: after a selection, Python sometimes draws the Details tab underline zero-width (#209), which
-# isn't even read as a tab bar, so the tab name is in [expect] `contains` instead. The cross-app check doesn't compare
+# isn't even read as a tab bar, so the tab name is in [expect] `contains` instead. The old cross-app check didn't compare
 # markdown text, so [expect] carries the README's content, and the renderer's own tests compare it cell by cell against
 # these references.
-gate = true
 parity_rows = [
     "repositories.overview-tab",
     "repositories.overview-readme-loading",
@@ -38,18 +37,16 @@ wait = { text = "Owned by parity-bot", timeout_ms = 15000 }
 
 [[step]]
 capture = "loading"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
 
 [[step]]
 wait = { text = "Hello World", timeout_ms = 15000 }
 
 [[step]]
 capture = "readme"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
 
 # Focus the details tab strip, then the content under it, and scroll to its end. With the content focused, the footer
 # is short enough to show `^p Command Pallete` (Python) against `^p Command Palette` (Rust): Py bug B14, fixed on
-# purpose. So these two captures leave out the cross-app footer check and match the footer's text with `contains`.
+# purpose. So these two captures leave out the old cross-app footer check and match the footer's text with `contains`.
 [[step]]
 keys = ["5"]
 
@@ -67,14 +64,12 @@ sleep_ms = 500
 
 [[step]]
 capture = "content-focused"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["end"]
 
 [[step]]
 capture = "scrolled"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # lazy-demo is the third row: archived, no description, and no README.
 [[step]]
@@ -91,7 +86,6 @@ wait = { text = "No README found.", timeout_ms = 15000 }
 
 [[step]]
 capture = "no-readme"
-checks = ["titles", "headers", "rows", "cursor", "footer", "focus"]
 
 # dotfiles is the first row. Python drops the README's blank lines and its header-shaped line before rendering
 # (Py bug B47), so only the titles are compared.
@@ -103,7 +97,6 @@ wait = { text = "The first paragraph.", timeout_ms = 15000 }
 
 [[step]]
 capture = "py-bug-b47"
-checks = ["titles", "focus"]
 
 [expect.loading]
 contains = ["Repo Overview", "parity-bot/hello-world • Public", "Owned by parity-bot", "Default branch: main"]

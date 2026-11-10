@@ -1,15 +1,14 @@
-version = 1
+version = 2
 description = "Edit PR (E) on PR 5: a new title, the Reviewers input (already a reviewer, an unknown user, a suggestion accepted and added), the existing reviewer removed, Update (PATCH, then only the new reviewer requested), and E again from the PR Overview with nothing changed"
 # shift+enter is sent in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read
 # (terminal-caveats.shift-enter). Python moves focus a tick after a focus key (Py bug B98), so each waits for it.
-# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
 # and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
 # the second closes; in Python the second reaches the main screen, where it does nothing.
 # Rust's one-row fields and borderless editor draw no outline `wait.focused` reads, so a focus move Python makes late
 # is waited out with `sleep_ms`, or on text only the newly focused part shows.
 # The merged PR's warning and the refused update are pr-edit-refused, so their toasts don't cover these dialogs.
-gate = true
 parity_rows = [
     "modals.edit-pr",
     "modals.pr-reviewers",
@@ -68,7 +67,6 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "open"
-checks = []
 
 # The title is focused with its text selected, so typing replaces it.
 [[step]]
@@ -91,7 +89,6 @@ wait.regex = 'Current Reviewers - Click/Select them to remove|Reviewers   Review
 
 [[step]]
 capture = "reviewers"
-checks = []
 
 [[step]]
 type = "Parity-Reviewer"
@@ -104,7 +101,6 @@ wait.text = "Already a reviewer!"
 
 [[step]]
 capture = "already-reviewer"
-checks = []
 
 [[step]]
 keys = ["ctrl+u"]
@@ -120,7 +116,6 @@ wait.text = "Could not find user"
 
 [[step]]
 capture = "unknown-user"
-checks = []
 
 [[step]]
 keys = ["ctrl+u"]
@@ -133,7 +128,6 @@ wait.text = "parity-friend"
 
 [[step]]
 capture = "suggestion"
-checks = []
 
 [[step]]
 keys = ["right", "enter"]
@@ -147,7 +141,6 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "added"
-checks = []
 
 # Into the list. It was empty when built, so nothing is highlighted until `down` highlights its first row,
 # parity-reviewer (the existing request); toggling it takes it off the list.
@@ -160,7 +153,6 @@ sleep_ms = 500
 
 [[step]]
 capture = "list-focused"
-checks = []
 
 [[step]]
 keys = ["down", "space"]
@@ -170,7 +162,6 @@ wait.text = "Removing parity-reviewer"
 
 [[step]]
 capture = "removed"
-checks = []
 
 # Update: the title changed, so PATCH; then only the reviewer not already requested.
 [[step]]
@@ -210,7 +201,6 @@ wait.stable_ms = 1000
 capture = "updated"
 # Python races the dialog handing focus back to the table against the reselected PR focusing its details, so
 # focus isn't checked here; Rust focuses the details, as a selection from the table does.
-checks = ["titles", "headers", "rows", "cursor"]
 
 # From the PR Overview's content: nothing changed, so no PATCH; both reviewers are requested already, and Python
 # requests an empty list.
@@ -247,7 +237,6 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "from-overview"
-checks = []
 
 [[step]]
 type = "\u001b[13;2u"
@@ -265,7 +254,6 @@ wait.gone = "Editing PR 5"
 
 [[step]]
 capture = "overview-updated"
-checks = ["titles"]
 
 [expect.open]
 contains = ["Editing PR 5", "Title", "Add a cursor to the viewer", "Description", "Adds a cursor to the viewer, as discussed in #3."]

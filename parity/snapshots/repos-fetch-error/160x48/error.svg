@@ -12,7 +12,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s7 { fill: #0178d4; }
 .s8 { fill: #0178d4; font-weight: bold; }
 .s9 { fill: #0178d4; text-decoration: underline; }
-.s10 { fill: #d4d4d4; }
+.s10 { fill: #e1e1e1; }
 .s11 { fill: #ffa62b; font-weight: bold; }
 </style>
 <rect width="1600" height="960" fill="#1e1e1e"/>
@@ -66,16 +66,22 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="10" y="780" width="620" height="20" fill="#242f38"/>
 <rect x="630" y="780" width="970" height="20" fill="#121212"/>
 <rect x="0" y="800" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="800" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="800" width="10" height="20" fill="#121212"/>
 <rect x="0" y="820" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="820" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="820" width="10" height="20" fill="#121212"/>
 <rect x="0" y="840" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="840" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="840" width="10" height="20" fill="#121212"/>
 <rect x="0" y="860" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="860" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="860" width="10" height="20" fill="#121212"/>
 <rect x="0" y="880" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="880" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="880" width="10" height="20" fill="#121212"/>
 <rect x="0" y="900" width="650" height="20" fill="#121212"/>
+<rect x="650" y="900" width="940" height="20" fill="#000000"/>
 <rect x="1590" y="900" width="10" height="20" fill="#121212"/>
 <rect x="0" y="920" width="1600" height="20" fill="#121212"/>
 <rect x="0" y="940" width="1600" height="20" fill="#242f38"/>
@@ -232,27 +238,22 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="630" y="795" textLength="970" lengthAdjust="spacingAndGlyphs">│┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐</text>
 <text class="s3" x="0" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="815" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s10" x="650" y="815" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s10" x="650" y="815" textLength="940" lengthAdjust="spacingAndGlyphs">ERROR 2026-01-01 00:00:00 - Error fetching repositories from Github API                       </text>
 <text class="s3" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="835" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s10" x="650" y="835" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s3" x="1590" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="855" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s10" x="650" y="855" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s3" x="1590" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="875" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s10" x="650" y="875" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s3" x="1590" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="895" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s10" x="650" y="895" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s3" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="915" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s10" x="650" y="915" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s3" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="935" textLength="1600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘</text>
 <text class="s11" x="0" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>

@@ -1,7 +1,5 @@
-version = 1
+version = 2
 description = "gh failing mid-session: once the main screen is up, selecting a repo gets a 500 (issues), a 502 (workflows), a 401 (README) and a response past the shortened gh time limit (runs). One toast says gh isn't logged in, one that it timed out; each list logs its own error and nothing is left loading"
-gate = true
-apps = ["rust"]
 parity_rows = ["toasts.gh-unavailable"]
 sizes = [[160, 48]]
 

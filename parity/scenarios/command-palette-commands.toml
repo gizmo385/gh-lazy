@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Command palette's LazyGithub commands: the four section toggles (hide and show, a toggled-off section's focus key ignored), the command log toggle, and Refresh notifications while notifications are on"
-# Palette text is loose text (see command-palette.toml), checked per app with [expect]. Captures after the repo is
-# selected ignore the Details box, whose tab underline Python sometimes draws zero-width (#209).
-gate = true
+# Palette text is loose text (see command-palette.toml), checked with [expect].
 parity_rows = [
     "command-palette.toggle-command-log",
     "command-palette.toggle-workflows",
@@ -48,8 +46,6 @@ wait = { text = "Toggle Pull Requests" }
 
 [[step]]
 capture = "query-tog"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["escape"]
@@ -77,8 +73,6 @@ wait = { gone = "[3] Issues" }
 
 [[step]]
 capture = "issues-hidden"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 # 3 doesn't focus a section a toggle hid.
 [[step]]
@@ -89,8 +83,6 @@ wait = { text = "O Lookup Repository" }
 
 [[step]]
 capture = "issues-key"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -112,8 +104,6 @@ wait = { text = "[3] Issues (empty)" }
 
 [[step]]
 capture = "issues-shown"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -135,8 +125,6 @@ wait = { gone = "[4] Workflows" }
 
 [[step]]
 capture = "workflows-hidden"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -158,8 +146,6 @@ wait = { text = "[4] Workflows (empty)" }
 
 [[step]]
 capture = "workflows-shown"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -181,8 +167,6 @@ wait = { gone = "[2] Pull Requests" }
 
 [[step]]
 capture = "prs-hidden"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -204,8 +188,6 @@ wait = { text = "[2] Pull Requests (empty)" }
 
 [[step]]
 capture = "prs-shown"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -227,8 +209,6 @@ wait = { text = "[6] Command Log" }
 
 [[step]]
 capture = "log-shown"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details", "Command Log"] }
 
 [[step]]
 keys = ["6"]
@@ -238,8 +218,6 @@ wait = { focused = "Command Log" }
 
 [[step]]
 capture = "log-focused"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details", "Command Log"] }
 
 # Hiding the focused command log: Python leaves nothing focused, where Rust focuses the Repositories table (Py bug
 # B88's answer, unit-tested), so focus isn't compared here.
@@ -263,8 +241,6 @@ wait = { gone = "[6] Command Log" }
 
 [[step]]
 capture = "log-hidden"
-checks = ["titles"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["ctrl+p"]
@@ -280,8 +256,6 @@ wait = { text = "Refresh the unread notifications count" }
 
 [[step]]
 capture = "query-ref"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [[step]]
 keys = ["enter"]
@@ -291,8 +265,6 @@ wait = { gone = "🔎" }
 
 [[step]]
 capture = "refreshed"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [expect.query-tog]
 contains = [

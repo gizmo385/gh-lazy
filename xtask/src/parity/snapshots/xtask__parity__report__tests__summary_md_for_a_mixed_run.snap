@@ -2,21 +2,18 @@
 source: xtask/src/parity/report.rs
 expression: md
 ---
-## Parity: 1 pass, 1 fail, 1 rust-not-ready
+## Scenarios: 1 pass, 2 fail
 
-Python: live for repo-select; recorded for the rest
+| Scenario | 160x48 | 100x30 | Mismatches |
+| --- | --- | --- | --- |
+| repo-select | fail | skipped | 3 |
+| pr-list | fail | pass | n/a |
+| startup | pass | pass (flaky) | 0 |
 
-| Scenario | Gate | 160x48 | 100x30 | Mismatches |
-| --- | --- | --- | --- | --- |
-| repo-select | yes | fail | skipped | 4 |
-| pr-list | no | rust-not-ready | rust-not-ready | n/a |
-| startup | yes | pass | pass (flaky) | 0 |
+<details><summary>Mismatches (first 3 of 3)</summary>
 
-<details><summary>Mismatches (first 4 of 4)</summary>
-
-- repo-select/160x48/main: titles [1] Repositories: python=[1] Repositories rust=(none)
-- repo-select/160x48/main: rows Pull \| Requests: python=["a","&lt;b&gt;"] rust=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx…
-- repo-select/160x48/main: drift rows [1] Repositories: python=["parity-bot","alpha"] rust=["parity-bot","beta"]
-- repo-select/160x48/main: rust snapshot: python=(none) rust=(none)
+- repo-select/160x48/main: titles [1] Repositories: actual=(none) expected=[1] Repositories
+- repo-select/160x48/main: contains Pull \| Requests: actual=xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx… expected=["a","&lt;b&gt;"]
+- repo-select/160x48/main: snapshot: 3 line(s) differ from the snapshot
 
 </details>

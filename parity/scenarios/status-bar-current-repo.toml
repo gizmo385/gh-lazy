@@ -1,9 +1,8 @@
-version = 1
+version = 2
 description = "Selecting a repo in the repos table: the bar shows Current repo: owner/name"
 # The harness's HTTPS remote never auto-selects on the Python side: Python keeps the `.git` (Py bug B5), so no repo
 # matches. Selecting with enter reaches the same `set_currently_loaded_repo`; `repo-auto-select` covers the
 # current-directory default with an SSH remote.
-gate = true
 parity_rows = [
     "main-layout.status-current-repo",
     "repositories.select",
@@ -25,12 +24,8 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and no wait settles it,
-# so the Details box is ignored: a re-record keeps the stored screen.
 [[step]]
 capture = "selected"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
-ignore = { boxes = ["Details"] }
 
 # No `tabs`: with the zero-width underline (#209) Python's strip isn't read as a tab bar at all, which happens in most
 # runs of this scenario, so the tab name is in `contains` instead, as in `repo-overview`.

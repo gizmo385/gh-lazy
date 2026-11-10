@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "PR Conversation: r on a review's own block (not one of its comments) opens the reply modal for the review"
 # pr-comment sends r on a review comment, where the comment's binding wins; this sends it on the review's title, so
 # the review block's binding answers. The modal's footer isn't compared (Rust binds `modal.submit` there, Py bug B17).
-gate = true
 parity_rows = [
     "keybindings.conversation-review-reply",
 ]
@@ -73,7 +72,6 @@ wait = { focused = "Review from parity-bot" }
 
 [[step]]
 capture = "review-focused"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["r"]
@@ -85,7 +83,6 @@ wait.text = "Replying to comment from"
 # where Python's 100 x 50 modal hides them: nothing is compared across apps, [expect] checks the text.
 [[step]]
 capture = "reply-open"
-checks = []
 
 [expect.reply-open]
 # The review's body is quoted. Rust's sheet is short, so the thread's comment shows behind it.

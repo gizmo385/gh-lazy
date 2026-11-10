@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Resizing with New Issue open (#326): the typed title and description survive 160x48 to 80x24, to 30x10 (only \"Terminal too small\", where typing does nothing) and back to 160x48"
-gate = true
 # Python has no minimum size (decisions/terminal-too-small.md), so there's nothing to compare the 30x10 screen with.
-apps = ["rust"]
 parity_rows = ["main-layout.too-small"]
 sizes = [[160, 48]]
 
@@ -37,7 +35,6 @@ type = "Kept body"
 
 [[step]]
 capture = "typed"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 resize = [80, 24]
@@ -47,7 +44,6 @@ wait = { stable_ms = 500 }
 
 [[step]]
 capture = "small"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 resize = [30, 10]
@@ -61,7 +57,6 @@ type = "zzq"
 
 [[step]]
 capture = "too-small"
-checks = ["titles"]
 
 [[step]]
 resize = [160, 48]
@@ -71,7 +66,6 @@ wait = { text = "Kept body" }
 
 [[step]]
 capture = "restored"
-checks = ["titles", "focus", "footer"]
 
 [expect.typed]
 contains = ["New issue · parity-bot/dotfiles", "Resize title", "Kept body"]

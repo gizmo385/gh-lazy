@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Compose sheet on Create PR and Edit PR: opened with the PR template (15-row sheet growing with it), a long body at the cap (the body scrolls, its scrollbar shown only then), ctrl+t Preview, ctrl+o full screen and back, the Reviewers section expanded with a reviewer added, escape leaving a field (q Close) and closing, the saved draft restored at its height, then Edit PR and ctrl+s updating it (#422)"
 # Rust-only: the compose sheet is new behavior (decision compose-dialogs). Checked by eye at both sizes.
-gate = true
-apps = ["rust"]
 parity_rows = [
     "modals.compose-sheet",
     "modals.compose-preview",

@@ -1,7 +1,6 @@
-version = 1
+version = 2
 description = "Diff review: Submit Review with the Review Status set to its blank option is refused with an error toast and posts nothing"
 # The same way into the Submit review form as pr-review. The status list's blank option ("Select") sits above Approved.
-gate = true
 parity_rows = [
     "toasts.review-status-missing",
 ]
@@ -84,7 +83,6 @@ wait = { focused = "Review Status:" }
 
 [[step]]
 capture = "status-blank"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["tab"]
@@ -106,7 +104,6 @@ wait.text = "Please select a status for the new review!"
 
 [[step]]
 capture = "refused"
-checks = ["titles", "focus"]
 
 [expect.status-blank]
 contains = ["Review Status:", "Select", "Review summary", "Submit Review"]

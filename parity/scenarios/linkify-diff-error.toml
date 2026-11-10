@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "A README whose bare URLs, www. and fuzzy hosts and emails become links, and a PR whose diff doesn't parse: the Diff tab shows the parse error"
-gate = true
 parity_rows = ["markdown-links.linkify", "diff-viewer.parse-errors"]
 sizes = [[160, 48]]
 
@@ -23,7 +22,6 @@ wait = { text = "Trailing punctuation", timeout_ms = 15000 }
 # tab underline zero-width right after a selection (#209), so `tabs` is left out.
 [[step]]
 capture = "readme"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Python moves focus a tick after a focus key (Py bug B98), so wait for the PR table's bindings in the footer.
 [[step]]
@@ -50,7 +48,6 @@ wait = { text = "error parsing diff - please view on github:", timeout_ms = 5000
 # The reason after the colon differs: Python prints its exception's arguments, Rust its own message (see the row).
 [[step]]
 capture = "diff-parse-error"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 [expect.readme]
 contains = ["https://example.com/docs/start", "www.example.com", "user@example.com", "https://bücher.example/ä", "www.bücher.de", "http://example.com/*wiki*"]

@@ -1,7 +1,5 @@
-version = 1
+version = 2
 description = "GitHub rate limits: the notifications count hits the primary limit (one \"Rate limited\" toast with the reset time); selecting a repo still asks for its issues, whose secondary limit only logs, with no second toast"
-gate = true
-apps = ["rust"]
 parity_rows = ["toasts.rate-limited"]
 sizes = [[160, 48]]
 

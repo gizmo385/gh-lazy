@@ -1,9 +1,8 @@
-version = 1
+version = 2
 description = "PR Diff tab: the tab shows after the spinner, with the diff inside"
 # Since the Diff tab became one continuous diff (#388, decision diff-continuous-view), what's inside the tab and its
 # keys are Rust-only (`diff-navigation`, `diff-review`). Both apps still share the tab itself, so the capture checks
 # the titles and the tab strip and leaves out what's inside the Details box.
-gate = true
 parity_rows = ["pull-requests.diff-tab"]
 sizes = [[160, 48], [100, 30]]
 
@@ -45,8 +44,6 @@ wait = { text = "README.md", timeout_ms = 15000 }
 
 [[step]]
 capture = "files"
-checks = ["titles", "tabs"]
-ignore = { boxes = ["Details"] }
 
 [expect.files]
 tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Diff" }

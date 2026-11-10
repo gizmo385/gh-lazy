@@ -1,12 +1,11 @@
-version = 1
+version = 2
 description = "Wide, combining, zero-width and right-to-left text: the PR table's columns stay aligned, and the PR's title, branch and body (a paragraph, a list and a table) lay out by cell width"
 # The diff's capture is in the Rust-only `diff-unicode`: since #388 the Diff tab is one continuous diff, whose keys
 # Python can't follow.
 # Zero-width characters are kept out of the table: ratatui doesn't write them to the terminal, Textual does, so the
 # cells differ though they look the same. ZWJ emoji sequences are left out: terminals (and the harness's vt100 parser) disagree on their width, so they're
 # covered by the unit tests only. Control characters are too: Python sends them to the terminal raw (Py bug B34). The
-# footer is left out of the cross-app checks: Python spells `^p Command Pallete` (Py bug B14).
-gate = true
+# footer is left out of the old cross-app checks: Python spells `^p Command Pallete` (Py bug B14).
 parity_rows = [
     "pull-requests.columns",
     "pull-requests.overview-header",
@@ -33,7 +32,6 @@ wait = { text = "Ελληνικά", timeout_ms = 15000 }
 
 [[step]]
 capture = "table"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Python moves focus a tick after a focus key (Py bug B98), so wait for the PR table's bindings in the footer.
 [[step]]
@@ -68,7 +66,6 @@ wait = { text = "PR Reviews" }
 # Not `tabs`: right after a selection Python sometimes draws the tab underline zero-width (#209).
 [[step]]
 capture = "overview"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [expect.table]
 contains = [

@@ -170,9 +170,9 @@ the repo path in single quotes. fake-ssh:
 
 ### fake-browser
 
-`fake-browser` stands in for the user's browser (#338). The harness runs both apps with
-`BROWSER=<run>/bin/fake-browser`, which Python's `webbrowser` and the Rust app's `lazy_github_core::browser` both try
-first, so a followed link never opens a real browser and the run records what each app opened. fake-browser appends
+`fake-browser` stands in for the user's browser (#338). The harness runs the app with
+`BROWSER=<run>/bin/fake-browser`, which `lazy_github_core::browser` tries first (as Python's `webbrowser` did), so a
+followed link never opens a real browser and the run records what the app opened. fake-browser appends
 one line, `{"url": "<its first argument>"}`, to the file `FAKE_BROWSER_LOG` names, prints nothing and exits 0 (1 when
 it can't write the log; without `FAKE_BROWSER_LOG` it logs nothing). The harness points `FAKE_BROWSER_LOG` at the
 app's `browser.jsonl` in the report, and appends `{"capture": "<name>"}` there at each capture, after the screen is
@@ -572,9 +572,9 @@ the seeds' cache directories.
   palette's "Screenshot" saves into (neither app creates it). For the `command-palette-screenshot` scenario; its
   `-error` twin runs without it.
 - `user-theme/`: two user theme files in `home/.config/lazy-github/themes/` (#380): `my-theme.toml`, which extends
-  `nord` and overrides `surface.screen` and `border.pane_focused` (`parity/themes.toml`'s `[my-theme]` entry), and
-  `broken.toml`, which writes an unknown role and is skipped with a toast. For the `theme-user-file` scenario
-  (Rust only).
+  `nord` and overrides `surface.screen` and `border.pane_focused` (which `wait.focused` and the focus check read
+  through `theme.rs`), and `broken.toml`, which writes an unknown role and is skipped with a toast. For the
+  `theme-user-file` scenario.
 
 ## Recording fixtures
 
@@ -705,133 +705,81 @@ rewritten or refused. `body_file`s that aren't UTF-8 are treated as binary and s
 
 ## The parity harness (`cargo xtask parity`)
 
-`cargo xtask parity` runs scenarios from `parity/scenarios/` against the Rust app, in a pseudo-terminal with an
-isolated `HOME` and fake-gh on `PATH`, and dumps the screen at each capture point. The Python side comes from the
-[recorded references](#recorded-references) in `parity/references/`, or from the Python app run the same way with
-`--live-python`. See `docs/rust-rewrite/PLAN.md` §6.3. The code is in `xtask/src/parity/`.
+`cargo xtask parity` runs scenarios from `parity/scenarios/` against the app, in a pseudo-terminal with an isolated
+`HOME` and fake-gh on `PATH`, dumps the screen at each capture point, and checks each capture against its `[expect]`
+and its committed [snapshot](#rust-snapshots). Until #397 it also ran the Python app and compared the two; that side
+is gone, and nothing in the harness starts or reads Python. See `docs/rust-rewrite/PLAN.md` §6.3. The code is in
+`xtask/src/parity/`.
 
 ### Running scenarios
 
 ```
-cargo xtask parity [SCENARIO...] [--all] [--python-only | --rust-only] [--live-python[=SCENARIO,...]]
-                   [--size COLSxROWS]... [--out DIR] [--keep-home] [--no-build] [--no-sync] [--python PATH]
+cargo xtask parity [SCENARIO...] [--all] [--size COLSxROWS]... [--out DIR] [--keep-home] [--no-build]
                    [--retries N] [--jobs N] [--ci] [--validate]
-cargo xtask parity [SCENARIO...] [--all] --live-python-since REV [--plan] [run flags as above]
-cargo xtask parity --check-references [SCENARIO...] [--all] [--ci]
-cargo xtask parity --record [--force] [SCENARIO...] [--all] [--jobs N] [--python PATH] [--no-sync] [--no-build]
-                   [--out DIR] [--keep-home]
 cargo xtask parity --accept [SCENARIO...] [--all] [--jobs N] [--no-build] [--out DIR] [--keep-home]
 ```
 
 ```sh
-cargo xtask parity                         # every scenario: Rust live, Python from the references
-cargo xtask parity startup --live-python   # one scenario, both apps live, Python checked against its reference
-cargo xtask parity startup --python-only   # the Python side of one scenario, live
+cargo xtask parity                         # every scenario, checked against [expect] and the snapshots
+cargo xtask parity startup --size 100x30   # one scenario at one size
+cargo xtask parity --accept pr-details     # rewrite one scenario's snapshots after a UI change
 cargo xtask parity --validate              # check every scenario file, run nothing
 ```
 
 - `SCENARIO` is a file stem from `parity/scenarios/` (`startup`) or a path to a `.toml` file. With none given,
   `--all` is implied.
-- **Python from references (the default).** Before building or running anything, xtask checks the reference of every
-  selected scenario that runs Python, at each size it runs (as `--check-references` does; a `--size` the scenario
-  doesn't list has no reference and counts as missing). If any is stale, missing or invalid, it prints the
-  `--check-references` line with ` (or use --live-python)` appended, plus the `::error` annotations with `--ci`, and
-  exits `2`:
-  `stale reference: startup/160x48: scenario changed; run cargo xtask parity --record startup (or use --live-python)`.
-  Otherwise the reference is copied into the report as the Python run's dumps (`startup 160x48 python: recorded`) and
-  only Rust runs. No Python process starts, so this needs no `uv sync` and no `.venv`.
-- **Python live.** `--live-python` runs Python live for every selected scenario, and `--live-python=a,b` for those
-  (naming a scenario that isn't selected is an error, exit `2`; the others read their references). `--python-only`
-  runs it live too. After each live Python run whose reference is fresh, the run is compared with the reference by
-  the rule recording uses ([Recording](#recording)); where they disagree, that's **drift**:
-  `startup 160x48 main: drift: rows [[1] Repositories]: table 0 row 2 differs; the reference is wrong or
-  nondeterministic: run cargo xtask parity --record --force startup and review the diff`. Drift goes into the
-  capture's `check.json` (`drift`), counts against Python, so the scenario fails whatever its `gate`, and is an
-  `::error` with `--ci`. A disagreement about the served requests is listed on the first capture, as a `requests`
-  mismatch. A stale, missing or invalid reference skips the check with a note
-  (`startup 160x48: reference stale, drift not checked`), which isn't an error, so a PR can be checked live before
-  its references are re-recorded. What the live run gets wrong on its own (a failure, its `[expect]`) is reported as
-  usual, not as drift.
-- **Python live where its inputs changed (CI).** `--live-python-since REV` compares `REV` with the working tree
-  (`git diff --name-only --no-renames REV`, plus untracked files that aren't ignored). If any changed path is under
-  the Python app or harness inputs, the Python-backed tests, `.github/workflows/rust.yaml`, or a
-  `vt100`/`portable-pty` version in `Cargo.lock`
-  changed, every selected scenario runs Python live, as with `--live-python`. Otherwise only the selected scenarios
-  whose `parity/references/<name>/` changed run it live, as with `--live-python=a,b`, and the rest read their
-  references; references of a scenario that's deleted, not selected or doesn't run Python are ignored. The run
-  prints the plan first (`parity: live-python=startup (since HEAD^1)`), and drift is checked as above. With
-  `--plan` it prints only the plan line, `live-python=all`, `live-python=none` or `live-python=a,b,c`, and exits
-  `0` without building or running anything. The path lists are in `xtask/src/parity/reference.rs`
-  (`PYTHON_APP_INPUTS`, `HARNESS_INPUTS`, `CI_PYTHON_PATHS`), the same lists that decide whether a reference is
-  fresh.
-- `--rust-only` neither reads nor checks references.
-- **Rust snapshots.** After every Rust run, at each size the scenario lists, each capture is compared with its
-  committed [Rust snapshot](#rust-snapshots) and the run's effects with the snapshot's `effects.txt`. A difference is
-  a `snapshot` (or `effects`) mismatch that fails the scenario like a gated cross-app mismatch:
+- Each capture is checked against its `[expect.<capture>]` ([Checks](#checks)). At each size the scenario lists, each
+  capture is also compared with its committed [snapshot](#rust-snapshots) and the run's effects with the snapshot's
+  `effects.txt`. A difference is a `snapshot` (or `effects`) mismatch that fails the scenario:
   `pr-details 160x48 overview: snapshot: rows 12-14 differ; run cargo xtask parity --accept pr-details and review
-  the diff`. `--rust-only` checks them too; `--python-only` runs no Rust and checks none.
+  the diff`. A `--size` the scenario doesn't list has no snapshot, so only `[expect]` is checked there.
 - Before running, xtask builds `lazy-github` and `fake-gh` (`cargo build -p lazy-github -p fake-gh`) unless
-  `--no-build`. When a selected scenario runs Python live, it also runs `uv sync --frozen --quiet` under your real
-  environment unless `--no-sync`. uv is never run under the isolated `HOME`, where it would start from an empty cache.
-- Each scenario runs once per size and per app, in a fresh isolated environment. Sizes and apps within a scenario run
-  one after another.
+  `--no-build`.
+- Each scenario runs once per size, in a fresh isolated environment. Sizes within a scenario run one after another.
 - The report goes to `parity/reports/latest/` (wiped first, and git-ignored) or to `--out DIR`. With `--out`, only the
   directories of the scenarios being run are replaced.
 
 | Flag | Meaning |
 | --- | --- |
 | `--all` | Run every scenario in `parity/scenarios/`. |
-| `--python-only`, `--rust-only` | Run one app only: for capturing references and for debugging. `--python-only` runs Python live and checks it for drift; `--rust-only` doesn't read references. |
-| `--live-python[=SCENARIO,...]` | Run Python live instead of reading its reference: in every selected scenario, or in those named (after `=`, comma-separated). Fresh references are checked for drift. Conflicts with `--rust-only`, `--record` and `--check-references`. |
-| `--live-python-since REV` | Run Python live in every selected scenario if a Python input changed since `REV`, otherwise in those whose references changed (above). Conflicts with `--live-python`, `--python-only`, `--rust-only`, `--record` and `--check-references`. |
-| `--plan` | With `--live-python-since`: print the plan line and exit `0`, building and running nothing. |
 | `--size COLSxROWS` | Run at this size instead of the scenarios' `sizes`. Repeatable. |
 | `--out DIR` | Write the report here instead of `parity/reports/latest/`. |
 | `--keep-home` | Copy each run's `home/` and `work/` (and `remotes/`, with `git_remote_branches`) into its report directory. |
 | `--no-build` | Skip `cargo build -p lazy-github -p fake-gh`. The binaries must already be in `target/<profile>/`. |
-| `--no-sync` | Skip `uv sync --frozen` (which only runs when Python runs live). |
-| `--python PATH` | Run `PATH -m lazy_github` instead of the repo's `.venv/bin/python` (`.venv\Scripts\python.exe` on Windows). |
-| `--retries N` | Re-run a failed app run up to N times. A run that passes on retry is marked `flaky: true`. Default 0, or 1 with `--ci`. A Rust run in a scenario with `gate = false` is never retried, since it can't fail the gate. |
+| `--retries N` | Re-run a failed run up to N times. A run that passes on retry is marked `flaky: true`. Default 0, or 1 with `--ci`. |
 | `--jobs N` | Run up to N scenarios in parallel. Default: the CPU count, at most 4. More runs at once slow each app enough to risk timeouts. |
-| `--ci` | Running in CI: `--retries 1` unless `--retries` is given, each condition `wait` capped at 3 s in runs that can't fail the gate (the Rust side of a `gate = false` scenario, which usually times out waiting for something it can't draw yet; stability waits aren't capped), `--color never` for the nested `cargo build` and `uv sync`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
+| `--ci` | Running in CI: `--retries 1` unless `--retries` is given, `--color never` for the nested `cargo build`, and GitHub Actions annotations at the end of the output (see [CI](#ci)). |
 | `--validate` | Parse and validate the scenario files (all, or the ones named) and exit. |
-| `--check-references` | Check the [recorded references](#recorded-references) of the scenarios (all, or the ones named) against the current inputs and exit: `0` when all are fresh, `1` otherwise. Builds and runs nothing. Takes only scenario names, `--all` and `--ci`. |
-| `--record` | [Record](#recording) the stale and missing references of the scenarios (all, or the ones named) by running Python, and delete orphans. Builds only `fake-gh`. Run dumps go to `--out`, default `parity/reports/record/` (wiped first). Conflicts with `--python-only`, `--rust-only`, `--live-python`, `--size`, `--retries`, `--ci`, `--validate` and `--check-references`. |
-| `--force` | With `--record`: re-record fresh references too. |
-| `--accept` | [Accept](#accepting-snapshots) the Rust snapshots of the scenarios (all, or the ones named): run Rust twice per size and write each snapshot whose runs pass and agree, then delete orphans. Builds `lazy-github` and `fake-gh`. Run dumps go to `--out`, default `parity/reports/accept/` (wiped first). Conflicts with `--record`, `--python-only`, `--live-python`, `--live-python-since`, `--check-references`, `--size`, `--retries`, `--ci` and `--validate`. |
+| `--accept` | [Accept](#accepting-snapshots) the snapshots of the scenarios (all, or the ones named): run the app twice per size and write each snapshot whose runs pass and agree, then delete orphans. Builds `lazy-github` and `fake-gh`. Run dumps go to `--out`, default `parity/reports/accept/` (wiped first). Conflicts with `--size`, `--retries`, `--ci` and `--validate`. |
+
+The flags of the Python side (`--python-only`, `--rust-only`, `--live-python`, `--live-python-since`, `--plan`,
+`--python`, `--no-sync`, `--record`, `--force`, `--check-references`) were removed by #397 and are unknown arguments.
 
 Exit codes:
 
-- `0`: every gated scenario passed and the Python side is clean everywhere.
-- `1`: a gated scenario failed (a Rust snapshot mismatch included), or the Python side failed anywhere (timeout,
-  crash, fixture miss, failed `[expect]`, drift).
-- `2`: a scenario file is invalid (printed as `file:line: message`), a reference the run reads isn't fresh, or the
-  harness itself failed.
-
-Rust-side failures in scenarios with `gate = false` are reported as `rust-not-ready` and don't change the exit code,
-so scenarios can land before the Rust UI exists. Until M1 the Rust binary just exits, so every scenario's Rust side
-is `rust-not-ready`.
+- `0`: every scenario passed.
+- `1`: a scenario failed: a run failed (timeout, crash, fixture miss), or a capture's `[expect]` or snapshot did.
+- `2`: a scenario file is invalid (printed as `file:line: message`), or the harness itself failed.
 
 ### The isolated environment
 
-Every scenario × size × app gets a temp dir `<run>` holding `home/`, `bin/` and `work/` (and `remotes/` with
+Every scenario × size gets a temp dir `<run>` holding `home/`, `bin/` and `work/` (and `remotes/` with
 `git_remote_branches`). It's removed after the run; `--keep-home` copies `home/`, `work/` and `remotes/` into the
 report first.
 
 - `home/.config/lazy-github/config.json` is built from three layers, in order:
   - the scenario's `config` file, `parity/configs/<name>.json` (default `default`);
   - deep-merged with the scenario's `config_overrides` (objects merge key by key; anything else replaces);
-  - then always forced: `core.first_start = false` and `api.client_type = "GITHUB_CLI"`, which keep the Python app
-    off its first-start screen and on the `gh` backend.
+  - then always forced: `core.first_start = false`, which keeps the app off its first-start screen.
 
-  The Python app keeps everything (config, log, table cache, PR drafts) under `$HOME/.config/lazy-github`, so a fresh
-  `HOME` also means no cached tables are shown before the first fetch.
+  The app keeps everything (config, log, table cache, PR drafts) under `$HOME/.config/lazy-github`, so a fresh `HOME`
+  also means no cached tables are shown before the first fetch.
 - `bin/gh` (`gh.exe` on Windows) is fake-gh, `bin/fake-ssh` is [fake-ssh](#fake-ssh) and `bin/fake-browser` is
   [fake-browser](#fake-browser), installed with `fake_gh::install`. The app gets `BROWSER=<run>/bin/fake-browser` and
-  `FAKE_BROWSER_LOG=<report>/<app>/browser.jsonl`.
+  `FAKE_BROWSER_LOG=<report>/browser.jsonl`.
 - With `seed = "<name>"`, `parity/seeds/<name>/home/` is copied into `home/` and `work/` into `work/` before the app
   starts: after `config.json` is written and after the git repo below is made. Copying after `git init` keeps the
-  parity commit empty, so its SHA doesn't change, and seeded `work/` files are untracked. Each app run gets a fresh
+  parity commit empty, so its SHA doesn't change, and seeded `work/` files are untracked. Each run gets a fresh
   copy, so a file one run rewrites never reaches the next. A seed is rejected (with `file:line`, by `--validate` and
   every run) when its name isn't `[a-z0-9][a-z0-9-]*`, its directory is missing, it holds anything at the top level
   other than `home/` and `work/`, it holds no files, it holds a symlink anywhere, or it holds
@@ -839,24 +787,21 @@ report first.
 - With `config_dir_read_only = true`, `home/.config/lazy-github` is made read-only (`r-x`) last, after the config
   and the seed, so the app can't save its config or create its log file, cache or drafts there. Write permission
   comes back when the run finishes, so the run dir can be removed. Unix only (a read-only folder on Windows still
-  takes new files), and meaningless as root, which writes anyway; such scenarios are Rust-only (`apps = ["rust"]`).
-- With `gh_timeout_ms = <n>`, the Rust app runs with `LAZY_GITHUB_GH_TIMEOUT_MS=<n>`, which a debug build reads as
-  the time limit of every `gh` call (release builds ignore it), so a hung `gh` times out in seconds. It's set outside
-  `env.rs` and only for the Rust app; Python has no time limit. Such scenarios are Rust-only (`apps = ["rust"]`).
-- With `toast_timeout_ms = <n>`, the Rust app runs with `LAZY_GITHUB_TOAST_TIMEOUT_MS=<n>`, which a debug build
-  reads as the lifetime of every toast (release builds ignore it). Python's toasts don't time out under the harness,
-  so a scenario whose later captures show toasts raised steps earlier sets it (`paste-link`), and its Rust snapshots
-  then don't depend on how fast the machine is. Set outside `env.rs`, only for the Rust app, and not in the capture
-  key, so it needs no re-record.
+  takes new files), and meaningless as root, which writes anyway.
+- With `gh_timeout_ms = <n>`, the app runs with `LAZY_GITHUB_GH_TIMEOUT_MS=<n>`, which a debug build reads as the
+  time limit of every `gh` call (release builds ignore it), so a hung `gh` times out in seconds.
+- With `toast_timeout_ms = <n>`, the app runs with `LAZY_GITHUB_TOAST_TIMEOUT_MS=<n>`, which a debug build reads as
+  the lifetime of every toast (release builds ignore it). A scenario whose later captures show toasts raised steps
+  earlier sets it (`paste-link`), so its snapshots don't depend on how fast the machine is.
 - `work/` is the app's working directory. When the scenario sets `git_remote = "owner/name"`, it's made a git repo:
   - `git init -q -b <git_branch, default main>`
   - `git remote add origin https://github.com/owner/name.git`, or `git@github.com:owner/name.git` with
-    `git_remote_protocol = "ssh"`. Python keeps the `.git` of an HTTPS remote in the repo name (Py bug B5), so it
-    never finds that repo; a scenario where both apps should pick up the current directory's repo uses `"ssh"`.
+    `git_remote_protocol = "ssh"`. The scenarios that pick up the current directory's repo use `"ssh"`, because the
+    Python app kept the `.git` of an HTTPS remote in the repo name (Py bug B5) when they were written.
   - `git commit -q --allow-empty -m parity` as `parity-bot <parity-bot@example.com>` dated `2026-01-01T00:00:00Z`,
     so the commit SHA is the same on every run.
 - With `git_remote_branches = ["main", ...]` (which needs `git_remote_protocol = "ssh"`), `origin` reaches a local
-  repo. `origin` stays `git@github.com:owner/name.git`: both apps derive the current directory's repo from
+  repo. `origin` stays `git@github.com:owner/name.git`: the app derives the current directory's repo from
   `git remote get-url origin`, so a local path or `url.<base>.insteadOf` (which `get-url` expands) would lose it.
   Right after the commit above, with the same environment:
   - `git init -q --bare -b <first listed branch>` makes `<run>/remotes/<owner>/<name>.git` (`-b <git_branch>` when
@@ -873,34 +818,37 @@ report first.
   - `PATH=<run>/bin` followed by the inherited `PATH`
   - `TERM=xterm-256color`, `COLORTERM=truecolor`
   - `LANG=C.UTF-8` on Linux, `LANG=en_US.UTF-8` on macOS
-  - `TZ=UTC`. No fixed clock is needed: the Python UI renders only absolute timestamps.
+  - `TZ=UTC`, and `LAZY_GITHUB_FIXED_TIME=2026-01-01T00:00:00Z` ([the fixed clock](#rust-snapshots))
+  - `LAZY_GITHUB_GH_TIMEOUT_MS` and `LAZY_GITHUB_TOAST_TIMEOUT_MS`, when the scenario sets them (above)
   - `LAZY_GITHUB_ORIGINAL_PWD=<run>/work`
   - `FAKE_GH_FIXTURES` (the scenario's sets, resolved under `parity/fixtures/`), `FAKE_GH_LOG=<report dir>/fake-gh.log`
     and `FAKE_GH_AUTH`
   - `BROWSER=<run>/bin/fake-browser` and `FAKE_BROWSER_LOG=<report dir>/browser.jsonl` ([fake-browser](#fake-browser))
-  - `TEXTUAL_ANIMATIONS=none`, `PYTHONDONTWRITEBYTECODE=1`
+  - `TEXTUAL_ANIMATIONS=none`, which the app reads as Textual did: loading overlays show a still `Loading...`
+    instead of a spinner, so snapshots don't depend on timing
   - `GIT_CONFIG_NOSYSTEM=1`
   - `TMPDIR=<run>/tmp` on macOS
 
   `GH_TOKEN`, `GITHUB_TOKEN`, `GH_HOST`, `NO_COLOR`, `TEXTUAL` and everything else are never passed through.
-- Commands: Python runs `<repo>/.venv/bin/python -m lazy_github` (or `--python`), and Rust runs
-  `target/<profile>/lazy-github`. Neither gets arguments.
+- The command is `target/<profile>/lazy-github`, with no arguments.
 
-### Scenario format (v1)
+### Scenario format (v2)
 
 A scenario is `parity/scenarios/<name>.toml`; the file stem is its name. The name must match `[a-z0-9][a-z0-9-]*`,
 since it names the scenario's report directory, and names must be unique within a run.
 
+Version 2 (#397) is version 1 without the Python side's keys: `gate`, `apps`, a capture's `checks` and
+`ignore.writes` are unknown keys now, and `version = 1` is rejected with one error, on line 1:
+`version 1 scenarios had Python keys; this harness reads version 2 (parity/README.md, "Scenario format")`.
+
 ```toml
-version = 1
+version = 2
 description = "Main screen right after launch, no current-directory repo"
-gate = false                     # true = a Python/Rust structural mismatch fails CI (#70). Feature PRs flip it.
-apps = ["python", "rust"]        # default both
 parity_rows = ["main-layout.layout"]
                                  # parity matrix row ids (docs/rust-rewrite/parity/areas/); checked by
                                  # `cargo xtask parity-matrix`, shown in the report
 sizes = [[160, 48], [100, 30]]   # [cols, rows]; default [[160, 48]]
-timeout_ms = 30000               # whole run per app per size; default 30000
+timeout_ms = 30000               # whole run per size; default 30000
 key_delay_ms = 30                # pause after each key; default 30 (after "escape" always >= 100)
 capture_stable_ms = 300          # implicit stability wait before each capture; default 300
 
@@ -915,8 +863,8 @@ git_remote_branches = ["main"]   # optional: a local remote for origin with thes
                                  # environment); needs git_remote_protocol = "ssh"
 seed = "repos-cache"             # optional: parity/seeds/<name>/, copied into home/ and work/ (see Seeds)
 config_dir_read_only = false     # optional: make home/.config/lazy-github read-only (see The isolated environment)
-gh_timeout_ms = 2000             # optional: the Rust app's time limit for every gh call (see The isolated environment)
-toast_timeout_ms = 60000         # optional: how long the Rust app's toasts last (see The isolated environment)
+gh_timeout_ms = 2000             # optional: the app's time limit for every gh call (see The isolated environment)
+toast_timeout_ms = 60000         # optional: how long the app's toasts last (see The isolated environment)
 
 [env.config_overrides]           # optional, deep-merged over the config file
 appearance = { show_command_log = true }
@@ -947,12 +895,11 @@ move = { at = [100, 1] }         # motion only: park the pointer
 
 [[step]]
 capture = "after-select"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "footer", "focus"]   # default: all of these
-ignore = { boxes = ["Details"] } # skip the listed checks inside boxes whose title contains this text
-# ignore = { writes = ["PUT /repos/o/r/pulls/1/merge"] }   # last capture only: leave a write out of `writes`
-mask = ['Saved .*\.svg']        # mask these matches in the Rust snapshot (Rust regex, per row)
+# Say why: the box's contents differ between two runs.
+ignore = { boxes = ["Command Log"] }   # mask the interior of boxes whose title contains this text in the snapshot
+mask = ['Saved .*\.svg']        # mask these matches in the snapshot (Rust regex, per row)
 
-[expect.main]                    # optional, checked against EACH app on its own (#93)
+[expect.main]                    # optional, checked against the capture's structure (#93)
 pane_titles = ["", "[1] Repositories", "[2] Pull Requests (empty)"]
 focused = ["[1] Repositories"]
 contains = ["Repositories"]
@@ -970,7 +917,7 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
     - `gone = "<substring>"`: no longer on any row
     - `regex = "<pattern>"`: matched against the screen with rows joined by `\n` (Rust `regex` syntax)
     - `focused = "<text>"`: the screen shows focus on something whose label contains the text (a plain substring
-      test), read from the focus markers both apps draw. See [Focus waits](#focus-waits). Not empty.
+      test), read from the focus markers the app draws. See [Focus waits](#focus-waits). Not empty.
     - `stable_ms = <n>`: the screen's characters are unchanged for n ms. Colors and the cursor are ignored, so a
       blinking cursor doesn't reset the timer.
     - `log = { method = "PUT", path = "/repos/o/r/pulls/1/merge" }`: the fake-gh log has a served request matching
@@ -983,27 +930,18 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
 
     Each `wait` takes an optional `timeout_ms` (default 10000). A timeout fails that app's run at that step and dumps
     the screen.
-  - `keys`: a list of key specs, below. In a scenario Python runs, a focus key (`1` to `6`) must end its step, and
-    the next step must be a `wait` other than `stable_ms`, or a `sleep_ms` where nothing on screen can show the move.
-    Python moves focus a tick after the key (Py bug B98), so a key or capture sent right after it can reach the
-    section that had focus before (#314). Wait on the new section's focus border (`focused = "[3] Issues"`,
-    `focused = "Details"`, `focused = "Command Log"`), or on its bindings in the footer (`text = "O Lookup Issue"`).
-    A `sleep_ms` is for a move nothing shows, such as focus moving behind a maximized section; say why in a comment.
-    `tab` and `shift+tab` follow the same rule, except that a run of them may end the step together
-    (`["tab", "tab", "shift+tab"]`), but no other key may come after the first: Python moves focus only once the key
-    has bubbled back up to the app (Py bug B121), so a key sent in the same step reaches the widget that had focus
-    before. Wait on where focus lands, usually with `wait.focused` (`focused = "Review Status:"`,
-    `focused = "Save"`), before sending anything else. Scenarios with `apps = ["rust"]` are exempt from both rules:
-    Rust moves focus at once.
+  - `keys`: a list of key specs, below. The app moves focus at once, so keys may follow a focus key (`1` to `6`) or a
+    `tab` in the same step. (Version 1 made those keys end their step and wait for the move, because the Python app
+    moved focus late, Py bugs B98 and B121; older scenarios keep those waits, which are harmless.)
   - `type`: a string sent verbatim.
   - `paste`: a string. It's sent in bracketed-paste mode (`ESC[200~ … ESC[201~`) if the app has enabled it, else
     verbatim.
   - `capture`: a name. It must be unique in the scenario and match `[a-z0-9-]+`. An implicit
-    `wait.stable_ms = capture_stable_ms` runs first. `checks` and `ignore` are allowed alongside it, and only there;
-    `ignore.writes` only on the scenario's last capture. `mask` is allowed there too: a list of Rust `regex`
-    patterns, each matched against every row of the screen text, whose matches are masked in the
-    [Rust snapshot](#rust-snapshots). An invalid pattern is a `file:line` error. It isn't part of a reference's
-    capture key, so adding one leaves the Python reference fresh.
+    `wait.stable_ms = capture_stable_ms` runs first. `ignore = { boxes = [...] }` and `mask` are allowed alongside
+    it, and only there. Both only mask the [snapshot](#rust-snapshots): `ignore.boxes` the interior of every box whose
+    title contains one of the entries, and `mask` the matches of each Rust `regex` pattern on every row of the screen
+    text. An invalid pattern is a `file:line` error. Every `ignore.boxes` entry needs a comment saying why the box
+    differs between runs.
   - `sleep_ms`: a number.
   - `resize = [cols, rows]`: resizes the PTY and the parser.
   - `click`, `wheel` and `move`: mouse steps, below.
@@ -1014,8 +952,7 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
     `<capture>.txt` has it (wide-character continuation cells skipped) and maps back to the cell; matches are counted
     row by row, top to bottom, left to right, non-overlapping. The target is the first cell of the `nth` match plus
     `offset`. Like `wait.text`, the step polls until the match is on screen and times out if it never is, so it needs
-    no `wait` before it. Matching is per app, on its own screen, so text targets keep working when the apps place the
-    same text a cell apart. Use `at` for blank areas (parking the pointer, a pane's interior for the wheel).
+    no `wait` before it. Use `at` for blank areas (parking the pointer, a pane's interior for the wheel).
 
   The steps:
   - `click`: a motion report to the target, then a left press and release, in one write, then `key_delay_ms`. Two
@@ -1034,7 +971,7 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
   screen; otherwise the run fails at that step as `step-failed`, with the reason in `status.json`'s `message`
   (`click: the app hasn't enabled SGR mouse reporting (mode None, encoding Default)`,
   `click: target [161, 3] is off the 160x48 screen`). Motion reports are sent only in any-motion mode (`?1003h`), as
-  a terminal does: in another mode `click` and `wheel` skip theirs and `move` fails. Both apps use any-motion mode.
+  a terminal does: in another mode `click` and `wheel` skip theirs and `move` fails. The app uses any-motion mode.
 
   Keys stay the way to drive a flow. Use the mouse only for the behavior under test, so a scenario doesn't depend on
   hit-testing it isn't about. Don't send mouse reports with `type`: it hard-codes 1-based cells, can't follow text and
@@ -1064,15 +1001,14 @@ Rules. The parser rejects anything else, including unknown keys, with exit 2 and
 - `[expect.<capture>]` keys must name a capture in the scenario. All of them are optional. `pane_titles` and `focused`
   are exact ordered lists. `footer` is an exact ordered list of `"<key> <label>"`. `opened` is the exact ordered list
   of URLs the app had opened in the browser by the capture (none of them empty).
-- `checks`, `ignore` and `[expect]` are evaluated by the structural check, below.
+- `[expect]` is evaluated by the structural check ([Checks](#checks)), and `ignore` and `mask` by the snapshot
+  comparison.
 
 ### Focus waits
 
 `wait = { focused = "<text>" }` passes once the app's screen shows focus on something whose label contains `<text>`.
-It runs per app on that app's own screen, polled every 20 ms like the other waits, with the usual `timeout_ms`. It's
-for focus moves no text shows: in dialogs focus is a border color, a reversed button label or a highlighted tab, and
-Python moves focus late (Py bugs B98 and B121), so a key or capture sent right after a focus move can reach the old
-widget. The detector is `xtask/src/parity/focus.rs`, which traces its own outlines (it doesn't use `structure.rs`).
+It's polled every 20 ms like the other waits, with the usual `timeout_ms`. It's for focus moves no text shows: in
+dialogs focus is a border color, a reversed button label or a highlighted tab. The detector is `xtask/src/parity/focus.rs`, which traces its own outlines (it doesn't use `structure.rs`).
 
 It knows four kinds of focus marker, each read from the screen alone in the scenario theme's colors:
 
@@ -1091,24 +1027,24 @@ It knows four kinds of focus marker, each read from the screen alone in the scen
 - On a timeout the run fails as any wait does (`timeout`, `failure.txt`), and `status.json`'s `message` names the
   wait and every marker on screen instead, each with its labels:
   `wait.focused "Description": focused now: button "Save"`, or `focused now: nothing`.
-- **Theme keys.** The colors come from the scenario theme's entry in `parity/themes.toml` (keyed by
-  `appearance.theme`, as for the [focus check](#focus)): `focus` for panes, `border` for fields and `block_cursor`
-  for cursors. Buttons need no color. A scenario that uses `wait.focused` while its theme has no entry, or lacks one
-  of those keys, fails when the run is planned (exit 2, before anything starts), naming the theme and the key. Only
-  `textual-dark` and `no-such-theme` have `border` and `block_cursor` so far; measure them from Python dumps as
-  `focus` was before using the wait on another theme.
+- **Theme colors.** The colors come from the app's own themes (`xtask/src/parity/theme.rs`, reading
+  `lazy_github_tui::theme`), for the scenario's `appearance.theme` resolved the way the app resolves it (the built-in
+  themes, the user themes its seed puts in the config folder, an alias as its theme, an unknown name as the default
+  theme): `focus` for panes is the theme's `border.pane_focused`, `border` for fields is `border.field_focused`, and
+  `block_cursor` for cursors is `cursor.focused.bg`, each composited over the pane and written as the grid dumps it
+  (`#rrggbb`, or `idx:<n>` for an ANSI theme's palette color). Buttons need no color. Every theme the app ships can
+  be used. (Until #397 the colors were measured from Python dumps into `parity/themes.toml`.)
 - **Limits.** A theme whose `$button-focus-text-style` isn't bold reverse draws buttons the detector can't see. A
   focus that moves to something hidden (behind a maximized section, a widget scrolled out of view, a pane whose
   bottom edge is off screen) shows no marker, so nothing can wait for it: use `sleep_ms` with a comment, as
   `pr-maximize`'s `focus-key` does. Something unfocused drawn in one of the colors (a highlight that stays on the
   block-cursor background after focus leaves, an outline that happens to be in `$border`) is a false marker, so pick
-  a label only the newly focused widget has. In Python, keys bound below the screen do nothing while nothing has
-  focus (Py bug B88), so a focus key there shows no move either.
+  a label only the newly focused widget has.
 
 ### Keeping the suite fast
 
-Every scenario runs in CI on every PR, once per size and per app, and Actions minutes are the limit. Startup
-dominates a run (about 2.5 s for Python and 0.4 s for Rust), so the number of runs matters most. Before adding a
+Every scenario runs in CI on every PR, once per size, and Actions minutes are the limit. Startup dominates a short
+run, so the number of runs matters most. Before adding a
 scenario:
 
 - **Add captures, not scenarios.** If an existing scenario already has the env your rows need (fixtures, config,
@@ -1124,13 +1060,11 @@ scenario:
   for a timer (`gone = "View Maximized"`, not `sleep_ms = 5500`).
 - **One timer per behavior.** Checks that wait out a timer (a toast expiring, a refresh interval) cost their whole
   duration in every run. Check each timer in one scenario at one size, and keep other scenarios from waiting for it.
-- **Park the pointer after a click.** A footer item under the pointer stays hovered (in both apps), and a hovered
+- **Park the pointer after a click.** A footer item under the pointer stays hovered, and a hovered
   item's styles change how the extractor reads the footer. Before a capture after a click, `move` the pointer to a
   blank cell (the status box), as a real pointer moving away would.
-- **Re-record only what you changed.** `cargo xtask parity --record <scenario>` records just that scenario's
-  [references](#recording), and skips fresh ones. `--record --force` with no names runs Python at least once for
-  every reference, and twice where the screen changed (about 30 s to a minute today with 4 jobs); a harness or
-  Python-app change makes every reference stale anyway, so a plain `--record` does the same then.
+- **Accept only what you changed.** `cargo xtask parity --accept <scenario>` runs just that scenario twice per size
+  ([Accepting snapshots](#accepting-snapshots)); `--accept` with no names runs every scenario twice.
 
 ### How a run works
 
@@ -1157,29 +1091,25 @@ scenario:
 
 ```
 summary.json                                     # all results
-<scenario>/<cols>x<rows>/<app>/status.json       # how the run ended, fixture misses, duration
-<scenario>/<cols>x<rows>/<app>/fake-gh.log       # the request log
-<scenario>/<cols>x<rows>/<app>/browser.jsonl     # what it opened in the browser, with capture marks (fake-browser)
-<scenario>/<cols>x<rows>/<app>/pty.raw           # raw PTY output, for debugging
-<scenario>/<cols>x<rows>/<app>/<capture>.txt     # plain text screen
-<scenario>/<cols>x<rows>/<app>/<capture>.grid.json
-<scenario>/<cols>x<rows>/<app>/failure.txt       # only when the run failed (plus failure.grid.json)
-<scenario>/<cols>x<rows>/<app>/home/, work/      # only with --keep-home (remotes/ too, with git_remote_branches)
-<scenario>/<cols>x<rows>/<app>/<capture>.structure.json   # what the extractor recognized
-<scenario>/<cols>x<rows>/<capture>.check.json    # structural mismatches, drift and snapshot mismatches
-<scenario>/<cols>x<rows>/rust/<capture>.screen.new          # only when it differs from its Rust snapshot: the
-<scenario>/<cols>x<rows>/rust/<capture>.svg.new             # masked screen, its picture and a unified diff of
-<scenario>/<cols>x<rows>/rust/<capture>.snapshot.diff.txt   # the two .screen texts
-<scenario>/<cols>x<rows>/rust/effects.txt.new    # only when the run's effects differ from the snapshot's
-<scenario>/<cols>x<rows>/rust/effects.diff.txt   # (with a diff)
+<scenario>/<cols>x<rows>/status.json             # how the run ended, fixture misses, duration
+<scenario>/<cols>x<rows>/fake-gh.log             # the request log
+<scenario>/<cols>x<rows>/browser.jsonl           # what it opened in the browser, with capture marks (fake-browser)
+<scenario>/<cols>x<rows>/pty.raw                 # raw PTY output, for debugging
+<scenario>/<cols>x<rows>/<capture>.txt           # plain text screen
+<scenario>/<cols>x<rows>/<capture>.grid.json
+<scenario>/<cols>x<rows>/failure.txt             # only when the run failed (plus failure.grid.json)
+<scenario>/<cols>x<rows>/home/, work/            # only with --keep-home (remotes/ too, with git_remote_branches)
+<scenario>/<cols>x<rows>/<capture>.structure.json   # what the extractor recognized
+<scenario>/<cols>x<rows>/<capture>.check.json    # [expect] and snapshot mismatches
+<scenario>/<cols>x<rows>/<capture>.screen.new        # only when it differs from its snapshot: the masked screen,
+<scenario>/<cols>x<rows>/<capture>.svg.new           # its picture, the committed snapshot it was compared with
+<scenario>/<cols>x<rows>/<capture>.screen.snapshot   # and a unified diff of the two .screen texts
+<scenario>/<cols>x<rows>/<capture>.snapshot.diff.txt
+<scenario>/<cols>x<rows>/effects.txt.new         # only when the run's effects differ from the snapshot's
+<scenario>/<cols>x<rows>/effects.diff.txt        # (with a diff)
 ```
 
-When Python comes from a reference, its directory holds what the reference stores, in the same form: each
-`<capture>.grid.json` and `<capture>.txt` (from the `.screen`), `fake-gh.log` (the normalized `requests.jsonl`),
-`browser.jsonl` when the reference has one, and a `status.json` with `"recorded": true`. Nothing ran, so there's no `pty.raw` and no `failure.txt`.
-
-The report (#94) adds
-`<capture>.diff.txt`, `report.html`, `index.html` and `summary.md`.
+The report (#94) adds `report.html`, `index.html`, `summary.md` and `meta.json`.
 
 ### Screen dumps
 
@@ -1201,7 +1131,7 @@ trailing spaces trimmed.
 
 ### Status and results
 
-Each app run writes `status.json`:
+Each run writes `status.json`:
 
 ```json
 {"status": "ok", "step": null, "exit_code": null, "duration_ms": 2400, "flaky": false, "fixture_problems": false,
@@ -1216,43 +1146,25 @@ Each app run writes `status.json`:
 - `misses` are the fake-gh log lines with `"miss": true`, ready for `cargo xtask record-fixtures --from-log` (#68), and
   `errors` the lines with an `error`. Either makes `fixture_problems: true`, and the run counts as failed even though
   its status is `ok`.
-- `recorded: true` marks a Python side read from its [recorded reference](#recorded-references): status `ok`,
-  `duration_ms: 0`, and the console, the index and the run table say `recorded` instead of a duration. The field is
-  left out when false, so a live run's status is unchanged.
 
-`summary.json` collects everything:
+`summary.json` collects everything (format version 2; version 1 had one status per app):
 
 ```json
-{"version": 1, "scenarios": [{"name": "startup", "description": "…", "gate": false, "parity_rows": ["…"],
-  "result": "rust-not-ready",
-  "sizes": [{"size": "160x48", "apps": {"python": <status>, "rust": <status>},
-             "captures": [{"name": "main", "check": "pass", "mismatches": 0, "against": []}]}]}]}
+{"version": 2, "scenarios": [{"name": "startup", "description": "…", "parity_rows": ["…"], "result": "pass",
+  "sizes": [{"size": "160x48", "status": <status>,
+             "captures": [{"name": "main", "check": "pass", "mismatches": 0}]}]}]}
 ```
 
-An app that didn't run is left out of `apps`. A scenario's `result` is:
+A scenario's `result` is `pass` when every size ran and passed and every capture's check passed, and `fail`
+otherwise. `error` is set when the harness itself failed.
 
-- `pass`: both apps ran and passed, and every check passed.
-- `fail`: the Python side failed (including its `[expect]`), or a gated scenario's Rust side did (including a
-  mismatch). `error` is set when the harness itself failed.
-- `rust-not-ready`: not gated, and the Rust side failed or mismatched.
-- `python-only` / `rust-only`: only one app ran (a flag or the scenario's `apps`), and it passed.
+Each capture in `captures` carries its check:
 
-Each capture in `captures` carries its structural check:
+- `check` is `pass`, `fail`, or `n/a` when nothing checked it: the run didn't reach it, or it has no `[expect]` and no
+  snapshot was compared (a `--size` the scenario doesn't list).
+- `mismatches` counts its `[expect]` and snapshot mismatches.
 
-```json
-{"name": "main", "check": "fail", "mismatches": 1, "against": ["python"]}
-```
-
-- `check` is `pass`, `fail`, or `n/a` when there was nothing to check (no `[expect]` for the capture and no cross-app
-  comparison, for example because only one app produced the capture).
-- `against` lists the apps the mismatches count against: an app whose `[expect]` failed, `rust` for any cross-app
-  mismatch (including [`writes`](#checks), the requests that change something, on the last capture), and `python` for drift. An app with a mismatch counts as failed in the result rules above, so a Python
-  `[expect]` failure or drift always fails the run, and a Rust mismatch makes an ungated scenario `rust-not-ready`.
-  `mismatches` counts drift too.
-
-`<capture>.check.json` holds the mismatches: `expect` (per app), `cross` (Python against Rust) and, after a live
-Python run with a fresh reference, `drift` (left out when empty). A drift mismatch has the same keys as a cross-app
-one, with the live run's value under `python` and the reference's under `rust`, and its `message` says so.
+`<capture>.check.json` holds the mismatches ([Checks](#checks)).
 
 ### Structure extraction
 
@@ -1273,7 +1185,7 @@ text.
 ```
 
 `xtask/src/parity/snapshots/` holds the full structure of the Python `startup` screen at 160x48 and 100x30, extracted
-from the dumps in `xtask/tests/grids/python/`.
+from the frozen dumps in `xtask/tests/grids/python/`.
 
 #### Boxes
 
@@ -1310,16 +1222,15 @@ from the dumps in `xtask/tests/grids/python/`.
 
 #### Focus
 
-- The focus color comes from `parity/themes.toml`, keyed by the scenario config's `appearance.theme` (default
-  `textual-dark`, the Python default). It's Textual's `$success`, measured from the Python startup dump: `#4ebf71` for
-  `textual-dark`. A value is `#rrggbb` or, for the ANSI themes, which draw in the terminal's palette, an indexed
-  color as the grid dumps it (`idx:2`).
+- The focus color is the scenario theme's `border.pane_focused`, read from the app's own themes
+  (`xtask/src/parity/theme.rs`) for the config's `appearance.theme` (default `dark`, an alias of `textual-dark`):
+  `#4ebf71` for `textual-dark`. A value is `#rrggbb` or, for the ANSI themes, which draw in the terminal's palette, an
+  indexed color as the grid dumps it (`idx:2`).
 - A box is `focused` when its `border_fg` is the focus color, and the top-level `focused` lists the focused boxes'
   titles in pre-order.
-- **Limits.** A theme whose focus color also draws an unfocused border gives false positives. A theme missing from
-  `themes.toml` gives `focused = []` and a `warnings` entry, which is also printed. Measured so far: `textual-dark`, and
-  for the `theme-*` scenarios `catppuccin-latte`, `ansi-dark` and `no-such-theme` (an unknown name, which falls back to
-  `textual-dark`). `textual-light`'s `$success` is `textual-dark`'s, so a scenario can't tell those two apart by focus.
+- **Limits.** A theme whose focus color also draws an unfocused border gives false positives. An unknown theme name
+  resolves to the default theme, as in the app. `textual-light`'s focus color is `textual-dark`'s, so a scenario can't
+  tell those two apart by focus.
 
 #### Inside a box
 
@@ -1386,9 +1297,8 @@ differs:
 - **Cursor in short tables.** "The row whose background differs from the others" has no answer with one or two rows,
   so bold breaks the tie.
 - **Clipping.** Both sizes cut the Python footer off (`^p Comman`, `^v Paste lin`), and 100x30 cuts the last
-  Workflows header. The structure records `footer_clipped` and `headers_clipped`, and both `[expect] footer` and the
-  cross-app `footer`, `headers` and `rows` checks allow the cut (see Checks), so Rust doesn't have to clip at
-  Textual's column.
+  Workflows header. The structure records `footer_clipped` and `headers_clipped`, and `[expect] footer` allows the cut
+  (see Checks), so one expected list works at every size.
 - **Top-level tabs** go in the structure's `tabs` field, which the v1 example didn't have.
 
 #### Rendering contract for the Rust UI
@@ -1415,23 +1325,24 @@ These rules double as the contract the Rust UI renders to, so that its screens a
 
 ### Checks
 
-`xtask/src/parity/check.rs` checks each capture in two ways, compares the two apps' writes once per size, and writes
-`<scenario>/<size>/<capture>.check.json`.
-A capture with nothing to check (`check: "n/a"` in `summary.json`) gets no `check.json`, so the report shows it as
-`not checked` rather than as having no mismatches.
+`xtask/src/parity/check.rs` checks each capture against its `[expect.<capture>]`, adds the snapshot comparison's
+mismatches ([Rust snapshots](#rust-snapshots)), and writes `<scenario>/<size>/<capture>.check.json`. A capture with
+nothing to check (`check: "n/a"` in `summary.json`) gets no `check.json`, so the report shows it as `not checked`
+rather than as having no mismatches.
 
 ```json
 {"capture": "main", "size": [160, 48],
- "expect": [{"check": "titles", "box": null, "python": ["", "[9] Repositories", "…"], "rust": null,
+ "expect": [{"check": "titles", "box": null, "actual": ["", "[9] Repositories", "…"],
              "expected": ["", "[1] Repositories", "…"], "message": "pane titles are […], expected […]"}],
- "cross": []}
+ "snapshot": [{"check": "snapshot", "box": null, "actual": null,
+               "message": "rows 3-3 differ; run cargo xtask parity --accept startup and review the diff"}]}
 ```
 
-A mismatch has `check`, `box` (the box's title, when it's about one box), `python`, `rust` and `message`. An `expect`
-mismatch puts what the app showed under its own key and `null` under the other, and adds `expected`. After each size,
-the console gets one line per mismatch.
+A mismatch has `check`, `box` (the box's title, when it's about one box), `actual` (what the screen showed) and
+`message`; an `expect` mismatch adds `expected`. `snapshot` is left out when empty. After each size, the console gets
+one line per mismatch.
 
-- **`[expect.<capture>]`** is checked against each app that produced the capture:
+- **`[expect.<capture>]`**:
   - `pane_titles` (check `titles`): every box title in pre-order, untitled boxes as `""`, exactly.
   - `focused` (check `focus`): the focused titles, exactly.
   - `footer`: the `"<key> <label>"` strings in order. When `footer_clipped` is set, the bindings shown must be a
@@ -1441,49 +1352,12 @@ the console gets one line per mismatch.
     included.
   - `opened`: the URLs in the app's `browser.jsonl` before the capture's mark ([fake-browser](#fake-browser)),
     exactly and in order. A run with no log, or no mark yet, opened nothing.
+- **Snapshots**: a `snapshot` mismatch on a capture whose masked screen differs from its `.screen`, and an `effects`
+  mismatch on the scenario's last capture when the run's effects differ from `effects.txt`
+  ([Rust snapshots](#rust-snapshots), "Checking").
 
-  A failure counts against that app. A Python failure always fails the run, because it means the scenario or the
-  fixtures are wrong.
-- **Cross-app**, Python against Rust, when both apps ran ok. Only the capture's `checks` run (default all):
-  - `titles`: the ordered title lists are equal. One mismatch names the boxes found in only one app, or says that the
-    order differs.
-  - `tabs`: for each box title found in both apps, and for the top-level tabs, the names and the active tab are
-    equal.
-  - `headers`: per box, the list of its tables' `headers`. When either table has `headers_clipped`, the clipped-list
-    rule below applies to that table's headers.
-  - `rows`: per box, the number of tables (a table missing in one app is one mismatch, `python has N tables, rust
-    has M`), then per table the row count, then each row cell by cell. Cells are trimmed, and a cell ending in `…`
-    equals one that starts with its text before the `…`, because truncation width is layout, not content. When
-    either table has `headers_clipped`, a row's last cells may also be one a prefix of the other.
-  - `cursor`: per box and table, the `cursor` index. A differing number of tables is reported here when `rows`
-    isn't checked.
-  - `footer`: the `"<key> <label>"` lists. When either app has `footer_clipped`, the clipped-list rule applies.
-
-  **Clipped lists** are compared up to the shorter list, and the last entry compared may be a prefix of the other
-  app's: text cut at the screen's edge is layout, not content.
-  - `focus`: the `focused` lists.
-
-  Boxes are paired by title: the nth box with a title in one app with the nth in the other. A box found in only one
-  app is reported once, under `titles`, and skipped by the other checks. Boxes whose title contains an `ignore.boxes`
-  entry are skipped by every check but `titles`, and left out of the `focus` lists. Cross-app mismatches count against
-  Rust.
-- **`writes`**, cross-app, once per size, when both apps left a `fake-gh.log` (Python's is its live log or its
-  reference's `requests.jsonl`), whether or not the runs passed. It isn't one of a capture's `checks`: it always runs.
-  A write is every log line whose method isn't `GET` (served, missed or errored alike; not `fake-ssh` lines), keyed by
-  method, path, query and body (with object keys sorted, since the order an app builds a JSON object in isn't part of
-  what it sent). Each app's writes are a set, so a write sent twice equals one sent once (a double submit is a
-  unit-test concern). When the sets differ, one mismatch goes on the scenario's last capture, in `cross`: `python`
-  and `rust` hold the writes found only in that app as `METHOD /path?query body` lines (the body as compact JSON, cut
-  at 200 characters with `…`), and the message counts them: `2 writes differ: only in python: POST /repos/o/r/issues
-  {"body":"y","title":"x"}; only in rust: POST /repos/o/r/issues {"title":"x"}`. Like any cross-app mismatch it
-  counts against Rust, and it shows as `cross writes` in `--ci` annotations and as `writes` in the report and
-  `summary.md`. Equal sets add nothing, so a last capture with nothing else to check stays `n/a`.
-
-  For an approved intentional difference, list the write on the last capture as
-  `ignore = { writes = ["PUT /repos/o/r/pulls/1/merge"] }`: an entry is an upper-case method other than `GET`, a space
-  and a path without a query, and drops every write in either app with that method and path. It's a parse error on
-  any other step. `ignore.writes` isn't part of the [capture key](#recorded-references): Python's run doesn't depend
-  on it, so changing it needs no re-record.
+The cross-app check of version 1 (`checks`, Python against Rust, and the `writes` comparison of the two apps'
+requests) was removed by #397: the snapshot's screen and `effects.txt` cover the same ground for the one app.
 
 ### Reading the report
 
@@ -1492,9 +1366,8 @@ Every run ends by writing the human-readable report next to `summary.json` (`xta
 ```
 index.html                                       # every scenario × size, start here
 summary.md                                       # the short table for the CI job summary (#70)
-meta.json                                        # the run's commit, subject, time, OS, command and app sources
+meta.json                                        # the run's commit, subject, time, OS and command
 <scenario>/report.html                           # one page per scenario
-<scenario>/<cols>x<rows>/<capture>.diff.txt      # unified diff of python/<capture>.txt against rust/<capture>.txt
 ```
 
 Open `index.html` in a browser. It works straight from disk or from a downloaded CI artifact (`file://`): every page
@@ -1502,122 +1375,71 @@ is self-contained, with inline CSS, a few lines of inline JS and no external ass
 
 **The published report.** The latest `rust-main` report is online at
 <https://www.gizmo.codes/gh-lazy/parity/report/>, under a landing page at <https://www.gizmo.codes/gh-lazy/parity/>
-that shows the commit it was built from (linked, with its subject) and when, the run's pass / fail / `rust-not-ready`
-counts with the failed scenarios, the matrix's status by milestone and by area, its coverage (the
-`cargo xtask parity-matrix` tables), and links to the matrix and PLAN §6.3. Only the latest report is kept. The
-[Pages workflow](#ci) builds both; `cargo xtask parity-site --report <dir> --out <dir>` writes the landing page's
-`index.html` locally from any report (the commit and time come from the report's `meta.json`, the counts from its
-`summary.json`, so the page and the report can't disagree). It fails when the report has no `index.html`, and lists
-the matrix's problems on the page rather than failing on them.
+that shows the commit it was built from (linked, with its subject) and when, the run's pass / fail counts with the
+failed scenarios, the matrix's status by milestone and by area, its coverage (the `cargo xtask parity-matrix`
+tables), and links to the matrix and PLAN §6.3. Only the latest report is kept. The [Pages workflow](#ci) builds
+both; `cargo xtask parity-site --report <dir> --out <dir>` writes the landing page's `index.html` locally from any
+report (the commit and time come from the report's `meta.json`, the counts from its `summary.json`, so the page and
+the report can't disagree). It fails when the report has no `index.html`, and lists the matrix's problems on the page
+rather than failing on them.
 
-- **`index.html`** starts with the run's commit (`git rev-parse HEAD`), time, OS and command line, and where Python
-  came from (`Python: recorded`, `Python: live`, `Python: live for a, b; recorded for the rest` or
-  `Python: not run`), then one row per
-  scenario × size: the result badge, each app's status, and the structural mismatch count (`not checked` when there's
-  no `check.json`). Failed gated scenarios come first, then other failures, then `rust-not-ready`, then passes. Each
-  row links to the scenario's page.
-- **`<scenario>/report.html`** has a header with the description, `gate`, `parity_rows`, the result and a table of
-  every app run per size: status, duration (`recorded` for a Python side read from its reference), flaky, the failed
-  step, the exit code and fixture misses as `METHOD /path?query` keys. Then, per size and capture:
-  - **Two panels**, Python on the left and Rust on the right, each the captured screen drawn from `grid.json` at one
-    `ch` per cell (default colors `#d4d4d4` on `#1e1e1e`, inverse applied, indexed colors through the xterm palette).
-    A panel wider than its half of the page scrolls sideways inside itself. The Python panel is captioned
-    `Python (recorded)` when it shows a reference.
-  - When an app has no capture, its panel says why (`exited with code 1 at step 2`, say) and shows `failure.grid.json`,
-    the screen when the run failed, if there is one. An app that didn't run says `not run (--python-only)` or similar.
-  - **Highlight differences** (when both apps captured) outlines every cell whose character differs between the two
-    grids, and the count of differing cells sits next to it. The cells are marked when the report is written; the
-    checkbox only flips a class, and it's hidden when JS is off.
-  - **Structural mismatches**: the `check.json` table (check, box, Python value, Rust value, the `[expect]` value
-    for an `expect` mismatch, message), tagged
-    `expect`, `cross`, `drift` or `snapshot` (a Rust snapshot mismatch, with a link to its diff), or `not checked`
-    when there's no `check.json`.
-  - Collapsible sections: the text diff, both `structure.json` files pretty-printed, and per size the last 50 lines of
-    each app's `fake-gh.log`. **Expand all** / **Collapse all** open or close every section at once.
-- **`<capture>.diff.txt`** is written only when both apps captured. It's informational and never gates: Markdown,
-  wrapping and spacing legitimately differ, and the structural check is what decides.
-- **`summary.md`** is a heading `Parity: <n> pass, <n> fail, <n> rust-not-ready` (plus `python-only` / `rust-only`
-  counts when there are any), the line `Python: …` as in `index.html`, a table
-  `| Scenario | Gate | 160x48 | 100x30 | Mismatches |` (other sizes in the run get extra columns; a size a scenario
-  didn't run is `skipped`; drift counts as mismatches), and a `<details>` list of the first 20 mismatches as
-  `scenario/size/capture: check box: python=… rust=…` (`drift check box` for drift, where `python` is the live run and
-  `rust` the reference, and `rust snapshot` or `rust effects` for a snapshot mismatch), plus ` expected=…` for an `[expect]` mismatch, with values
-  cut to 80 characters. A size where a run passed only on retry shows its result with ` (flaky)`. It stays under
-  64 KiB.
+- **`index.html`** starts with the run's pass / fail counts, commit (`git rev-parse HEAD`), time, OS and command
+  line, then one row per scenario × size: the result badge, the run's status, and the mismatch count (`not checked`
+  when no capture has a `check.json`). Failures come first, then passes. Each row links to the scenario's page.
+- **`<scenario>/report.html`** has a header with the description, `parity_rows`, the result and a table of the run
+  at each size: status, duration, flaky, the failed step, the exit code and fixture misses as `METHOD /path?query`
+  keys. Then, per size and capture:
+  - When the capture differs from its snapshot, **two panels**: **Snapshot** (the committed `.screen`) on the left
+    and **Run** (the run's masked screen) on the right, each drawn at one `ch` per cell (default colors `#d4d4d4` on
+    `#1e1e1e`, inverse applied, indexed colors through the xterm palette). **Highlight differences** outlines every
+    cell whose character differs between the two, and the count of differing cells sits next to it. The cells are
+    marked when the report is written; the checkbox only flips a class, and it's hidden when JS is off. A panel wider
+    than its half of the page scrolls sideways inside itself.
+  - Otherwise one **Run** panel with the captured screen from `grid.json`. With no capture, the panel says why
+    (`exited with code 1 at step 2`, say) and shows `failure.grid.json`, the screen when the run failed, if there is
+    one.
+  - **Mismatches**: the `check.json` table (check, box, actual, expected, message), each tagged `expect` or `snapshot`
+    (a snapshot or effects mismatch, with a link to its diff), or `not checked` when there's no `check.json`.
+  - Collapsible sections: the text diff against the snapshot, `structure.json` pretty-printed, and per size the last
+    50 lines of `fake-gh.log` and what the app opened in the browser. **Expand all** / **Collapse all** open or close
+    every section at once.
+- **`summary.md`** is a heading `Scenarios: <n> pass, <n> fail`, a table `| Scenario | 160x48 | 100x30 | Mismatches |`
+  (other sizes in the run get extra columns; a size a scenario didn't run is `skipped`), and a `<details>` list of the
+  first 20 mismatches as `scenario/size/capture: check box: actual=… expected=…` for an `[expect]` mismatch, or
+  `scenario/size/capture: snapshot: <message>` for a snapshot one, with values cut to 80 characters. A size where the
+  run passed only on retry shows its result with ` (flaky)`. It stays under 64 KiB.
 
-A size's result in the index and `summary.md` is computed from that size's app statuses; a size with structural
-mismatches takes the scenario's `fail` or `rust-not-ready` result.
+A size's result in the index and `summary.md` is computed from that size's status and its captures' mismatches.
 
 ### CI
 
 The parity gate runs in the single CI job of `.github/workflows/rust.yaml`, `fmt, clippy, test (ubuntu-latest)`, on
 every PR into `rust-main`, after fmt, clippy and the unit tests. It runs on Linux only, because macOS runners are too
-expensive (PLAN §7). There's no `paths` filter: every PR runs the gate, and every PR runs the Rust app live. Python
-runs only when the PR changes something it depends on, because a scenario's Python side is otherwise exactly its
-[recorded reference](#recorded-references), which `cargo test` has already checked is fresh.
+expensive (PLAN §7). There's no `paths` filter: every PR runs the gate. No Python, uv or `setup-uv` is involved
+(#397), and the checkout is one commit deep.
 
-The checkout is two commits deep (`fetch-depth: 2`): a PR run checks out the PR's merge commit, whose first parent,
-`HEAD^1`, is the base tip. A `Plan the parity run` step runs
-`cargo xtask parity --all --live-python-since HEAD^1 --plan >> "$GITHUB_OUTPUT"`, and the rest of the job follows the
-plan ([Running scenarios](#running-scenarios) has the rules):
-
-| Plan | When | What runs |
-| --- | --- | --- |
-| `live-python=all` | The PR changes the Python app (`lazy_github/`, `pyproject.toml`, `uv.lock`), the capture harness, a pinned crate version, a Python-backed test (`xtask/tests/python_app.rs`, `xtask/tests/structural_check.rs`, `crates/fake-gh/tests/python_client.rs`), or the workflow. That's a merge of `main` or a harness change. | Python 3.13 and `uv sync --frozen`, every scenario with Python live (checked for drift, so the re-recorded references are checked on the CI machine), and the `#[ignore]`d Python-backed tests, `cargo test -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`. |
-| `live-python=a,b` | The PR re-recorded the references of `a` and `b`, and nothing above changed. | Python and `uv sync`; `a` and `b` run Python live, which checks that the developer's recording reproduces on Linux with Python 3.13. The rest read their references. No Python-backed tests. |
-| `live-python=none` | Anything else: most feature PRs. | No `setup-uv`, no `uv sync`, no Python process. Rust runs against the references. |
-
-The parity step is `cargo xtask parity --all --ci --no-sync --jobs 4 --live-python-since HEAD^1` (the runner's 4
-vCPUs), which recomputes the same plan. Under `live-python=all` it runs `--jobs 2`: four live Textual apps on four
-vCPUs drop and misroute keys, which shows up as early captures and timeouts that repeat on the retry. The job summary starts with the plan line. Pushes to `rust-main` run only
+The parity step is `cargo xtask parity --all --ci --jobs 4` (the runner's 4 vCPUs). Pushes to `rust-main` run only
 fmt, clippy and the unit tests, because the squash-merged tree already passed the gate on its PR, and that run keeps
-the Rust cache warm for PRs. The unit tests include the references freshness test, so a trunk that merged stale
-references goes red at once.
+the Rust cache warm for PRs. The unit tests include `xtask/tests/snapshots.rs`, so a trunk with a scenario edited
+without `--accept` goes red at once.
 
-A PR that edits a scenario, its fixtures or a harness input without re-recording fails in the Test step (stale
-reference) and again in the parity step (exit `2`), with the `--record` command to run. Live runs on CI are the
-check that the manifests hash every input: a missed input shows up as drift the next time the scenario runs live.
-There's no scheduled live audit, since `schedule` runs only on the default branch, `main`; the parity reviewer's
-milestone audits (`cargo xtask parity --all --live-python`) take that role.
+**What gates.** The job fails when `cargo xtask parity` exits non-zero ([exit codes](#running-scenarios)):
 
-**What gates.** The job fails when `cargo xtask parity` exits non-zero ([exit codes](#running-scenarios)) or an
-ignored test fails:
-
-- a scenario with `gate = true` has a structural mismatch, or an app run that failed at any size;
-- the Python side failed in any scenario (timeout, crash, fixture miss, failed `[expect]`), since that means the
-  fixtures or the scenario are broken;
+- a run failed at any size (timeout, crash, fixture miss);
+- a capture's `[expect]` failed, or it differs from its snapshot, or the run's effects differ from `effects.txt`;
 - a scenario file is invalid or the harness failed.
 
 A run that fails and then passes on its one retry doesn't fail the job; `summary.md` marks its size `(flaky)`.
 
-**What doesn't gate.** The Rust side of a scenario with `gate = false` (`rust-not-ready`), the text diffs and the HTML
-report. Because of `--ci`'s 3 s wait cap, a CI `rust-not-ready` can also mean a ready step that needs longer than 3 s.
-Run the scenario locally without `--ci` before setting `gate = true`.
-
 **Annotations.** With `--ci`, the last lines of the output are workflow commands that GitHub shows on the run and
 on the scenario file in the PR:
 
-- `::error file=parity/scenarios/<name>.toml::<scenario>/<size>/<capture>: <source> <check> <box>: <message>` for
-  each mismatch that counts against the gate, where `<source>` is `<app> expect` for an `[expect]` mismatch on that
-  app's screen, `cross` for a Python-vs-Rust one, or `rust` for a Rust snapshot mismatch
-  (`startup/160x48/main: rust snapshot: rows 3-3 differ; ...`), the same wording as the console lines;
-- `::error` for each app run that fails the gate (`<scenario>/<size>/<app>: timeout at step 0 (15.2s)`) and for a
-  harness error: on the scenario file (and line) for an invalid scenario, and with no file for one that stops the
-  whole run;
-- one `::warning` per `rust-not-ready` scenario, listing the Rust failures and the number of mismatches, and one per
-  run that passed only on retry.
-
-**Scenarios ahead of their feature.** A scenario can land before the Rust feature it checks, with `gate = false` and
-its Python reference recorded: it runs on every PR, shows as `rust-not-ready` in the report, `summary.md` and the
-published site, and never fails the job, so the `pass` / `rust-not-ready` counts track how much of the Python app the
-Rust app matches. `link-hints`, `link-click`, `paste-link`, `pr-preload` and `settings-list-field` started this way.
-The feature PR then makes it pass and flips `gate`, as below.
-
-**Flipping `gate`.** A feature PR that makes a scenario pass sets `gate = true` in that scenario file in the same
-PR; its acceptance criteria say "scenario `<name>` with `gate = true`". The parity reviewer checks the flip, and
-moves the rows whose ids are in `parity_rows` to `parity` in their `docs/rust-rewrite/parity/areas/<area>.md` files
-when it merges. From then on a regression in that scenario fails every PR. The gate isn't read from the parity matrix,
-so turning it on is atomic with the change that earns it.
+- `::error file=parity/scenarios/<name>.toml::<scenario>/<size>/<capture>: expect <check> <box>: <message>` for each
+  `[expect]` mismatch, and `...: snapshot: <message>` for each snapshot or effects mismatch
+  (`startup/160x48/main: snapshot: rows 3-3 differ; ...`), the same wording as the console lines;
+- `::error` for each failed run (`<scenario>/<size>: timeout at step 0 (15.2s)`) and for a harness error: on the
+  scenario file (and line) for an invalid scenario, and with no file for one that stops the whole run;
+- one `::warning` per run that passed only on retry.
 
 **The report.** The job summary shows `summary.md` and a link to the `parity-report-<os>` artifact (kept 14 days).
 Download it from the link (or the run page's **Artifacts** section), unzip it and open `index.html` in a browser; it
@@ -1633,164 +1455,28 @@ branch build did, and the parity site under `/parity/` ([The published report](#
 push to `rust-main` that touches `crates/`, `xtask/`, `parity/`, `docs/rust-rewrite/parity/`, `Cargo.toml`,
 `Cargo.lock`, `rust-toolchain.toml` or the workflow, and by hand (`workflow_dispatch`; with `deploy` off it only
 builds the `github-pages` artifact). A newer run cancels one still running. It isn't a gate: it runs
-`cargo xtask parity --all --no-sync --jobs 4` against the recorded references (no Python, no uv), ignores its exit
-code so failing scenarios are published, then `cargo xtask parity-site`, and copies the report to `/parity/report/`.
-Only a run with no report (no `index.html`) fails, which leaves the live site as it was. `main` is frozen during the
-rewrite, so a change there is picked up by the next run, or a manual one.
-
-### Recorded references
-
-A recorded reference is the Python side of one scenario at one size, checked into the repo like an `insta`
-snapshot, so a parity run can compare the Rust app against it without starting Python (#150). They are separate from
-the data goldens in `parity/goldens/` (#157). `cargo xtask parity --record` writes them, `--check-references`
-checks them, and a normal run reads them instead of starting Python ([Running scenarios](#running-scenarios));
-`--live-python` runs Python and checks the references for drift.
-
-```
-parity/references/<scenario>/<cols>x<rows>/
-  manifest.toml        # input hashes; written by --record, never by hand
-  <capture>.screen     # one per capture step (format in #161)
-  requests.jsonl       # the Python run's fake-gh log, normalized
-  browser.jsonl        # fake-browser's log with the capture marks; only when Python opened something
-```
-
-Every scenario that runs Python has one directory per size in its `sizes`. Anything else under `parity/references/`
-is an orphan: a directory for a scenario that doesn't exist or doesn't run Python, a size the scenario doesn't list,
-a `.screen` for a capture it doesn't have, or any other file.
-
-**The manifest.**
-
-```toml
-# Written by `cargo xtask parity --record`. Don't edit.
-format = 1
-size = "160x48"
-captures = ["main"]
-
-[inputs]
-scenario = "3f1c..."
-fixtures = "a09e..."
-python_app = "77d2..."
-harness = "c41b..."
-
-[recorded_with]
-python = "3.11.14"
-os = "linux"
-```
-
-`captures` must equal the scenario's captures in step order. `recorded_with` is informational and never compared.
-Each input is a git object id from `git hash-object`, run in the repo with a cleared environment:
-
-| Input | What it hashes |
-| --- | --- |
-| `scenario` | The capture key: JSON of the resolved `config.json` (the config file plus `config_overrides`), the fixture set names in order, `gh_auth`, `git_remote`, `git_remote_protocol` (only when `"ssh"`), `git_branch`, `git_remote_branches` (only when set), `key_delay_ms`, `capture_stable_ms`, the size, every step and, only when the scenario sets one, the seed: its name and its files as sorted `[<path relative to the seed dir>, <blob>]` pairs; `config_dir_read_only` only when `true`; and `gh_timeout_ms` only when set. Waits are stored without `timeout_ms`, and captures with their `checks` and `ignore.boxes` (not `ignore.writes`). |
-| `fixtures` | Every fixture in the scenario's sets whose request key (method, path, query, accept) equals a served entry in `requests.jsonl`, plus its `body_file`, as sorted `<set>/<relpath> <blob>` lines. For a `--paginate` request, the pages its `Link: rel="next"` headers lead to as well. |
-| `python_app` | `lazy_github/`, `pyproject.toml` and `uv.lock`. |
-| `harness` | `crates/fake-gh/src/`, `crates/fake-gh/Cargo.toml`, `xtask/src/parity/{env,runner,keys,mouse,grid,focus}.rs`, `parity/themes.toml` (the colors `wait.focused` reads), `CAPTURE_VERSION` and the `vt100` and `portable-pty` versions in `Cargo.lock`. |
-
-The file sets (`python_app`, `harness`) are the files `git ls-files -co --exclude-standard` lists (tracked, plus
-untracked but not ignored: local edits count and `__pycache__` doesn't), each hashed from the working tree after
-`.gitattributes` filters, so a CRLF checkout hashes like an LF one. The path lists and `CAPTURE_VERSION` are consts in
-`xtask/src/parity/reference.rs`. Bump `CAPTURE_VERSION` when capture semantics change somewhere that isn't listed,
-for example a new env var set in a file that isn't hashed.
-
-**What invalidates a reference.**
-
-| Change | References invalidated |
-| --- | --- |
-| Merging `main` into `rust-main` with changes to `lazy_github/`, `pyproject.toml` or `uv.lock` | all |
-| A scenario's env, steps, `checks` or `ignore.boxes`, or the config file it uses | that scenario's |
-| A file in a scenario's seed (`parity/seeds/<name>/`), added, changed or removed | that scenario's (`scenario changed`) |
-| Adding or changing fixtures | those whose Python run requested a changed key |
-| `crates/fake-gh/src/`, `env.rs`, `runner.rs`, `keys.rs`, `mouse.rs`, `grid.rs`, `focus.rs` or `themes.toml`, a pinned crate, or `CAPTURE_VERSION` | all |
-| `[expect]`, `gate`, `parity_rows`, `description`, timeouts, `apps`, `check.rs`, `structure.rs` or `report.rs` | none |
-
-`[expect]` and the checks run against the stored screen on every run, which is why they need no re-record.
-
-**Checking.** `cargo xtask parity --check-references [SCENARIO...]` recomputes the four hashes for each reference
-and prints one line per problem, then a count. It needs only `git` and the fixtures (no build, no Python, no `uv`) and
-takes well under a second.
-
-```
-stale reference: startup/160x48: fixtures, python_app changed; run cargo xtask parity --record startup
-missing reference: startup/100x30; run cargo xtask parity --record startup
-orphaned reference: parity/references/old-name/ (no such scenario); cargo xtask parity --record deletes it
-invalid reference: startup/160x48/main.screen:1: expected `lazy-github-screen 1`, found "..."
-```
-
-A stale reference names every changed input, in the order `scenario, fixtures, python_app, harness`. A reference is
-invalid when `manifest.toml` doesn't parse, has another `format` or `size`, or lists other captures than the
-scenario, or when a `.screen` or `requests.jsonl` is missing or doesn't parse (a `.screen` is fully parsed, and the
-error names its line). Orphaned directories of other scenarios are reported only when checking all of them. With
-`--ci`, each problem is also an `::error` on the scenario file. `xtask/tests/references.rs` runs the same check in
-`cargo test` and fails on any problem, missing references included, so a scenario change made without a re-record
-fails the pre-push checks the way an outdated `insta` snapshot does.
-
-#### Recording
-
-`cargo xtask parity --record [SCENARIO...]` (no names means every scenario) builds `fake-gh`, runs
-`uv sync --frozen --quiet` unless `--no-sync`, and then, for each scenario that runs Python, at each of its `sizes`:
-
-- A fresh reference is skipped (`startup 160x48: fresh`) unless `--force`.
-- Otherwise Python runs with **no retries and no wait caps**:
-  1. If an old reference exists and this run agrees with it, the manifest is rewritten and each old `.screen` is kept
-     when it's identical outside ignored boxes (every cell's text and style is equal except inside the interior of a
-     box whose title contains one of the capture's `ignore.boxes`, in both screens). A re-record that changes nothing
-     leaves only `recorded_with` in the diff: `startup 160x48: unchanged (1 run, 3.0s)`.
-  2. Otherwise Python runs a second time, and run 1 is written if the two agree:
-     `startup 160x48: recorded (2 runs, 6.2s)`.
-  3. Otherwise nothing is written, and the first disagreement is printed with a unified diff of what it's about:
-     `startup 160x48: not recorded: run 2 differs from run 1: main: rows [[1] Repositories]: ...`. A run that fails
-     on its own isn't run again: `not recorded: run 1 timeout at step 3 (15.1s)` or
-     `not recorded: run 1 [expect] main: contains: no row contains "..."`.
-
-**Agree** means both runs passed (status `ok`, no fixture misses or errors), both pass the scenario's `[expect]`,
-they produced the same captures, `check::compare` finds nothing between them for each capture's `checks` and
-`ignore` (the cross-app check, between two Python runs; in its messages `python` is the first run and `rust` the
-second), and they served the same request keys. `reference::agree` implements it, and the drift check of a live run
-against its reference reuses it.
-A failed run is never written and nothing is retried, so a flaky Python run shows up once, at record time, instead
-of being stored.
-
-A reference is written to `<size>.tmp/` and renamed into place, then checked for freshness. Afterwards `--record`
-deletes orphans: with no names, directories of scenarios that don't exist or don't run Python; for each selected
-scenario, sizes it doesn't list and `.screen` files of captures it doesn't have. Both runs' dumps stay in
-`<out>/<scenario>/<size>/run-1/` and `run-2/` (the runner's usual files) for debugging. The exit code is `0` when
-every selected reference is fresh at the end, `1` when some couldn't be recorded (the others are still written) and
-`2` for a harness error or an invalid scenario.
-
-**When a scenario won't record**, fix the scenario, not the tolerance: wait for a signal that follows the redraw
-the capture races with, or add the box to `ignore.boxes` when the capture doesn't check its contents. Read the two
-dumps first; a disagreement between two Python runs is a race the Rust side would be compared against too. Under
-load (other parity runs at the same time), rerun with `--jobs 1` before changing anything.
-
-Known races: after a repo is selected, Python sometimes draws the Details tab underline zero-width (`╸╺━━━` instead
-of `╸━━━━╺`) and leaves it that way, so no wait settles it (#209). Captures taken after selecting a repo that don't
-check the Details box list it in `ignore.boxes` (`table-lazy-load`, `status-bar-current-repo`), so a forced
-re-record keeps the stored screen whichever form the run drew. The hidden terminal cursor's position varies too, but
-no check reads it and a re-record doesn't compare it, so it never rewrites a screen.
-
-Re-record a scenario, and commit `parity/references/`, whenever its env, steps, `checks` or `ignore.boxes` change.
-Flipping `gate`, editing `parity_rows`, editing `[expect]` or editing `ignore.writes` needs no re-record.
+`cargo xtask parity --all --jobs 4`, ignores its exit code so failing scenarios are published, then
+`cargo xtask parity-site`, and copies the report to `/parity/report/`. Only a run with no report (no `index.html`)
+fails, which leaves the live site as it was. `main` is frozen during the rewrite, so a change there is picked up by
+the next run, or a manual one.
 
 ### Rust snapshots
 
-Every Rust capture has a committed snapshot, checked on every run (#396). It's the first step of turning the harness
-into Rust tests: after cutover (#207) the scenarios' visuals are reviewed snapshots, with no Python comparison (#397
-removes the Python side, #400 moves the runs into `cargo test`). Until then the snapshots sit beside the Python
-references and the cross-app check, and guard the screens where Rust deliberately moves away from Python.
+Every capture has a committed snapshot, checked on every run (#396). The scenarios' visuals are reviewed snapshots:
+#397 removed the Python comparison they replaced (the recorded Python references in `parity/references/` and the
+cross-app check), and #400 moves the runs into `cargo test`.
 
 ```
 parity/snapshots/<scenario>/<cols>x<rows>/
-  <capture>.screen   # the masked screen, in the .screen format (v1) the references use: what's compared
+  <capture>.screen   # the masked screen, in the .screen format (v1): what's compared
   <capture>.svg      # the same screen drawn as an SVG, for review in PRs and browsers
   effects.txt        # what the run did outside the screen
 ```
 
-Every scenario the Rust app runs has one directory per size in its `sizes`, Rust-only scenarios included; anything
-else under `parity/snapshots/` is an orphan.
+Every scenario has one directory per size in its `sizes`; anything else under `parity/snapshots/` is an orphan.
 
-- **`<capture>.screen`** is the Rust run's capture, masked (below), in the [`.screen` format](#recorded-references),
-  so a change reads as a text diff of rows, styles and legend.
+- **`<capture>.screen`** is the run's capture, masked (below), in the `.screen` format (`xtask/src/parity/screen.rs`
+  documents it), so a change reads as a text diff of rows, styles and legend.
 - **`<capture>.svg`** is `lazy_github_core::screen::Screen::to_svg` of that `.screen`, titled
   `<scenario> · <capture> · <cols>x<rows>`, in the report's default colors (`#d4d4d4` on `#1e1e1e`). GitHub shows
   SVGs in a PR's file view, with a rich diff, so a reviewer sees what changed without running anything. It's derived
@@ -1799,34 +1485,33 @@ else under `parity/snapshots/` is an orphan.
   reorder it: each served request as `<METHOD> <path>[?<query>][ accept=<accept>]` (query keys sorted as
   `requests.jsonl` normalizes them, `accept` left out when it's `json`), followed for a request with a body by the
   body as compact JSON with sorted object keys; each fake-ssh line as `ssh <service> <path>`; and each URL opened in
-  the browser as `open <url>`. For Rust it covers what the cross-app `writes` check and the references'
-  `requests.jsonl` compare, plus reads and opened URLs.
+  the browser as `open <url>`. It covers what the removed cross-app `writes` check compared, plus reads and opened
+  URLs.
 
 `.gitattributes` keeps `parity/snapshots/**` LF and marks the `.screen` files and `effects.txt` generated, so a PR's
 file list collapses them and shows the SVGs.
 
 **Masking.** A snapshot holds only what's the same on every run, on every machine:
 
-- the interior of every box whose title contains one of the capture's `ignore.boxes`, which the cross-app check
-  already skips;
+- the interior of every box whose title contains one of the capture's `ignore.boxes`, for a box whose contents differ
+  between runs (each entry has a comment saying why);
 - every match of the capture's `mask` patterns on a row of the screen text, for text such as a temp path in a toast;
 - the run directory, wherever it appears, both as the harness made it and in its canonical form (macOS's
   `/private/var/...`), so the screenshot toast, the read-only-config toast and anything else that prints a path under
   `HOME` match. A path that wraps across rows needs a `mask` entry.
 
 A masked cell becomes `░` in the default colors, so the masked area shows in the `.screen` and the SVG and the layout
-around it is unchanged. A hidden cursor is written as `cursor 0 0 hidden`, since its position isn't stable
-([Recording](#recording), "Known races") and no check reads it; a visible cursor is kept.
+around it is unchanged. A hidden cursor is written as `cursor 0 0 hidden`, since its position isn't stable and no
+check reads it; a visible cursor is kept.
 
 **The fixed clock.** The harness starts the Rust app with `LAZY_GITHUB_FIXED_TIME=2026-01-01T00:00:00Z`
 (`lazy_github_core::time::FIXED_TIME_ENV`), which a debug build reads: everything it shows from the wall clock (the
 command log's and the log file's timestamps, a screenshot's file name) reads that instant, frozen, so those screens
-need no masks. Timers and deadlines keep the monotonic clock. Release builds ignore the variable, and Python's UI
-shows only fixture timestamps.
+need no masks. Timers and deadlines keep the monotonic clock. Release builds ignore the variable.
 
-**Checking.** After each Rust run at each size, each capture is masked and compared with its `.screen`, and the run's
+**Checking.** After each run at each size, each capture is masked and compared with its `.screen`, and the run's
 effects with `effects.txt` ([Running scenarios](#running-scenarios)). A difference is a `snapshot` mismatch on that
-capture, or an `effects` one on the scenario's last capture, and fails the scenario like a gated cross-app mismatch:
+capture, or an `effects` one on the scenario's last capture, and fails the scenario:
 
 ```
 pr-details 160x48 overview: snapshot: rows 12-14 differ; run cargo xtask parity --accept pr-details and review the diff
@@ -1834,17 +1519,17 @@ pr-details 160x48 overview: snapshot: missing; run cargo xtask parity --accept p
 issue-new 160x48: effects: 1 line only in the run: POST /repos/parity-bot/issue-fixture/issues {"body":"y","title":"x"}
 ```
 
-Rows are 0-based, as in `grid.json`. The run writes what it saw next to its dumps ([Report layout](#report-layout)),
-`check.json` lists the mismatch under `snapshot`, the report's structural-mismatch table links to the diff, and
-`--ci` annotates it (`::error file=parity/scenarios/<name>.toml::<scenario>/<size>/<capture>: rust snapshot: ...`).
-A Rust run that failed on its own (timeout, crash, fixture miss, `[expect]`) reports that failure and no snapshot
+Rows are 0-based, as in `grid.json`. The run writes what it saw, and a copy of the snapshot it was compared with,
+next to its dumps ([Report layout](#report-layout)); `check.json` lists the mismatch under `snapshot`, the report
+shows the Snapshot and Run panels and links to the diff, and `--ci` annotates it
+(`::error file=parity/scenarios/<name>.toml::<scenario>/<size>/<capture>: snapshot: ...`). A run that failed on its own (timeout, crash, fixture miss, `[expect]`) reports that failure and no snapshot
 mismatches, and a `--size` the scenario doesn't list has no snapshot to compare.
 
 #### Accepting snapshots
 
 `cargo xtask parity --accept [SCENARIO...]` (no names means every scenario) builds `lazy-github` and `fake-gh`
-unless `--no-build`, then for each scenario the Rust app runs, at each of its `sizes`, runs Rust **twice**, with no
-retries and no wait caps, as `--record` runs Python:
+unless `--no-build`, then for each scenario, at each of its `sizes`, runs the app **twice**, with no retries and no
+wait caps:
 
 - Both runs must pass on their own (status `ok`, no fixture misses or errors, `[expect]` passes) and agree: the same
   captures, identical masked `.screen`s and identical `effects.txt`. Then the snapshot is written
@@ -1855,7 +1540,7 @@ retries and no wait caps, as `--record` runs Python:
   `not accepted: run 1 timeout at step 3 (15.1s)`. The fix is a better `wait` or a `mask`, not a retry.
 
 A snapshot is written to `<size>.tmp/` and renamed into place. Then `--accept` deletes orphans: with no names,
-directories of scenarios that don't exist or don't run Rust; for each selected scenario, sizes it doesn't list and
+directories of scenarios that don't exist; for each selected scenario, sizes it doesn't list and
 files of captures it doesn't have. Both runs' dumps stay in `<out>/<scenario>/<size>/run-1/` and `run-2/`. The exit
 code is `0` when every selected snapshot was written or unchanged, `1` when some weren't (the others are still
 written) and `2` for a harness error or an invalid scenario.
@@ -1874,46 +1559,41 @@ the same screens is the parity run's job.
 
 - `cargo test -p xtask` covers scenario parsing, key encoding, config layering, the query responder and the grid
   format, and drives a tiny test TUI (`xtask/tests/bin/echo_tui.rs`, built as an example) through the runner
-  (`xtask/tests/runner.rs`). None of it needs Python. `xtask/src/parity/mouse.rs` unit-tests the SGR encoding and
-  text targets (`nth`, no match, a match after a wide character). `echo_tui` turns on mouse capture (any-motion, or
-  press/release only or off with `ECHO_TUI_MOUSE=press|off`) and echoes mouse events, and `tests/runner.rs` drives
-  `click`, `wheel` and `move` through it, with a text target, an off-screen target, a run without motion reports and
-  one with mouse reporting off.
+  (`xtask/tests/runner.rs`). `xtask/src/parity/mouse.rs` unit-tests the SGR encoding and text targets (`nth`, no
+  match, a match after a wide character). `echo_tui` turns on mouse capture (any-motion, or press/release only or off
+  with `ECHO_TUI_MOUSE=press|off`) and echoes mouse events, and `tests/runner.rs` drives `click`, `wheel` and `move`
+  through it, with a text target, an off-screen target, a run without motion reports and one with mouse reporting
+  off.
 - `xtask/tests/local_remote.rs` prepares runs with `git_remote_branches` and checks, with real git and fake-ssh
   (`xtask/tests/bin/fake_ssh.rs`, also an example), the bare repo's branches, `ls-remote` and `push` from `work/`
   with the app's environment, and `wait.remote_branch`. `crates/fake-gh/tests/ssh.rs` tests fake-ssh itself: both
   services, the refusals and the shared log lock.
-- Structure extraction and the checks are unit-tested on synthetic grids in `xtask/tests/grids/*.txt` and on the real
-  Python dumps in `xtask/tests/grids/python/` (golden `insta` snapshots in `xtask/src/parity/snapshots/`). A synthetic
-  grid is the screen's characters, then optionally a `--- styles` layer with one letter per cell and a `--- legend`
-  mapping letters to styles (`g fg=#4ebf71 bg=#121212 bold inverse`); `xtask/src/parity/test_grid.rs` documents the
-  format. When the Python screen changes, refresh the dumps from a `--python-only` run and review the snapshot diff
-  with `cargo insta review`.
-- The `wait.focused` detector (`xtask/src/parity/focus.rs`) is unit-tested the same way: Python dumps of a focused
-  pane, button, field (labelled inside, above and to the left), collapsible title and dashed comment box in
-  `xtask/tests/grids/python/` (copied there, not read from `parity/references/`, which re-recording changes), and
+- Structure extraction and the checks are unit-tested on synthetic grids in `xtask/tests/grids/*.txt` and on the
+  frozen Python dumps in `xtask/tests/grids/python/` (golden `insta` snapshots in `xtask/src/parity/snapshots/`).
+  Those dumps were captured before #397 and are kept as test vectors; nothing regenerates them. A synthetic grid is
+  the screen's characters, then optionally a `--- styles` layer with one letter per cell and a `--- legend` mapping
+  letters to styles (`g fg=#4ebf71 bg=#121212 bold inverse`); `xtask/src/parity/test_grid.rs` documents the format.
+- The `wait.focused` detector (`xtask/src/parity/focus.rs`) is unit-tested the same way: the frozen dumps of a focused
+  pane, button, field (labelled inside, above and to the left), collapsible title and dashed comment box, and
   synthetic grids for mixed-color outlines, single reversed cells and missing theme colors. `echo_tui` draws a
-  focused button on Ctrl+F, and `tests/runner.rs` waits for it and checks a timeout's `message`.
-- The report has `insta` snapshots (`summary.md`, the text diff, the HTML of a small grid pair) in
-  `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps. Review
-  snapshot changes with `cargo insta review`, or rerun with `INSTA_UPDATE=always` and read the diff.
-- `xtask/tests/reference_reads.rs` records a reference with `echo_tui` standing in for Python in a temp repo, then
-  checks that a normal run reads it with `--python /nonexistent` (`recorded: true`, checks run against it), that a
-  stale one exits `2` before anything starts, and that `--live-python` finds no drift in an agreeing run and drift in
-  a tampered reference. It also runs the `xtask` binary on a modified copy of `startup` for the stale lines. None of
-  it needs Python.
-- `xtask/tests/accept.rs` drives `--accept` with `echo_tui` standing in for the Rust app in a temp repo: two agreeing
+  focused button on Ctrl+F and a pane outlined in `ECHO_TUI_BORDER` on Ctrl+G, and `tests/runner.rs` waits for them,
+  the pane in `tokyo-night`'s colors as `theme.rs` reads them, and checks a timeout's `message`. `theme.rs`
+  unit-tests the colors of a truecolor theme, an ANSI theme, an unknown name and a seed's user theme.
+- The report has `insta` snapshots (`summary.md`, the HTML of a small grid pair, the Snapshot and Run panels) in
+  `xtask/src/parity/snapshots/`, and `xtask/tests/report.rs` writes a whole report from synthetic dumps and runs the
+  check on a scenario whose `[expect]` fails. Review snapshot changes with `cargo insta review`, or rerun with
+  `INSTA_UPDATE=always` and read the diff.
+- `xtask/tests/accept.rs` drives `--accept` with `echo_tui` standing in for the app in a temp repo: two agreeing
   runs write a snapshot, a second accept leaves it unchanged, two disagreeing runs write nothing and print the diff,
-  orphans are deleted, and a normal run fails with a `snapshot` mismatch (and writes the `.new` files and the diff)
-  once the screen no longer matches. `xtask/tests/snapshots.rs` checks the committed snapshots, and that its check
-  finds a deleted `.screen`, an orphan directory and an edited `.svg` in a temp copy. Masking, effects, comparison
-  and the `Grid` to `Screen` conversion are unit-tested in `xtask/src/parity/snapshot.rs`, with an `insta` snapshot
-  of a small masked screen's SVG.
-- `xtask/tests/python_app.rs` runs `startup` against the Python app and checks that a fixture miss fails the run. It
-  needs uv, so it's `#[ignore]`d (CI runs it after the parity scenarios): run it with
-  `cargo build -p fake-gh && cargo test -p xtask --test python_app -- --ignored`. `xtask/tests/structural_check.rs`
-  (also ignored) rebinds `main.repos.focus` to `9` in a copy of `startup` and checks that `[expect]` fails with a
-  `titles` mismatch naming `[9] Repositories` and exit code 1.
+  orphans are deleted, and a normal run fails with a `snapshot` mismatch (and writes the `.new` files, the stored
+  snapshot and the diff) once the screen no longer matches. `xtask/tests/snapshots.rs` checks the committed
+  snapshots, and that its check finds a deleted `.screen`, an orphan directory and an edited `.svg` in a temp copy.
+  Masking, effects, comparison and the `Grid` to `Screen` conversion are unit-tested in
+  `xtask/src/parity/snapshot.rs`, with an `insta` snapshot of a small masked screen's SVG.
+- `xtask/tests/structural_check.rs` runs the built app on a copy of `startup` with `main.repos.focus` rebound to `9`
+  and checks that `[expect]` fails with a `titles` mismatch naming `[9] Repositories` and exit code 1. It needs the
+  `lazy-github` and `fake-gh` binaries, which `cargo test --workspace` builds; alone, run
+  `cargo build -p lazy-github -p fake-gh` first.
 
 ## Goldens
 

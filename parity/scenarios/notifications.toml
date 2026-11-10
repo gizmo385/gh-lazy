@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Notifications modal (ctrl+n): loading, the Unread tab first, the table and its columns, a lazy page, r and u switching tabs, R marking one read, tab moving focus off the table, escape closing and refreshing the count"
 # The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs, table
-# and rows are only loose text: each capture checks them per app with [expect], and the footer cross-app.
-gate = true
+# and rows are only loose text: each capture checks them with [expect].
 parity_rows = [
     "modals.notifications",
     "modals.notifications-tabs",
@@ -38,14 +37,12 @@ wait = { text = "•Unread" }
 
 [[step]]
 capture = "loading"
-checks = ["footer"]
 
 [[step]]
 wait = { text = "Updated At" }
 
 [[step]]
 capture = "open"
-checks = ["footer"]
 
 # Four unread rows: the first row's highlight already asked for Unread's page 1 (all=false); this asks for page 2.
 [[step]]
@@ -56,7 +53,6 @@ wait = { log = { method = "GET", path = "/notifications", query = { all = "false
 
 [[step]]
 capture = "moved"
-checks = ["footer"]
 
 [[step]]
 keys = ["r"]
@@ -66,7 +62,6 @@ wait = { text = "Subscribed" }
 
 [[step]]
 capture = "read-tab"
-checks = ["footer"]
 
 [[step]]
 keys = ["u"]
@@ -76,7 +71,6 @@ wait = { gone = "Subscribed" }
 
 [[step]]
 capture = "unread-tab"
-checks = ["footer"]
 
 # Back to the first row, then R: it leaves Unread once the PATCH answers.
 [[step]]
@@ -90,7 +84,6 @@ wait = { gone = "Add the notifications modal" }
 
 [[step]]
 capture = "marked-one"
-checks = ["footer"]
 
 [[step]]
 keys = ["r"]
@@ -100,7 +93,6 @@ wait = { text = "Add the notifications modal" }
 
 [[step]]
 capture = "read-after-mark"
-checks = ["footer"]
 
 # Off the table, onto the scrolling container: the table's keys leave the footer.
 [[step]]
@@ -112,7 +104,6 @@ wait = { regex = '(?m)^ r View Read Notifications' }
 
 [[step]]
 capture = "tabbed"
-checks = ["footer"]
 
 [[step]]
 keys = ["escape"]

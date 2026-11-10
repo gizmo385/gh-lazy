@@ -20,7 +20,7 @@ enum Task {
     RecordFixtures(fixtures::RecordArgs),
     /// Check every committed parity fixture against the scrub rules, without network.
     CheckFixtures(fixtures::CheckArgs),
-    /// Run parity scenarios against the Python and Rust apps and capture their screens.
+    /// Run parity scenarios against the app and check their screens against `[expect]` and the snapshots.
     Parity(xtask::parity::cli::ParityArgs),
     /// Check the parity matrix (docs/rust-rewrite/parity/) and the scenarios and golden manifests that name its rows,
     /// and print its rows per area and status, then per area and coverage.

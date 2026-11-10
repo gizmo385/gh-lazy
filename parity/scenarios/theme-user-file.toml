@@ -1,11 +1,9 @@
-version = 1
+version = 2
 description = "A user theme file in the config directory's themes/ draws when appearance.theme names it and is listed in the theme palette; a broken theme file beside it is skipped with a \"Theme file skipped\" warning toast"
 # Rust-only: Python has only Textual's built-in themes (decision app-owned-themes, D3). The `user-theme` seed holds
 # `my-theme.toml` (nord with an orange focused-pane border) and `broken.toml` (an unknown role). parity/themes.toml
 # gives my-theme its overridden border color, so the focus check fails unless the app draws the user theme. Waits
 # out the toast's timer, so it runs at one size (parity/README.md, "Keeping the suite fast").
-gate = true
-apps = ["rust"]
 parity_rows = ["main-layout.theme-user-files"]
 sizes = [[160, 48]]
 
@@ -24,14 +22,12 @@ wait = { text = "Theme file skipped" }
 
 [[step]]
 capture = "skipped"
-checks = ["titles", "focus"]
 
 [[step]]
 wait = { gone = "Theme file skipped", timeout_ms = 8000 }
 
 [[step]]
 capture = "start"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["ctrl+p"]
@@ -54,7 +50,6 @@ wait = { text = "Search for themes" }
 # The theme list covers the Repositories box, so this capture doesn't check focus.
 [[step]]
 capture = "themes"
-checks = ["titles"]
 
 [expect.skipped]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]

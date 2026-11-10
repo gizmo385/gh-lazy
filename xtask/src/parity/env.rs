@@ -1,7 +1,6 @@
 //! The isolated environment for one app run: a temp `home/`, `bin/` (fake-gh as `gh`, `fake-ssh` and `fake-browser`)
-//! and `work/`,
-//! the layered `config.json`, an optional git repo with an optional local remote under `remotes/`, and a cleared
-//! process environment.
+//! and `work/`, the layered `config.json`, an optional git repo with an optional local remote under `remotes/`, and a
+//! cleared process environment.
 
 use std::ffi::{OsStr, OsString};
 use std::path::{Path, PathBuf};
@@ -12,7 +11,7 @@ use serde_json::{Value, json};
 use tempfile::TempDir;
 
 use super::focus::FocusColors;
-use super::scenario::{App, Roots, Scenario, Size, Timing};
+use super::scenario::{Roots, Scenario, Size, Timing};
 use super::{Context, HarnessError, Result};
 
 /// Where the binaries and resources a run needs live.
@@ -20,10 +19,8 @@ use super::{Context, HarnessError, Result};
 pub struct Paths {
     /// The fake-gh binary, installed as `bin/gh` in every run.
     pub fake_gh: PathBuf,
-    /// The Rust app binary (`target/<profile>/lazy-github`).
-    pub rust_app: PathBuf,
-    /// The Python interpreter that runs `-m lazy_github` (the repo's venv by default).
-    pub python: PathBuf,
+    /// The app binary (`target/<profile>/lazy-github`).
+    pub app: PathBuf,
     pub roots: Roots,
 }
 
@@ -104,14 +101,11 @@ impl RunEnv {
 const REMOTES_DIR: &str = "remotes";
 
 /// The config every run starts from: `parity/configs/<name>.json`, `config_overrides` deep-merged over it, then
-/// the fields that keep the Python app off its first-start screen and on the `gh` backend.
+/// `core.first_start = false`, which keeps the app off its first-start screen.
 pub fn build_config(base: Value, overrides: &Value) -> Value {
     let mut config = base;
     merge(&mut config, overrides);
-    merge(
-        &mut config,
-        &json!({"core": {"first_start": false}, "api": {"client_type": "GITHUB_CLI"}}),
-    );
+    merge(&mut config, &json!({"core": {"first_start": false}}));
     config
 }
 
@@ -136,15 +130,20 @@ fn merge(base: &mut Value, over: &Value) {
     }
 }
 
-/// Builds the run's temp dirs and the command for `app`. `out` is the app's report dir, which gets `fake-gh.log`.
-pub fn prepare(
-    scenario: &Scenario,
-    app: App,
-    size: Size,
-    paths: &Paths,
-    out: &Path,
-    keep_home: bool,
-) -> Result<RunEnv> {
+/// The variable a debug build of the app reads its test `gh` time limit from, in milliseconds: the same name as
+/// `lazy_github_core::gh::GH_TIMEOUT_ENV`, repeated here so the harness reads as one list of what it sets.
+const GH_TIMEOUT_ENV: &str = "LAZY_GITHUB_GH_TIMEOUT_MS";
+/// `lazy_github_tui::options::TOAST_TIMEOUT_ENV`, likewise.
+const TOAST_TIMEOUT_ENV: &str = "LAZY_GITHUB_TOAST_TIMEOUT_MS";
+/// The variable that freezes a debug build of the app's wall clock: the same name as
+/// `lazy_github_core::time::FIXED_TIME_ENV`.
+const FIXED_TIME_ENV: &str = "LAZY_GITHUB_FIXED_TIME";
+
+/// The wall-clock instant every run shows (`parity/README.md`, "Rust snapshots").
+pub const FIXED_TIME: &str = "2026-01-01T00:00:00Z";
+
+/// Builds the run's temp dirs and the app's command. `out` is the run's report dir, which gets `fake-gh.log`.
+pub fn prepare(scenario: &Scenario, size: Size, paths: &Paths, out: &Path, keep_home: bool) -> Result<RunEnv> {
     let run_dir = tempfile::Builder::new()
         .prefix("lazy-github-parity-")
         .tempdir()
@@ -219,14 +218,7 @@ pub fn prepare(
     )
     .map_err(|e| HarnessError(format!("PATH can't be built: {e}")))?;
 
-    let mut command = match app {
-        App::Python => {
-            let mut c = CommandBuilder::new(&paths.python);
-            c.args(["-m", "lazy_github"]);
-            c
-        }
-        App::Rust => CommandBuilder::new(&paths.rust_app),
-    };
+    let mut command = CommandBuilder::new(&paths.app);
     command.env_clear();
     let logs = Logs {
         gh: &log,
@@ -290,9 +282,10 @@ struct Logs<'a> {
     browser_log: &'a Path,
 }
 
-/// The allow-listed environment. Nothing else from the developer's environment (`GH_TOKEN`, `NO_COLOR`,
-/// `TEXTUAL`, `BROWSER`, ...) reaches the app. `BROWSER` is fake-browser, for both apps, so a link never opens a
-/// real browser and the run records what was opened.
+/// The allow-listed environment. Nothing else from the developer's environment (`GH_TOKEN`, `NO_COLOR`, `BROWSER`,
+/// ...) reaches the app. `BROWSER` is fake-browser, so a link never opens a real browser and the run records what was
+/// opened. The test hooks only a debug build reads: the fixed clock always, the `gh` time limit and the toast lifetime
+/// when the scenario sets them.
 fn isolated_env(
     root: &Path,
     home: &Path,
@@ -316,10 +309,17 @@ fn isolated_env(
         ("FAKE_GH_FIXTURES", fixtures),
         ("FAKE_GH_LOG", logs.gh.into()),
         ("FAKE_GH_AUTH", scenario.env.gh_auth.env_value().into()),
-        ("TEXTUAL_ANIMATIONS", "none".into()),
-        ("PYTHONDONTWRITEBYTECODE", "1".into()),
         ("GIT_CONFIG_NOSYSTEM", "1".into()),
+        (FIXED_TIME_ENV, FIXED_TIME.into()),
+        // The app reads Textual's variable too: animations off keep loading overlays still, so snapshots are stable.
+        ("TEXTUAL_ANIMATIONS", "none".into()),
     ];
+    if let Some(ms) = scenario.env.gh_timeout_ms {
+        env.push((GH_TIMEOUT_ENV, ms.to_string().into()));
+    }
+    if let Some(ms) = scenario.env.toast_timeout_ms {
+        env.push((TOAST_TIMEOUT_ENV, ms.to_string().into()));
+    }
     if let Some(browser) = logs.browser {
         env.push(("BROWSER", browser.into()));
         env.push((fake_gh::browser::LOG_ENV, logs.browser_log.into()));
@@ -440,7 +440,7 @@ mod tests {
     use crate::parity::scenario::GitRemoteProtocol;
 
     #[test]
-    fn overrides_are_deep_merged_and_forced_fields_win() {
+    fn overrides_are_deep_merged_and_the_forced_field_wins() {
         let base = json!({
             "core": {"first_start": true, "keep": 1},
             "api": {"client_type": "RAW_HTTP", "base_url": "x"},
@@ -456,7 +456,7 @@ mod tests {
             build_config(base, &overrides),
             json!({
                 "core": {"first_start": false, "keep": 1},
-                "api": {"client_type": "GITHUB_CLI", "base_url": "x"},
+                "api": {"client_type": "RAW_HTTP", "base_url": "x"},
                 "appearance": {"theme": "textual-dark", "show_command_log": true},
                 "bindings": {"overrides": {"main.repos.focus": "9"}},
             })
@@ -513,7 +513,7 @@ mod tests {
             configs: parity.join("configs"),
             seeds,
         };
-        let source = "version = 1\n[env]\ngit_remote = \"o/n\"\nseed = \"s\"\n";
+        let source = "version = 2\n[env]\ngit_remote = \"o/n\"\nseed = \"s\"\n";
         let scenario = Scenario::parse(Path::new("seeded.toml"), source, &roots).unwrap();
         // Any file will do as fake-gh and fake-browser: nothing runs them.
         let fake_gh = dir.path().join("fake-gh");
@@ -521,12 +521,11 @@ mod tests {
         std::fs::write(dir.path().join(fake_gh::browser::file_name()), "").unwrap();
         let paths = Paths {
             fake_gh: fake_gh.clone(),
-            rust_app: fake_gh.clone(),
-            python: fake_gh,
+            app: fake_gh,
             roots,
         };
         let out = dir.path().join("out");
-        let run = prepare(&scenario, App::Rust, Size { cols: 80, rows: 24 }, &paths, &out, false).unwrap();
+        let run = prepare(&scenario, Size { cols: 80, rows: 24 }, &paths, &out, false).unwrap();
         let root = run.run_dir.as_ref().unwrap().path();
         let (home, work) = (root.join("home"), root.join("work"));
         assert_eq!(

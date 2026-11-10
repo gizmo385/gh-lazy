@@ -1,10 +1,9 @@
-version = 1
+version = 2
 description = "Diff review: the Submit review form (Review Status, summary) at the end of the Diff tab, reached from the repos table, posts the review; the PR author's form has only the summary and Add Comments"
 # Add Comment and the pending comments are reached through the diff's lines, which Python's keys and Rust's continuous
 # diff (#388, decision diff-continuous-view) reach differently, so they're in the Rust-only `diff-review`; both apps
 # still reach the form from the repos table with shift+tab. After the submit Rust refetches the PR (B15), so that
 # isn't in [expect].
-gate = true
 parity_rows = [
     "diff-viewer.submit-review",
     "toasts.comment-review-added",
@@ -68,7 +67,6 @@ wait = { focused = "Review Status:" }
 
 [[step]]
 capture = "status-focused"
-checks = ["titles", "focus"]
 
 # Scrolled up three notches, the box is near the details' bottom: the open list doesn't fit below it, and moves up
 # until its bottom border is on the footer row, over the footer (#364).
@@ -98,7 +96,6 @@ wait.text = "Changes Requested"
 
 [[step]]
 capture = "status-list-bottom"
-checks = ["titles", "focus"]
 
 # The list's bottom border, on the footer row: nothing happens, no footer binding runs.
 [[step]]
@@ -109,7 +106,6 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "status-list-footer-click"
-checks = ["titles", "focus"]
 
 # Commented, the last option, on the details box's bottom border row: picked, and the list closes.
 [[step]]
@@ -120,7 +116,6 @@ wait.gone = "Changes Requested"
 
 [[step]]
 capture = "status-list-picked"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter", "up", "up", "enter"]
@@ -168,7 +163,6 @@ wait.text = "Opened on"
 
 [[step]]
 capture = "submitted"
-checks = ["titles", "focus"]
 
 # PR 3 is parity-bot's own: the form has only the summary and Add Comments.
 [[step]]
@@ -210,7 +204,6 @@ wait = { gone = "O Lookup Repository" }
 
 [[step]]
 capture = "author-form"
-checks = ["titles", "focus"]
 
 [expect.status-focused]
 contains = ["Review Status:", "Commented", "Review summary", "Submit Review"]

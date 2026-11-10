@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "M maximizes the focused widget over the whole screen with the View Maximized toast, escape restores it, and 5 then M maximizes the details tabs"
-gate = true
 parity_rows = ["main-layout.maximize", "keybindings.app-maximize-widget", "main-layout.details-tabs-focused", "main-layout.toasts", "toasts.view-maximized"]
 # The maximized widget fills the screen at each size, and the toast's message wraps differently at 100 columns.
 sizes = [[160, 48], [100, 30]]
@@ -39,7 +38,6 @@ wait = { regex = "╸━+╺" }
 
 [[step]]
 capture = "restored"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["5"]
@@ -55,7 +53,6 @@ wait = { gone = "[5] Details" }
 
 [[step]]
 capture = "max-details"
-checks = ["titles", "tabs", "focus"]
 
 # `contains` is matched per row, and at 100 columns the message wraps before "return." (46 content columns).
 [expect.max]

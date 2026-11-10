@@ -1,11 +1,10 @@
-version = 1
+version = 2
 description = "Command palette Theme command: a second palette (\"Search for themes…\") listing the 21 theme names sorted, no help lines, the first highlighted; moving the highlight changes nothing; escape keeps the theme; a query narrows the list and enter switches the theme for the session"
-# The theme list (one row per name) covers the Repositories box, so those captures don't check focus. Palette text is loose text (see command-palette.toml), checked per app with [expect]. After the switch the focus
-# color no longer matches parity/themes.toml's entry for the config's theme, so later captures compare titles only;
-# the new theme's colors are checked in the report's screens and by unit tests. Not saved to config.json (Py bug
+# The theme list (one row per name) covers the Repositories box, so those captures don't check focus. Palette text is loose text (see command-palette.toml), checked with [expect]. After the switch the focus
+# color no longer matches the config's theme, so the focus check finds nothing there; the new theme's colors are in
+# the snapshots and checked by unit tests. Not saved to config.json (Py bug
 # B27), which is unit-tested. Textual's own two themes are `textual-dark` and `textual-light` in Python and `dark` and
 # `light` in Rust (decision app-owned-themes), so the `themes` capture doesn't name them.
-gate = true
 parity_rows = ["command-palette.theme"]
 
 [env]
@@ -31,7 +30,6 @@ wait = { text = "Change the current theme" }
 
 [[step]]
 capture = "query-theme"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]
@@ -41,7 +39,6 @@ wait = { text = "Search for themes" }
 
 [[step]]
 capture = "themes"
-checks = ["titles"]
 
 # Moving the highlight doesn't preview anything.
 [[step]]
@@ -49,7 +46,6 @@ keys = ["down", "down"]
 
 [[step]]
 capture = "moved"
-checks = ["titles"]
 
 [[step]]
 keys = ["escape"]
@@ -59,7 +55,6 @@ wait = { gone = "🔎" }
 
 [[step]]
 capture = "escaped"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["ctrl+p"]
@@ -87,7 +82,6 @@ wait = { gone = "dracula" }
 
 [[step]]
 capture = "query-nor"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]
@@ -97,7 +91,6 @@ wait = { gone = "🔎" }
 
 [[step]]
 capture = "switched"
-checks = ["titles"]
 
 [expect.query-theme]
 contains = ["🔎 theme", "Theme", "Change the current theme"]

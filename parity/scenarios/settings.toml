@@ -1,9 +1,8 @@
-version = 1
+version = 2
 description = "Settings modal (palette \"Change Settings\"): the heading, the nine tabs in config order switched with left and right, each tab's dimmed docstring and its fields' widgets by type, the Key Bindings rows, and escape closing without saving"
 # The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs, labels
-# and widgets are loose text, checked per app with [expect], and the footer cross-app. Focus inside the modal isn't
+# and widgets are loose text, checked with [expect]. Focus inside the modal isn't
 # visible to the extractor either; the focus ring is unit-tested.
-gate = true
 parity_rows = [
     "command-palette.change-settings",
     "modals.settings",
@@ -36,7 +35,6 @@ wait = { text = "Adjust LazyGithub settings" }
 
 [[step]]
 capture = "palette-query"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]
@@ -50,7 +48,6 @@ wait = { text = "q Close" }
 
 [[step]]
 capture = "appearance"
-checks = ["footer"]
 
 # The tab strip has focus on open: right moves to the next tab.
 [[step]]
@@ -61,7 +58,6 @@ wait = { text = "Mark Notification As Read When Selected" }
 
 [[step]]
 capture = "notifications"
-checks = ["footer"]
 
 [[step]]
 keys = ["right"]
@@ -79,7 +75,6 @@ wait = { regex = 'Quit:? +q' }
 
 [[step]]
 capture = "key-bindings"
-checks = ["footer"]
 
 [[step]]
 keys = ["right"]
@@ -89,7 +84,6 @@ wait = { text = "Repository-specific settings" }
 
 [[step]]
 capture = "repositories"
-checks = ["footer"]
 
 [[step]]
 keys = ["right"]
@@ -99,7 +93,6 @@ wait = { text = "Preferred Merge Method" }
 
 [[step]]
 capture = "pull-requests"
-checks = ["footer"]
 
 [[step]]
 keys = ["right"]
@@ -109,7 +102,6 @@ wait = { gone = "Preferred Merge Method" }
 
 [[step]]
 capture = "issues"
-checks = ["footer"]
 
 [[step]]
 keys = ["right"]
@@ -119,7 +111,6 @@ wait = { text = "Auth Cache Duration" }
 
 [[step]]
 capture = "cache"
-checks = ["footer"]
 
 [[step]]
 keys = ["right"]
@@ -129,7 +120,6 @@ wait = { text = "Logfile Max Bytes" }
 
 [[step]]
 capture = "core"
-checks = ["footer"]
 
 [[step]]
 keys = ["right"]
@@ -139,7 +129,6 @@ wait = { text = "Base Url" }
 
 [[step]]
 capture = "api"
-checks = ["footer"]
 
 # right past Api: Python wraps to the first tab, while Rust shows its own last tab, Search (decision
 # search-issues-and-prs), from which it wraps (unit-tested in modal/settings/tests.rs).
@@ -151,7 +140,6 @@ wait = { regex = 'Show Command Log|Searches you saved' }
 
 [[step]]
 capture = "wrapped"
-checks = ["footer"]
 
 # Escape closes the modal, saving nothing.
 [[step]]
@@ -162,7 +150,6 @@ wait = { gone = "LazyGithub Settings" }
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus", "footer"]
 
 [expect.palette-query]
 contains = ["Change Settings", "Adjust LazyGithub settings"]

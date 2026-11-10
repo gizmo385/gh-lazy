@@ -442,7 +442,7 @@ fn narrow_tables_do_not_panic() {
 /// bottom one.
 fn python_tables(size: &str, width: usize) -> Vec<String> {
     let path = repo_root()
-        .join("parity/references/repo-overview")
+        .join("crates/lazy-github-tui/tests/fixtures/python_screens/repo-overview")
         .join(size)
         .join("scrolled.screen");
     let screen = std::fs::read_to_string(path).unwrap();
@@ -600,7 +600,7 @@ fn wide_graphemes_wrap_by_cells() {
 /// bottom of the Details box.
 fn python_readme(size: &str, width: usize) -> Vec<String> {
     let path = repo_root()
-        .join("parity/references/repo-overview")
+        .join("crates/lazy-github-tui/tests/fixtures/python_screens/repo-overview")
         .join(size)
         .join("readme.screen");
     let screen = std::fs::read_to_string(path).unwrap();
@@ -751,7 +751,7 @@ fn code_cells(
 
 #[test]
 fn sh_fences_color_echo_as_python_does() {
-    // `parity/references/repo-overview/160x48/readme.screen`: `echo` is `#ffc473` and its argument `#ffffff`.
+    // `tests/fixtures/python_screens/repo-overview/160x48/readme.screen`: `echo` is `#ffc473` and its argument `#ffffff`.
     let rendered = render("```sh\necho hello\n```", 40);
     let cells = code_cells(&rendered, 40, 2, 4..14);
     assert!(cells[..4].iter().all(|(_, fg, _)| *fg == rgb(0xFFC473)), "{cells:?}");

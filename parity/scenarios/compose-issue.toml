@@ -59,6 +59,10 @@ wait.text = "Must have a non-empty issue title!"
 [[step]]
 capture = "empty-title"
 
+# The toast goes before the next captures, so whether it still shows doesn't depend on how fast the runner is.
+[[step]]
+wait.gone = "Must have a non-empty issue title!"
+
 [[step]]
 type = "Parity title"
 

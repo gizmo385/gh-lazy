@@ -25,8 +25,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s20 { fill: #2a5738; }
 .s21 { fill: #c2c2bf; }
 .s22 { fill: #2a3c50; }
-.s23 { fill: #b93c5b; }
-.s24 { fill: #ffa62b; font-weight: bold; }
+.s23 { fill: #ffa62b; font-weight: bold; }
 </style>
 <rect width="1000" height="600" fill="#1e1e1e"/>
 <g shape-rendering="crispEdges">
@@ -121,18 +120,12 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="0" y="460" width="1000" height="20" fill="#121212"/>
 <rect x="0" y="480" width="1000" height="20" fill="#121212"/>
 <rect x="0" y="500" width="1000" height="20" fill="#121212"/>
-<rect x="0" y="520" width="490" height="20" fill="#121212"/>
-<rect x="490" y="520" width="490" height="20" fill="#343f49"/>
-<rect x="980" y="520" width="20" height="20" fill="#121212"/>
+<rect x="0" y="520" width="1000" height="20" fill="#121212"/>
 <rect x="0" y="540" width="10" height="20" fill="#121212"/>
 <rect x="10" y="540" width="310" height="20" fill="#0a1e2c"/>
 <rect x="320" y="540" width="70" height="20" fill="#0a0a0a"/>
-<rect x="390" y="540" width="100" height="20" fill="#121212"/>
-<rect x="490" y="540" width="490" height="20" fill="#343f49"/>
-<rect x="980" y="540" width="20" height="20" fill="#121212"/>
-<rect x="0" y="560" width="490" height="20" fill="#121212"/>
-<rect x="490" y="560" width="490" height="20" fill="#343f49"/>
-<rect x="980" y="560" width="20" height="20" fill="#121212"/>
+<rect x="390" y="540" width="610" height="20" fill="#121212"/>
+<rect x="0" y="560" width="1000" height="20" fill="#121212"/>
 <rect x="0" y="580" width="1000" height="20" fill="#242f38"/>
 </g>
 <text class="s0" x="0" y="15" textLength="1000" lengthAdjust="spacingAndGlyphs">┌──────────────────────────────────────────────────────────────────────────────────────────────────┐</text>
@@ -255,25 +248,20 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="535" textLength="170" lengthAdjust="spacingAndGlyphs">┌─ [4] Workflows </text>
 <text class="s22" x="170" y="535" textLength="70" lengthAdjust="spacingAndGlyphs">(empty)</text>
 <text class="s3" x="240" y="535" textLength="170" lengthAdjust="spacingAndGlyphs"> ──────────────┐│</text>
-<text class="s23" x="490" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
 <text class="s3" x="990" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s10" x="320" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▋</text>
 <text class="s3" x="390" y="555" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s23" x="490" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
-<text class="s13" x="500" y="555" textLength="480" lengthAdjust="spacingAndGlyphs"> Must have a non-empty issue title!             </text>
 <text class="s3" x="990" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s3" x="0" y="575" textLength="490" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────┘└────────</text>
-<text class="s23" x="490" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">▌</text>
-<text class="s3" x="980" y="575" textLength="20" lengthAdjust="spacingAndGlyphs">─┘</text>
-<text class="s24" x="0" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^s </text>
+<text class="s3" x="0" y="575" textLength="1000" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘</text>
+<text class="s23" x="0" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^s </text>
 <text class="s13" x="40" y="595" textLength="50" lengthAdjust="spacingAndGlyphs">Save </text>
-<text class="s24" x="90" y="595" textLength="90" lengthAdjust="spacingAndGlyphs"> shift+⏎ </text>
+<text class="s23" x="90" y="595" textLength="90" lengthAdjust="spacingAndGlyphs"> shift+⏎ </text>
 <text class="s13" x="180" y="595" textLength="50" lengthAdjust="spacingAndGlyphs">Save </text>
-<text class="s24" x="230" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^t </text>
+<text class="s23" x="230" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^t </text>
 <text class="s13" x="270" y="595" textLength="80" lengthAdjust="spacingAndGlyphs">Preview </text>
-<text class="s24" x="350" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^o </text>
+<text class="s23" x="350" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^o </text>
 <text class="s13" x="390" y="595" textLength="70" lengthAdjust="spacingAndGlyphs">Expand </text>
-<text class="s24" x="460" y="595" textLength="50" lengthAdjust="spacingAndGlyphs"> esc </text>
+<text class="s23" x="460" y="595" textLength="50" lengthAdjust="spacingAndGlyphs"> esc </text>
 <text class="s13" x="510" y="595" textLength="60" lengthAdjust="spacingAndGlyphs">Leave </text>
 </svg>

@@ -42,12 +42,12 @@ cursor 0 0 hidden
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
 ┌─ [4] Workflows ──────────────────────────────────────────────┐└──────────────────────────────────────────────────────────────────────────────────────────────┘
 │ Time  Result  Job Name  Run Name  Run #                      │┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
-│                                                              ││░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░│
+│                                                              ││ERROR 2026-01-01 00:00:00 - Cannot load notifications - please login to the gh CLI: gh auth   │
+│                                                              ││                                                                                              │
+│                                                              ││                                 ▌                                                            │
+│                                                              ││                                 ▌ Failed to Load Notifications                               │
+│                                                              ││                                 ▌ Cannot load notifications - please login to the gh CLI:    │
+│                                                              ││                                 ▌ gh auth login                                              │
 └──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
  / Search  ^f Toggle Favorite  O Lookup Repository  u View User  I New Issue  P New PR  ^n Notifications  ^v Paste link  f Follow link  F Follow link (browser)
 --- styles
@@ -91,14 +91,14 @@ c..............................................................cc...............
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc..............................................................................................c
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 cmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
-c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnc
-c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnc
-c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnc
-c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnc
-c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnc
-c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnc
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccopppppppppppppppppppppppppppppppppppppppppppppppppppppppppppcc
-qqqrrrrrrrqqqqrrrrrrrrrrrrrrrrqqqrrrrrrrrrrrrrrrrrrqqqrrrrrrrrrrqqqrrrrrrrrrrqqqrrrrrrrqqqqrrrrrrrrrrrrrrqqqqrrrrrrrrrrrqqqrrrrrrrrrrrrqqqrrrrrrrrrrrrrrrrrrrrrr
+c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnooc
+c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnooc
+c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqoc
+c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnpqrrrrrrrrrrrrrrrrrrrrrrrrrrrrqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqoc
+c..............................................................ccnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqoc
+c..............................................................ccssssssssssssssssssssssssssssssssspqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqtc
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccpqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcc
+uuuvvvvvvvuuuuvvvvvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvuuuvvvvvvvvvvuuuvvvvvvvvvvuuuvvvvvvvuuuuvvvvvvvvvvvvvvuuuuvvvvvvvvvvvuuuvvvvvvvvvvvvuuuvvvvvvvvvvvvvvvvvvvvvv
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212
@@ -114,8 +114,12 @@ j fg=#0178d4 bg=#121212 bold
 k fg=#e0e0e0 bg=#121212 bold
 l fg=#0178d4 bg=#121212 underline
 m fg=#e0e0e0 bg=#242f38 bold
-n default
-o fg=#b93c5b bg=#343f49
-p fg=#e0e0e0 bg=#343f49
-q fg=#ffa62b bg=#242f38 bold
-r fg=#e0e0e0 bg=#242f38
+n fg=#e1e1e1 bg=#1e1e1e
+o fg=#e1e1e1 bg=#000000
+p fg=#b93c5b bg=#343f49
+q fg=#e0e0e0 bg=#343f49
+r fg=#d17e92 bg=#343f49 bold
+s fg=#003054 bg=#1e1e1e inverse
+t bg=#000000
+u fg=#ffa62b bg=#242f38 bold
+v fg=#e0e0e0 bg=#242f38

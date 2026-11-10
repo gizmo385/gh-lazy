@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Main screen with the default config: status bar, four sections and the Introduction tab, then focus keys 2-6 and the Tab ring: each section's border and the footer follow focus, 5 twice stays on Details, 6 without the log does nothing"
-gate = true
 parity_rows = [
     "main-layout.layout",
     "main-layout.section-order",
@@ -50,10 +49,9 @@ wait = { regex = "╸━+╺" }
 # both apps. A cut item only has to start the expected one, so the list runs to the end.
 [[step]]
 capture = "start"
-checks = ["titles", "tabs", "focus", "footer"]
 
 # From here on the `^p` item shows at 160 columns far enough to tell "Pallete" (Python) from "Palette" (Rust): Py
-# bug B14, fixed on purpose. So these captures leave out the cross-app footer check and match the footer's text with
+# bug B14, fixed on purpose. So these captures leave out the old cross-app footer check and match the footer's text with
 # `contains`: the whole row as shown at 100 columns, which both apps show the same at both sizes.
 [[step]]
 keys = ["2"]
@@ -63,7 +61,6 @@ wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 capture = "prs"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["3"]
@@ -73,7 +70,6 @@ wait = { text = "O Lookup Issue" }
 
 [[step]]
 capture = "issues"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["4"]
@@ -83,7 +79,6 @@ wait = { text = "T Trigger Workflow" }
 
 [[step]]
 capture = "workflows"
-checks = ["titles", "tabs", "focus"]
 
 # B14: the whole `^p` item shows at both sizes.
 [[step]]
@@ -94,7 +89,6 @@ wait = { gone = "T Trigger Workflow" }
 
 [[step]]
 capture = "details"
-checks = ["titles", "tabs", "focus"]
 
 # Focus is on the tab strip already, so 5 and then 6 leave it there: their waits pass at once.
 [[step]]
@@ -105,7 +99,6 @@ wait = { gone = "T Trigger Workflow" }
 
 [[step]]
 capture = "details-again"
-checks = ["titles", "tabs", "focus"]
 
 # The command log isn't displayed, so 6 does nothing.
 [[step]]
@@ -116,7 +109,6 @@ wait = { gone = "T Trigger Workflow" }
 
 [[step]]
 capture = "no-log"
-checks = ["titles", "tabs", "focus"]
 
 # Tab from the tab strip goes to the details content, then wraps to the repos table; Shift+Tab goes back. Python
 # moves focus a tick after a tab (Py bug B121), so each capture waits for the move to show.
@@ -130,7 +122,6 @@ sleep_ms = 500
 
 [[step]]
 capture = "tab-content"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["tab"]
@@ -140,7 +131,6 @@ wait = { focused = "[1] Repositories" }
 
 [[step]]
 capture = "tab-wrap"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["shift+tab"]
@@ -150,7 +140,6 @@ wait = { focused = "[5] Details" }
 
 [[step]]
 capture = "shift-tab"
-checks = ["titles", "tabs", "focus"]
 
 # Box titles in pre-order by (row, col), as the structural check lists them: Details shares the Repositories row.
 # Notifications are off, so the status bar's right half is blank.

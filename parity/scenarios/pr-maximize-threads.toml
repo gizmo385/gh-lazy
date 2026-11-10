@@ -1,10 +1,9 @@
-version = 1
+version = 2
 description = "M in the PR Conversation tab: the scroll area does nothing; a review's title or a comment in it maximizes the review; a comment's reactions title its reactions; a comment outside a review the details tab area"
 # The Diff tab's captures (the filter typing M, a file's and a hunk's title, the hunk pane) went with #388: the Diff
 # tab is one continuous diff, whose `M` maximizes the tab area (Rust-only `diff-navigation`, `maximized`).
 # A maximized section has no boxes, tables or tabs, so those captures are checked through [expect] `contains` and
 # `not_contains`. The footer is hidden while maximized.
-gate = true
 parity_rows = ["pull-requests.collapsible", "main-layout.maximize"]
 sizes = [[160, 48]]
 # Four maximizes take Python close to the default 30 s run under load.
@@ -65,7 +64,6 @@ keys = ["M"]
 
 [[step]]
 capture = "conversation-noop"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["tab"]
@@ -81,7 +79,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "review-title"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -104,7 +101,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "review-comment"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -136,7 +132,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "top-comment"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -160,7 +155,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "comment-reactions"
-checks = ["titles", "focus"]
 
 [expect.conversation-noop]
 focused = ["[5] PR #5 Details"]

@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "The View Maximized toast goes away after its 5 s timeout, and the next maximize raises no new one"
-gate = true
 parity_rows = ["main-layout.toasts", "toasts.view-maximized", "main-layout.maximize"]
 # The one scenario that waits out this toast's timer, so it runs at one size (parity/README.md, "Keeping the suite
 # fast"). `maximize` captures the toast itself, at both sizes.
@@ -45,7 +44,6 @@ wait = { gone = "[1] Repositories" }
 
 [[step]]
 capture = "max-again"
-checks = ["titles", "focus"]
 
 [expect.expired]
 not_contains = ["View Maximized", "Traceback"]

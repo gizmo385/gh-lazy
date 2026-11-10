@@ -1,7 +1,7 @@
-//! Rust scenario snapshots (#396): every capture's masked screen (`<capture>.screen`, with a `<capture>.svg` drawn
-//! from it) and what the run did outside the screen (`effects.txt`), committed under `parity/snapshots/`. Every Rust
-//! run is compared with them ([`check_run`]), and `cargo xtask parity --accept` writes them from two agreeing runs
-//! ([`accept`]). The rules are in `parity/README.md` ("Rust snapshots").
+//! Scenario snapshots (#396): every capture's masked screen (`<capture>.screen`, with a `<capture>.svg` drawn from it)
+//! and what the run did outside the screen (`effects.txt`), committed under `parity/snapshots/`. Every run is compared
+//! with them ([`check_run`]), and `cargo xtask parity --accept` writes them from two agreeing runs ([`accept`]). The
+//! rules are in `parity/README.md` ("Rust snapshots").
 //!
 //! Masking, effects, comparison and the problems `xtask/tests/snapshots.rs` looks for are pure functions over
 //! [`Grid`]s and text; only [`check_run`], [`accept`] and the orphan cleanup touch the disk.
@@ -11,7 +11,7 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 
 use fake_gh::browser::BrowserLine;
-use fake_gh::fixture::Accept;
+use fake_gh::fixture::{Accept, Query, QueryValue};
 use fake_gh::log::RequestLog;
 use lazy_github_core::screen::{CellStyle, Color, Screen, SvgOptions};
 use regex::Regex;
@@ -22,17 +22,18 @@ use super::cli::{self, RunOptions};
 use super::diff;
 use super::env::{self, Paths};
 use super::grid::{Cursor, Grid, Line, Run, Style};
-use super::record;
-use super::reference;
-use super::scenario::{App, Capture, Scenario, Size, Step};
+use super::scenario::{Capture, Scenario, Size, Step};
 use super::screen;
-use super::structure::{self, Structure, ThemeColors, Themes};
+use super::structure::{self, Structure, ThemeColors};
+use super::theme;
 use super::{Context, HarnessError, Result};
 
 /// Where snapshots live, relative to the repo root.
 pub const SNAPSHOTS_DIR: &str = "parity/snapshots";
 /// The run's effects in a snapshot directory.
 pub const EFFECTS_FILE: &str = "effects.txt";
+/// The extension of a capture's screen text ([`screen::render`]).
+pub const SCREEN_EXTENSION: &str = "screen";
 /// The extension of a capture's picture.
 pub const SVG_EXTENSION: &str = "svg";
 /// What a masked cell shows, in the default colors.
@@ -41,16 +42,13 @@ pub const MASK_SYMBOL: &str = "░";
 pub const DEFAULT_FG: (u8, u8, u8) = (0xd4, 0xd4, 0xd4);
 pub const DEFAULT_BG: (u8, u8, u8) = (0x1e, 0x1e, 0x1e);
 /// The suffix of what a run saw when it differs from the snapshot, in the report.
-const NEW_SUFFIX: &str = ".new";
+pub const NEW_SUFFIX: &str = ".new";
+/// The suffix of the committed snapshot's `.screen` copied next to a run that differs from it, for the report.
+pub const SNAPSHOT_SUFFIX: &str = ".snapshot";
 
 /// `parity/snapshots/<scenario>/<size>/`.
 pub fn snapshot_dir(repo: &Path, scenario: &str, size: Size) -> PathBuf {
     repo.join(SNAPSHOTS_DIR).join(scenario).join(size.to_string())
-}
-
-/// Whether `scenario` has snapshots: every scenario the Rust app runs.
-pub fn has_snapshots(scenario: &Scenario) -> bool {
-    scenario.apps.contains(&App::Rust)
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -206,7 +204,7 @@ pub fn effects(fake_gh_log: &str, browser_log: &str) -> String {
         };
         let mut line = format!(
             "{method} {path}{}",
-            reference::query_suffix(&entry.query.clone().unwrap_or_default())
+            query_suffix(&entry.query.clone().unwrap_or_default())
         );
         let accept = entry.accept.as_deref().map(Accept::normalize).unwrap_or_default();
         if accept != Accept::Json {
@@ -229,6 +227,22 @@ pub fn effects(fake_gh_log: &str, browser_log: &str) -> String {
         out.push('\n');
         out
     })
+}
+
+/// `?k=v&k=w` for a logged query, in the log's (sorted) key order, or nothing when it's empty.
+fn query_suffix(query: &Query) -> String {
+    let pairs: Vec<String> = query
+        .iter()
+        .flat_map(|(k, v)| match v {
+            QueryValue::One(v) => vec![format!("{k}={v}")],
+            QueryValue::Many(vs) => vs.iter().map(|v| format!("{k}={v}")).collect(),
+        })
+        .collect();
+    if pairs.is_empty() {
+        String::new()
+    } else {
+        format!("?{}", pairs.join("&"))
+    }
 }
 
 /// `value` as compact JSON with every object's keys sorted.
@@ -305,17 +319,19 @@ pub fn svg(scenario: &str, capture: &str, grid: &Grid) -> String {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Outcome {
     Unchanged,
-    /// `summary` says what differs (`rows 12-14 differ`); `diff` is a unified diff of the two `.screen` texts.
+    /// `summary` says what differs (`rows 12-14 differ`); `diff` is a unified diff of the two `.screen` texts;
+    /// `stored` is the snapshot's.
     Differs {
         summary: String,
         diff: String,
+        stored: String,
     },
     Missing,
 }
 
 /// Compares `masked` (a run's masked capture) with `<dir>/<capture>.screen`.
 pub fn compare(dir: &Path, capture: &str, masked: &Grid) -> Result<Outcome> {
-    let path = dir.join(format!("{capture}.{}", reference::SCREEN_EXTENSION));
+    let path = dir.join(format!("{capture}.{SCREEN_EXTENSION}"));
     let stored = match std::fs::read_to_string(&path) {
         Ok(text) => text,
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(Outcome::Missing),
@@ -332,6 +348,7 @@ pub fn compare(dir: &Path, capture: &str, masked: &Grid) -> Result<Outcome> {
     Ok(Outcome::Differs {
         summary,
         diff: diff::labeled_diff(&stored, &text, "snapshot", "run"),
+        stored,
     })
 }
 
@@ -383,7 +400,7 @@ pub fn effects_difference(snapshot: &str, run: &str) -> Option<String> {
 // ---------------------------------------------------------------------------------------------------------------
 // One run
 
-/// What one Rust run captured, as its snapshot holds it.
+/// What one run captured, as its snapshot holds it.
 #[derive(Debug, Clone)]
 pub struct Captured {
     /// Each capture's masked grid, in step order. A capture the run didn't dump is left out.
@@ -403,7 +420,7 @@ impl Captured {
         let mut files = Vec::new();
         for (name, grid) in &self.screens {
             let text = screen::render(grid).with_context(|| format!("rendering {name}"))?;
-            files.push((format!("{name}.{}", reference::SCREEN_EXTENSION), text));
+            files.push((format!("{name}.{SCREEN_EXTENSION}"), text));
             files.push((format!("{name}.{SVG_EXTENSION}"), svg(scenario, name, grid)));
         }
         files.push((EFFECTS_FILE.to_owned(), self.effects.clone()));
@@ -411,7 +428,7 @@ impl Captured {
     }
 }
 
-/// Reads back what a finished Rust run left in `out`: each capture's grid dump, masked with the capture's masks and
+/// Reads back what a finished run left in `out`: each capture's grid dump, masked with the capture's masks and
 /// `run_dirs`, and its effects. `theme` finds the boxes.
 pub fn capture_run(scenario: &Scenario, out: &Path, theme: &ThemeColors, run_dirs: &[String]) -> Result<Captured> {
     let mut screens = Vec::new();
@@ -460,9 +477,8 @@ pub fn expect_failure(scenario: &Scenario, out: &Path, theme: &ThemeColors) -> R
             continue;
         };
         let grid: Grid = serde_json::from_str(&text).with_context(|| format!("parsing {}", path.display()))?;
-        let mut found = check::check_expect(App::Rust, &structure::extract(&grid, theme), expect);
+        let mut found = check::check_expect(&structure::extract(&grid, theme), expect);
         found.extend(check::check_opened(
-            App::Rust,
             &fake_gh::browser::opened_by(&browser, name),
             expect,
         ));
@@ -480,10 +496,11 @@ pub struct SnapshotMismatch {
     pub mismatch: Mismatch,
 }
 
-/// Compares a Rust run with its snapshot at `repo`: each capture's masked screen with its `.screen`, and the run's
-/// effects with `effects.txt` (a mismatch on the scenario's last capture). What differs is written to the run's
-/// report dir `out`: `<capture>.screen.new`, `<capture>.svg.new` and `<capture>.snapshot.diff.txt`, and
-/// `effects.txt.new` and `effects.diff.txt`.
+/// Compares a run with its snapshot at `repo`: each capture's masked screen with its `.screen`, and the run's effects
+/// with `effects.txt` (a mismatch on the scenario's last capture). What differs is written to the run's report dir
+/// `out`: `<capture>.screen.new`, `<capture>.svg.new`, `<capture>.snapshot.diff.txt` and, when there is one, the
+/// snapshot's own `<capture>.screen.snapshot`, which the report shows beside the run; and `effects.txt.new` and
+/// `effects.diff.txt`.
 pub fn check_run(
     repo: &Path,
     scenario: &Scenario,
@@ -503,13 +520,16 @@ pub fn check_run(
         let Some(grid) = captured.screen(name) else { continue };
         let (message, diff) = match compare(&dir, name, grid)? {
             Outcome::Unchanged => continue,
-            Outcome::Differs { summary, diff } => (
-                format!(
-                    "{summary}; run cargo xtask parity --accept {} and review the diff",
-                    scenario.name
-                ),
-                diff,
-            ),
+            Outcome::Differs { summary, diff, stored } => {
+                write(&format!("{name}.{SCREEN_EXTENSION}{SNAPSHOT_SUFFIX}"), &stored)?;
+                (
+                    format!(
+                        "{summary}; run cargo xtask parity --accept {} and review the diff",
+                        scenario.name
+                    ),
+                    diff,
+                )
+            }
             Outcome::Missing => {
                 let text = screen::render(grid).with_context(|| format!("rendering {name}"))?;
                 (
@@ -519,7 +539,7 @@ pub fn check_run(
             }
         };
         let text = screen::render(grid).with_context(|| format!("rendering {name}"))?;
-        write(&format!("{name}.{}{NEW_SUFFIX}", reference::SCREEN_EXTENSION), &text)?;
+        write(&format!("{name}.{SCREEN_EXTENSION}{NEW_SUFFIX}"), &text)?;
         write(
             &format!("{name}.{SVG_EXTENSION}{NEW_SUFFIX}"),
             &svg(&scenario.name, name, grid),
@@ -601,13 +621,13 @@ impl fmt::Display for Problem {
 
 /// The problems with the snapshots of `scenarios` under `repo`: missing and orphaned files, `.screen`s that don't
 /// parse and `.svg`s that aren't their `.screen`'s rendering. With `all`, directories of scenarios that don't exist
-/// (or don't run Rust) are orphans too. Reads files only; nothing runs.
+/// are orphans too. Reads files only; nothing runs.
 pub fn check(repo: &Path, scenarios: &[Scenario], all: bool) -> Result<Vec<Problem>> {
     let mut problems: Vec<Problem> = orphans(repo, scenarios, all)?
         .into_iter()
         .map(|(path, reason)| Problem::Orphaned { path, reason })
         .collect();
-    for scenario in scenarios.iter().filter(|s| has_snapshots(s)) {
+    for scenario in scenarios {
         for &size in &scenario.sizes {
             let dir = snapshot_dir(repo, &scenario.name, size);
             let shown = |file: &str| format!("{}/{size}/{file}", scenario.name);
@@ -616,7 +636,7 @@ pub fn check(repo: &Path, scenarios: &[Scenario], all: bool) -> Result<Vec<Probl
                 file: shown(file),
             };
             for name in scenario.capture_names() {
-                let screen_file = format!("{name}.{}", reference::SCREEN_EXTENSION);
+                let screen_file = format!("{name}.{SCREEN_EXTENSION}");
                 let svg_file = format!("{name}.{SVG_EXTENSION}");
                 let Some(text) = read_optional(&dir.join(&screen_file))? else {
                     problems.push(missing(&screen_file));
@@ -669,16 +689,10 @@ pub fn orphans(repo: &Path, scenarios: &[Scenario], all: bool) -> Result<Vec<(St
     }
     for scenario in scenarios {
         let dir = root.join(&scenario.name);
-        if !has_snapshots(scenario) {
-            if dir.exists() {
-                out.push((display(repo, &dir), format!("{} doesn't run Rust", scenario.name)));
-            }
-            continue;
-        }
         let sizes: BTreeSet<String> = scenario.sizes.iter().map(Size::to_string).collect();
         let mut files: BTreeSet<String> = BTreeSet::from([EFFECTS_FILE.to_owned()]);
         for name in scenario.capture_names() {
-            files.insert(format!("{name}.{}", reference::SCREEN_EXTENSION));
+            files.insert(format!("{name}.{SCREEN_EXTENSION}"));
             files.insert(format!("{name}.{SVG_EXTENSION}"));
         }
         for path in list_dir(&dir)? {
@@ -698,7 +712,7 @@ pub fn orphans(repo: &Path, scenarios: &[Scenario], all: bool) -> Result<Vec<(St
                     continue;
                 }
                 let capture = name
-                    .strip_suffix(&format!(".{}", reference::SCREEN_EXTENSION))
+                    .strip_suffix(&format!(".{SCREEN_EXTENSION}"))
                     .or_else(|| name.strip_suffix(&format!(".{SVG_EXTENSION}")));
                 let reason = match capture {
                     Some(c) if file.is_file() => format!("{} has no capture {c}", scenario.name),
@@ -758,14 +772,13 @@ fn read_optional(path: &Path) -> Result<Option<String>> {
 // Accepting
 
 /// How to accept.
-pub struct AcceptOptions<'a> {
+pub struct AcceptOptions {
     /// Every scenario is selected, so snapshot directories of scenarios that don't exist are orphans.
     pub all: bool,
     /// How many units run at once.
     pub jobs: usize,
     /// Copy each run's `home/` and `work/` into its dump directory.
     pub keep_home: bool,
-    pub themes: &'a Themes,
 }
 
 /// What happened to one snapshot.
@@ -805,7 +818,7 @@ pub struct AcceptUnit {
 /// What [`accept`] did.
 #[derive(Debug, Clone)]
 pub struct AcceptReport {
-    /// One per selected scenario that runs Rust, per size, in order.
+    /// One per selected scenario, per size, in order.
     pub outcomes: Vec<AcceptUnit>,
     /// The orphans deleted, repo-relative.
     pub deleted: Vec<String>,
@@ -832,20 +845,19 @@ impl AcceptReport {
     }
 }
 
-/// Accepts the snapshots of `scenarios` under `repo`: for each scenario the Rust app runs, at each of its sizes, two
-/// Rust runs (dumps in `<out>/<scenario>/<size>/run-N/`) that must pass and agree, then the snapshot is written (or
-/// left alone when it's unchanged). Then deletes orphans. Prints one line per snapshot as it finishes. A harness
+/// Accepts the snapshots of `scenarios` under `repo`: for each scenario, at each of its sizes, two runs (dumps in
+/// `<out>/<scenario>/<size>/run-N/`) that must pass and agree, then the snapshot is written (or left alone when it's
+/// unchanged). Then deletes orphans. Prints one line per snapshot as it finishes. A harness
 /// error in one unit doesn't stop the others; the first is returned after all of them ran.
 pub fn accept(
     repo: &Path,
     scenarios: &[Scenario],
     paths: &Paths,
     out: &Path,
-    options: &AcceptOptions<'_>,
+    options: &AcceptOptions,
 ) -> Result<AcceptReport> {
     let units: Vec<(&Scenario, Size)> = scenarios
         .iter()
-        .filter(|s| has_snapshots(s))
         .flat_map(|s| s.sizes.iter().map(move |&size| (s, size)))
         .collect();
     let results = cli::parallel_map(&units, options.jobs, |&(scenario, size)| {
@@ -892,7 +904,7 @@ pub fn accept(
 
     let mut deleted = Vec::new();
     for (path, _) in orphans(repo, scenarios, options.all)? {
-        record::remove(&record::repo_path(repo, &path))?;
+        remove(&repo_path(repo, &path))?;
         println!("deleted orphaned snapshot: {path}");
         deleted.push(path);
     }
@@ -902,7 +914,7 @@ pub fn accept(
     Ok(AcceptReport { outcomes, deleted })
 }
 
-/// One finished Rust run, read back.
+/// One finished run, read back.
 struct AcceptRun {
     label: String,
     captured: Captured,
@@ -914,26 +926,24 @@ fn accept_unit(
     size: Size,
     paths: &Paths,
     out: &Path,
-    options: &AcceptOptions<'_>,
+    options: &AcceptOptions,
 ) -> Result<AcceptOutcome> {
-    let theme = options.themes.colors(&check::scenario_theme(scenario, &paths.roots)?);
+    let colors = theme::scenario_colors(scenario, &paths.roots)?;
+    let theme = colors.theme;
     let dumps = out.join(&scenario.name).join(size.to_string());
     if dumps.exists() {
         std::fs::remove_dir_all(&dumps).with_context(|| format!("wiping {}", dumps.display()))?;
     }
     let run_options = RunOptions {
-        apps: &[App::Rust],
         sizes: &[],
         retries: 0,
         keep_home: options.keep_home,
-        cap_ungated_waits: false,
-        themes: options.themes,
     };
     // A run that can't be a snapshot on its own: it failed, or its `[expect]` did.
     let run = |n: u32| -> Result<std::result::Result<AcceptRun, String>> {
         let label = format!("run {n}");
         let run_out = dumps.join(format!("run-{n}"));
-        let run = cli::run_app(scenario, App::Rust, size, paths, &run_out, &run_options)?;
+        let run = cli::run_app(scenario, size, paths, &run_out, &run_options, &colors.focus)?;
         if !run.status.passed() {
             return Ok(Err(format!("{label} {}", run.status.describe())));
         }
@@ -1018,8 +1028,44 @@ fn write_snapshot(repo: &Path, scenario: &Scenario, size: Size, captured: &Captu
         let path = tmp.join(name);
         std::fs::write(&path, text).with_context(|| format!("writing {}", path.display()))?;
     }
-    record::replace_dir(&tmp, &dir)?;
+    replace_dir(&tmp, &dir)?;
     Ok(AcceptOutcome::Accepted)
+}
+
+/// Moves `from` to `to`, replacing `to`. A directory can't be renamed over a non-empty one, so the old one is moved
+/// aside first; an interrupted replace leaves `<size>.old/` or `<size>.tmp/`, which the next `--accept` deletes as
+/// orphans.
+fn replace_dir(from: &Path, to: &Path) -> Result<()> {
+    if to.exists() {
+        let aside = to.with_extension("old");
+        if aside.exists() {
+            std::fs::remove_dir_all(&aside).with_context(|| format!("wiping {}", aside.display()))?;
+        }
+        std::fs::rename(to, &aside).with_context(|| format!("moving {} aside", to.display()))?;
+        std::fs::rename(from, to).with_context(|| format!("moving {} to {}", from.display(), to.display()))?;
+        std::fs::remove_dir_all(&aside).with_context(|| format!("removing {}", aside.display()))
+    } else {
+        if let Some(parent) = to.parent() {
+            std::fs::create_dir_all(parent).with_context(|| format!("creating {}", parent.display()))?;
+        }
+        std::fs::rename(from, to).with_context(|| format!("moving {} to {}", from.display(), to.display()))
+    }
+}
+
+/// A repo-relative, `/`-separated path (directories end in `/`) on disk.
+fn repo_path(repo: &Path, path: &str) -> PathBuf {
+    path.split('/')
+        .filter(|p| !p.is_empty())
+        .fold(repo.to_owned(), |acc, p| acc.join(p))
+}
+
+fn remove(path: &Path) -> Result<()> {
+    let result = if path.is_dir() {
+        std::fs::remove_dir_all(path)
+    } else {
+        std::fs::remove_file(path)
+    };
+    result.with_context(|| format!("deleting {}", path.display()))
 }
 
 #[cfg(test)]
@@ -1234,7 +1280,7 @@ mod tests {
         let mut changed = grid.clone();
         changed.lines[1].cells[0] = "T".into();
         changed.lines[2].cells[0] = "T".into();
-        let Outcome::Differs { summary, diff } = compare(dir.path(), "main", &changed).unwrap() else {
+        let Outcome::Differs { summary, diff, .. } = compare(dir.path(), "main", &changed).unwrap() else {
             panic!("not a difference");
         };
         assert_eq!(summary, "rows 1-2 differ");

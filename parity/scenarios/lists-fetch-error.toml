@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "The first issues-endpoint page, the workflows and the runs fail: the loading overlays, then empty, compact PR, Issues and Workflows sections and one error line per failed request in the command log, with no toast"
-gate = true
 parity_rows = [
   "pull-requests.loading",
   "issues.loading",
@@ -27,11 +26,11 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Loading...", timeout_ms = 15000 }
 
-# The log's lines carry the time, which differs between the apps, so the expectations check the line.
+# The expectations check the log's line.
 [[step]]
 capture = "loading"
-checks = ["titles", "headers", "rows", "focus"]
-ignore = { boxes = ["Details", "Command Log"] }
+# The three lists fail at once, so their error lines reach the Command Log in a different order from run to run.
+ignore = { boxes = ["Command Log"] }
 
 [[step]]
 wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - API Error fetching issues and PRs from Github API', timeout_ms = 15000 }
@@ -45,8 +44,8 @@ wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Error retrieving action
 
 [[step]]
 capture = "error"
-checks = ["titles", "headers", "rows", "focus"]
-ignore = { boxes = ["Details", "Command Log"] }
+# The three lists fail at once, so their error lines reach the Command Log in a different order from run to run.
+ignore = { boxes = ["Command Log"] }
 
 [expect.loading]
 contains = ["Loading..."]

@@ -1,5 +1,5 @@
 //! Builds [`Grid`]s from the compact text fixtures in `xtask/tests/grids/*.txt`, so synthetic structure tests stay
-//! readable.
+//! readable. `xtask/tests/grids/python/` holds frozen Python screen dumps, kept as test vectors (its `README.md`).
 //!
 //! A fixture is the screen's characters, one line per row, optionally followed by a style layer and its legend:
 //!

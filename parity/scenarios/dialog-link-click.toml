@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Clicking a link in a dialog's markdown: a link in the New comment preview opens in the browser, with nothing shown in the app and the dialog still open (Textual's Markdown keeps open_links in dialogs)"
-gate = true
 parity_rows = [
     "markdown-links.link-click",
 ]
@@ -89,7 +88,6 @@ wait = { stable_ms = 1000 }
 # where Python's 100 x 50 modal hides them: nothing is compared across apps, [expect] checks the text.
 [[step]]
 capture = "clicked"
-checks = []
 
 [expect.clicked]
 contains = ["New comment", "Preview", "see zzdocs here"]

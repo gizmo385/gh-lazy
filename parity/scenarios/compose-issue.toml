@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Compose sheet on New issue (I) and Edit issue (E): 12 rows empty with the title focused, a short body, ctrl+t Preview, ctrl+o full screen and back, escape leaving a field (q Close), ctrl+s saving the same write as Python's Save with Saving… in the heading, a long pasted body at the cap (the body scrolls, its scrollbar shown only then), an empty title refused, and Edit issue with its body, its one-row Status select open over the rows below, and escape closing the list before leaving the field (#421)"
 # Rust-only: the compose sheet is new behavior (decision compose-dialogs). Checked by eye at both sizes.
-gate = true
-apps = ["rust"]
 parity_rows = [
     "modals.compose-sheet",
     "modals.compose-preview",

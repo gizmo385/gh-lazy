@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "Wide, combining and right-to-left text in the continuous diff (#388): file headers and code lines lay out by cell width, the line cursor on the first hunk"
 # Rust-only: the Diff tab is one continuous diff (decision diff-continuous-view), whose keys Python can't follow; this
 # is the diff capture `unicode` had.
-gate = true
-apps = ["rust"]
 parity_rows = ["diff-viewer.hunk-pane", "diff-viewer.file-header"]
 sizes = [[160, 48]]
 

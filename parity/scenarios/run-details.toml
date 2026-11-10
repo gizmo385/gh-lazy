@@ -1,10 +1,9 @@
-version = 1
+version = 2
 description = "Workflow run details: selecting a run opens its Overview, Jobs and Logs tabs; the job tree, a job's logs with l, a job without logs, the aggregated logs, an in-progress run and a run without jobs"
 # The Details box's text isn't compared across apps, so [expect] carries
 # it, picking text both apps show while Py bugs B62 (the Overview's fields run together) and B63 (the Jobs tab's `?`
-# for a queued job) are open. The footer is left out of the cross-app checks wherever it isn't cut off: Python spells
+# for a queued job) are open. The footer is left out of the old cross-app checks wherever it isn't cut off: Python spells
 # `^p Command Pallete` (Py bug B14).
-gate = true
 parity_rows = [
     "workflows.select",
     "workflows.details",
@@ -56,7 +55,6 @@ wait = { text = "deploy (9s)", timeout_ms = 15000 }
 
 [[step]]
 capture = "overview"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -66,7 +64,6 @@ wait = { text = "Jobs for Run #42", timeout_ms = 15000 }
 
 [[step]]
 capture = "jobs"
-checks = ["titles", "tabs", "headers", "rows", "cursor", "focus"]
 
 # Tab: the tab's scroll area, then the tree. Down puts the cursor on the first job, enter expands it. Python moves
 # focus a tick after a tab (Py bug B121), so down waits for the tree's bindings to lead the footer (the tree draws no
@@ -85,7 +82,6 @@ wait = { text = "Run cargo build (completed)", timeout_ms = 15000 }
 
 [[step]]
 capture = "job-expanded"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["l"]
@@ -95,7 +91,6 @@ wait = { text = "Finished dev profile", timeout_ms = 15000 }
 
 [[step]]
 capture = "job-logs"
-checks = ["titles", "tabs", "focus"]
 
 # Down to test, space expands it, down to its first step: l on a step shows its job's logs.
 [[step]]
@@ -106,7 +101,6 @@ wait = { text = "exit code 101", timeout_ms = 15000 }
 
 [[step]]
 capture = "step-logs"
-checks = ["titles", "tabs", "focus"]
 
 # Down past test's three steps to lint, whose logs answer 404.
 [[step]]
@@ -117,7 +111,6 @@ wait = { text = "No logs available or failed to fetch logs.", timeout_ms = 15000
 
 [[step]]
 capture = "no-logs"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["5"]
@@ -133,7 +126,6 @@ wait = { text = "The operation was canceled.", timeout_ms = 15000 }
 
 [[step]]
 capture = "logs"
-checks = ["titles", "tabs", "focus"]
 
 # Run 41, in progress.
 [[step]]
@@ -150,7 +142,6 @@ wait = { text = "test (Not started)", timeout_ms = 15000 }
 
 [[step]]
 capture = "in-progress"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -160,7 +151,6 @@ wait = { text = "Jobs for Run #41", timeout_ms = 15000 }
 
 [[step]]
 capture = "in-progress-jobs"
-checks = ["titles", "tabs", "focus"]
 
 # Run 40, without jobs: each tab says so.
 [[step]]
@@ -180,7 +170,6 @@ wait = { text = "No jobs found", timeout_ms = 15000 }
 
 [[step]]
 capture = "no-jobs"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -190,7 +179,6 @@ wait = { text = "Jobs for Run #40", timeout_ms = 15000 }
 
 [[step]]
 capture = "no-jobs-tree"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["right"]
@@ -200,7 +188,6 @@ wait = { text = "No jobs found for this workflow run.", timeout_ms = 15000 }
 
 [[step]]
 capture = "no-jobs-logs"
-checks = ["titles", "tabs", "focus"]
 
 [expect.overview]
 pane_titles = ["", "[1] Repositories", "[5] Workflow Run #42 Details", "[2] Pull Requests (empty)", "[3] Issues (empty)", "[4] Workflows"]

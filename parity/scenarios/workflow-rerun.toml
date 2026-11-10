@@ -1,9 +1,8 @@
-version = 1
+version = 2
 description = "Run Overview re-run buttons: Re-run Failed Jobs and Re-run Workflow each post their request, toast Re-run Started and reload the run"
 # shift+tab from the Repositories table wraps to the last focus stop on the screen, the Overview's last button, in both
 # apps (the stops before the buttons differ: owner decision on #241). After a re-run Rust refetches the run (Py bug
 # B15's recommendation) and Python reloads the stale one.
-gate = true
 parity_rows = [
     "workflows.overview-actions",
     "toasts.rerun-started",
@@ -65,7 +64,6 @@ wait = { gone = "O Lookup Repository" }
 
 [[step]]
 capture = "failed-jobs-focused"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]
@@ -82,7 +80,6 @@ wait.text = "deploy (9s)"
 
 [[step]]
 capture = "failed-jobs-rerun"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["1"]
@@ -112,7 +109,6 @@ wait.text = "Workflow run queued for re-run"
 
 [[step]]
 capture = "workflow-rerun"
-checks = ["titles", "focus"]
 
 [expect.failed-jobs-focused]
 focused = ["[5] Workflow Run #42 Details"]

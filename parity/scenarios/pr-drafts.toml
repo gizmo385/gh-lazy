@@ -1,11 +1,10 @@
-version = 1
+version = 2
 description = "Create PR drafts (P): a title typed and escape saves the draft; reopening restores it with the toast; the title cleared and the dialog closed deletes it, so the next open is empty"
 # The 2 s debounce is covered by the Rust unit tests rather than a sleep here: closing saves at once.
-# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
 # and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
 # the second closes; in Python the second reaches the main screen, where it does nothing.
-gate = true
 parity_rows = ["modals.pr-drafts"]
 sizes = [[160, 48]]
 
@@ -38,7 +37,6 @@ wait.text = "New Pull Request"
 # No draft saved yet: the form as it opens, and no toast.
 [[step]]
 capture = "open"
-checks = []
 
 [[step]]
 type = "Draft title"
@@ -58,7 +56,6 @@ wait.text = "Restored saved PR draft"
 
 [[step]]
 capture = "restored"
-checks = []
 
 # Clear the title, then close: an empty form deletes the draft. (Python's Cancel did the same; Rust's sheet has no
 # Cancel button.) The toast is waited out first, on the modal: Textual moves toasts to the screen below when the
@@ -88,7 +85,6 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "cleared"
-checks = []
 
 [expect.open]
 contains = ["New Pull Request", "Base", "main", "Title", "Description"]

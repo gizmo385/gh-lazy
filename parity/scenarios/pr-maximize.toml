@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "M on the PR Overview's focus stops: the body does nothing; a section's title or list maximizes that section alone, centered on the hatch, with the one-time toast; enter toggles it while maximized; M again does nothing; a focus key moves focus but keeps the section; escape restores"
 # A maximized section has no boxes, tables or tabs, so those captures are checked through [expect] `contains` and
 # `not_contains`. The footer is hidden while maximized.
-gate = true
 parity_rows = ["pull-requests.collapsible", "main-layout.maximize"]
 sizes = [[160, 48]]
 
@@ -60,7 +59,6 @@ keys = ["M"]
 
 [[step]]
 capture = "body-noop"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # The reactions title: the emoji split its cursor into runs, so the wait matches the first.
 [[step]]
@@ -77,7 +75,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "reactions-title"
-checks = ["titles", "focus"]
 
 # Enter on the maximized title opens the section in place; the view grows and stays centered.
 [[step]]
@@ -88,7 +85,6 @@ wait = { text = "👍: parity-bot, parity-friend" }
 
 [[step]]
 capture = "reactions-open"
-checks = ["titles", "focus"]
 
 # M while maximized does nothing; escape restores the layout, with the section still open and its title focused.
 [[step]]
@@ -99,7 +95,6 @@ wait = { text = "[5] PR #5 Details" }
 
 [[step]]
 capture = "restored"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # The open section's list maximizes the section too. The list draws no focus marker and the footer stays the same,
 # so the move only takes the cursor off the title, which wait.focused can't wait for (it waits for a marker, not for
@@ -118,7 +113,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "reactions-list"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -140,7 +134,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "checks-title"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -162,7 +155,6 @@ wait = { gone = "[5] PR #5 Details" }
 
 [[step]]
 capture = "reviews-title"
-checks = ["titles", "focus"]
 
 # A focus key moves focus to the PR table, but the section stays maximized until escape.
 [[step]]
@@ -175,7 +167,6 @@ sleep_ms = 500
 
 [[step]]
 capture = "focus-key"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -189,7 +180,6 @@ wait = { focused = "[2] Pull Requests" }
 
 [[step]]
 capture = "restored-prs"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [expect.body-noop]
 focused = ["[5] PR #5 Details"]

@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Trigger workflow modal (T): without a repo; the Workflow select opened and Release picked; an empty branch rejected; a branch typed with its suggestion accepted with right; the dispatch sent and the success toast; q closes the modal"
 # Not exercised, because the two apps differ on purpose: Trigger with no workflow picked crashes Python (Py bug B67),
 # and a dispatch GitHub refuses still reports success in Python (Py bug B68).
-gate = true
 parity_rows = [
     "workflows.trigger",
     "modals.trigger-workflow",
@@ -39,7 +38,6 @@ wait.text = "No repository selected"
 
 [[step]]
 capture = "no-repo"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["1"]
@@ -73,7 +71,6 @@ wait.text = "Select a workflow"
 
 [[step]]
 capture = "open"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["enter"]
@@ -83,14 +80,12 @@ wait.text = "Release"
 
 [[step]]
 capture = "select-open"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["down", "down", "enter"]
 
 [[step]]
 capture = "selected"
-checks = ["titles", "focus", "footer"]
 
 # The branch input selects `main` when it gets focus; backspace empties it, and Trigger refuses.
 [[step]]
@@ -114,7 +109,6 @@ wait.text = "You must enter a branch!"
 
 [[step]]
 capture = "no-branch"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["shift+tab"]
@@ -129,14 +123,12 @@ type = "rel"
 
 [[step]]
 capture = "suggested"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["right"]
 
 [[step]]
 capture = "accepted"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["tab"]
@@ -157,7 +149,6 @@ wait.text = "Successfully triggered workflow"
 
 [[step]]
 capture = "triggered"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Again, and close it with q while the select has focus.
 [[step]]
@@ -180,7 +171,6 @@ wait.gone = "Select a workflow"
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus"]
 
 [expect.no-repo]
 contains = ["No repository selected"]

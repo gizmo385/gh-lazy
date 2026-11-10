@@ -1,10 +1,9 @@
-version = 1
+version = 2
 description = "Command palette (ctrl+p): the opening list of system commands, a query and its hit, No matches found, escape, and the Keys, Maximize and Minimize commands"
 # The palette is a band across the top of the screen with no box border, so its input, hits and help texts are loose
-# text, checked per app with [expect]. Rust lists LazyGithub's own commands after the system ones (Py bug B87's
+# text, checked with [expect]. Rust lists LazyGithub's own commands after the system ones (Py bug B87's
 # answer; Python finds them only by typing), so the opening list differs in length, covers different boxes, and that
 # capture checks focus only.
-gate = true
 parity_rows = [
     "command-palette.palette",
     "command-palette.navigation",
@@ -30,7 +29,6 @@ wait = { text = "Search for commands" }
 
 [[step]]
 capture = "open"
-checks = ["focus"]
 
 [[step]]
 type = "keys"
@@ -40,7 +38,6 @@ wait = { text = "keys" }
 
 [[step]]
 capture = "query-keys"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["backspace", "backspace", "backspace", "backspace"]
@@ -58,7 +55,6 @@ keys = ["enter"]
 
 [[step]]
 capture = "no-matches"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -68,7 +64,6 @@ wait = { gone = "🔎" }
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["ctrl+p"]
@@ -90,7 +85,6 @@ wait = { text = "Cursor up" }
 
 [[step]]
 capture = "keys"
-checks = ["titles", "focus"]
 
 # With the help panel open, "Keys" offers to hide it.
 [[step]]
@@ -107,7 +101,6 @@ wait = { text = "Hide the keys" }
 
 [[step]]
 capture = "keys-hide"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]
@@ -136,7 +129,6 @@ wait = { gone = "[1] Repositories" }
 # The palette's Maximize raises no "View Maximized" toast.
 [[step]]
 capture = "maximized"
-checks = ["titles"]
 
 [[step]]
 keys = ["ctrl+p"]
@@ -146,7 +138,6 @@ wait = { text = "Search for commands" }
 
 [[step]]
 capture = "maximized-open"
-checks = ["focus"]
 
 [[step]]
 type = "min"
@@ -162,7 +153,6 @@ wait = { text = "[1] Repositories" }
 
 [[step]]
 capture = "minimized"
-checks = ["titles", "focus"]
 
 # The palette's Maximize didn't use up the one-time toast: the first M raises it.
 [[step]]
@@ -173,7 +163,6 @@ wait = { text = "View Maximized" }
 
 [[step]]
 capture = "m-toast"
-checks = ["titles"]
 
 [expect.open]
 contains = [

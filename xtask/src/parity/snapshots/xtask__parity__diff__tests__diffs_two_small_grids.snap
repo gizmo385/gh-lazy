@@ -1,9 +1,9 @@
 ---
 source: xtask/src/parity/diff.rs
-expression: "text_diff(py, rs)"
+expression: "labeled_diff(a, b, \"snapshot\", \"run\")"
 ---
---- python
-+++ rust
+--- snapshot
++++ run
 @@ -1,5 +1,5 @@
  ┌─ [1] Repositories ─┐
  │ alpha              │

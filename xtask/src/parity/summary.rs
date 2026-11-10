@@ -1,15 +1,12 @@
-//! `summary.json`: the machine-readable results of a parity run, and the rules that turn app statuses into a
-//! scenario result, including each capture's structural check.
-
-use std::collections::BTreeMap;
+//! `summary.json`: the machine-readable results of a parity run, and the rule that turns a run's status and its
+//! captures' checks into a scenario result.
 
 use serde::{Deserialize, Serialize};
 
 use super::runner::AppRunStatus;
-use super::scenario::App;
 
-/// The only summary format version written.
-pub const SUMMARY_VERSION: u32 = 1;
+/// The only summary format version written. Version 1 had a per-app split and the Python-only results.
+pub const SUMMARY_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Summary {
@@ -21,7 +18,6 @@ pub struct Summary {
 pub struct ScenarioSummary {
     pub name: String,
     pub description: String,
-    pub gate: bool,
     pub parity_rows: Vec<String>,
     pub result: ScenarioResult,
     pub sizes: Vec<SizeSummary>,
@@ -34,42 +30,39 @@ pub struct ScenarioSummary {
 pub struct SizeSummary {
     /// `COLSxROWS`, which is also the directory name.
     pub size: String,
-    /// The apps that ran at this size. An app left out didn't run.
-    pub apps: BTreeMap<App, AppRunStatus>,
+    /// How the run at this size went (its `status.json`).
+    pub status: AppRunStatus,
     pub captures: Vec<CaptureSummary>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CaptureSummary {
     pub name: String,
-    /// The structural check's outcome (`<capture>.check.json` has the details).
+    /// The capture's check: its `[expect]` and its snapshot (`<capture>.check.json` has the details).
     pub check: CheckOutcome,
     pub mismatches: usize,
-    /// The apps the mismatches count against: an app whose `[expect]` failed, and Rust for a cross-app mismatch.
-    #[serde(default)]
-    pub against: Vec<App>,
 }
 
 impl CaptureSummary {
-    /// A capture the structural check had nothing to say about.
+    /// A capture nothing checked.
     pub fn unchecked(name: &str) -> Self {
         Self {
             name: name.to_owned(),
             check: CheckOutcome::NotApplicable,
             mismatches: 0,
-            against: Vec::new(),
         }
     }
 }
 
-/// A capture's structural check.
+/// A capture's check.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum CheckOutcome {
     #[serde(rename = "pass")]
     Pass,
     #[serde(rename = "fail")]
     Fail,
-    /// Nothing to check: no `[expect]` for the capture and no cross-app comparison (only one app ran ok).
+    /// Nothing checked it: the run didn't reach it, or it has no `[expect]` and the run's snapshot wasn't compared
+    /// (a size the scenario doesn't list).
     #[serde(rename = "n/a")]
     NotApplicable,
 }
@@ -88,16 +81,10 @@ impl CheckOutcome {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ScenarioResult {
-    /// Every app that ran passed, its checks passed, and both ran.
+    /// Every size ran, and every check passed.
     Pass,
-    /// The Python side failed, or a gated scenario's Rust side did.
+    /// A run failed, or a capture's check did.
     Fail,
-    /// Not gated, and the Rust side failed.
-    RustNotReady,
-    /// Only the Python app ran (a flag or the scenario's `apps`), and it passed.
-    PythonOnly,
-    /// Only the Rust app ran, and it passed.
-    RustOnly,
 }
 
 impl ScenarioResult {
@@ -105,36 +92,18 @@ impl ScenarioResult {
         match self {
             ScenarioResult::Pass => "pass",
             ScenarioResult::Fail => "fail",
-            ScenarioResult::RustNotReady => "rust-not-ready",
-            ScenarioResult::PythonOnly => "python-only",
-            ScenarioResult::RustOnly => "rust-only",
         }
     }
 
-    /// Computes a result from app statuses and structural checks. An app fails when its run failed or a capture's
-    /// mismatches count against it.
-    pub fn from_statuses(gate: bool, sizes: &[SizeSummary]) -> Self {
-        let ran = |app| sizes.iter().any(|s| s.apps.contains_key(&app));
-        let failed = |app| {
-            sizes.iter().any(|s| {
-                s.apps.get(&app).is_some_and(|status| !status.passed())
-                    || s.captures.iter().any(|c| c.against.contains(&app))
-            })
-        };
-        if failed(App::Python) {
-            return ScenarioResult::Fail;
-        }
-        if failed(App::Rust) {
-            return if gate {
-                ScenarioResult::Fail
-            } else {
-                ScenarioResult::RustNotReady
-            };
-        }
-        match (ran(App::Python), ran(App::Rust)) {
-            (true, false) => ScenarioResult::PythonOnly,
-            (false, true) => ScenarioResult::RustOnly,
-            _ => ScenarioResult::Pass,
+    /// The result of the runs at `sizes`: a fail when any run failed or any capture has mismatches.
+    pub fn from_sizes(sizes: &[SizeSummary]) -> Self {
+        let failed = sizes
+            .iter()
+            .any(|s| !s.status.passed() || s.captures.iter().any(|c| c.mismatches > 0));
+        if failed {
+            ScenarioResult::Fail
+        } else {
+            ScenarioResult::Pass
         }
     }
 }
@@ -158,81 +127,47 @@ mod tests {
         .unwrap()
     }
 
-    fn size(apps: &[(App, AppRunStatus)]) -> SizeSummary {
+    fn size(status: AppRunStatus, mismatches: usize) -> SizeSummary {
         SizeSummary {
             size: "160x48".into(),
-            apps: apps.iter().cloned().collect(),
-            captures: Vec::new(),
-        }
-    }
-
-    #[test]
-    fn results_follow_the_rules() {
-        use App::{Python, Rust};
-        let ok = || status(RunState::Ok);
-        let bad = || status(RunState::Timeout);
-        let mut miss = ok();
-        miss.fixture_problems = true;
-
-        let r = ScenarioResult::from_statuses;
-        assert_eq!(r(true, &[size(&[(Python, ok()), (Rust, ok())])]), ScenarioResult::Pass);
-        assert_eq!(
-            r(false, &[size(&[(Python, ok()), (Rust, bad())])]),
-            ScenarioResult::RustNotReady
-        );
-        assert_eq!(r(true, &[size(&[(Python, ok()), (Rust, bad())])]), ScenarioResult::Fail);
-        assert_eq!(
-            r(false, &[size(&[(Python, bad()), (Rust, ok())])]),
-            ScenarioResult::Fail
-        );
-        assert_eq!(
-            r(false, &[size(&[(Python, ok())]), size(&[(Python, miss)])]),
-            ScenarioResult::Fail
-        );
-        assert_eq!(r(false, &[size(&[(Python, ok())])]), ScenarioResult::PythonOnly);
-        assert_eq!(r(false, &[size(&[(Rust, ok())])]), ScenarioResult::RustOnly);
-        assert_eq!(r(false, &[size(&[(Rust, bad())])]), ScenarioResult::RustNotReady);
-    }
-
-    #[test]
-    fn check_mismatches_count_against_their_app() {
-        use App::{Python, Rust};
-        let ok = || status(RunState::Ok);
-        let with = |against: Vec<App>| {
-            let mut s = size(&[(Python, ok()), (Rust, ok())]);
-            s.captures.push(CaptureSummary {
+            status,
+            captures: vec![CaptureSummary {
                 name: "main".into(),
-                check: if against.is_empty() {
+                check: if mismatches == 0 {
                     CheckOutcome::Pass
                 } else {
                     CheckOutcome::Fail
                 },
-                mismatches: against.len(),
-                against,
-            });
-            s
-        };
-        let r = ScenarioResult::from_statuses;
-        assert_eq!(r(true, &[with(vec![])]), ScenarioResult::Pass);
-        assert_eq!(r(false, &[with(vec![Python])]), ScenarioResult::Fail);
-        assert_eq!(r(true, &[with(vec![Rust])]), ScenarioResult::Fail);
-        assert_eq!(r(false, &[with(vec![Rust])]), ScenarioResult::RustNotReady);
-        let json = serde_json::to_value(&with(vec![]).captures[0]).unwrap();
-        assert_eq!(
-            json,
-            serde_json::json!({"name": "main", "check": "pass", "mismatches": 0, "against": []})
-        );
-        assert_eq!(serde_json::to_value(CheckOutcome::NotApplicable).unwrap(), "n/a");
+                mismatches,
+            }],
+        }
     }
 
     #[test]
-    fn app_keys_serialize_as_names() {
-        let s = size(&[(App::Python, status(RunState::Ok))]);
-        let json = serde_json::to_value(&s).unwrap();
-        assert_eq!(json["apps"]["python"]["status"], "ok");
+    fn a_failed_run_or_a_mismatch_fails_the_scenario() {
+        let ok = || status(RunState::Ok);
+        let r = ScenarioResult::from_sizes;
+        assert_eq!(r(&[size(ok(), 0)]), ScenarioResult::Pass);
         assert_eq!(
-            serde_json::to_value(ScenarioResult::RustNotReady).unwrap(),
-            "rust-not-ready"
+            r(&[size(ok(), 0), size(status(RunState::Timeout), 0)]),
+            ScenarioResult::Fail
         );
+        assert_eq!(r(&[size(ok(), 0), size(ok(), 2)]), ScenarioResult::Fail);
+        let mut miss = ok();
+        miss.fixture_problems = true;
+        assert_eq!(r(&[size(miss, 0)]), ScenarioResult::Fail);
+        assert_eq!(r(&[]), ScenarioResult::Pass);
+    }
+
+    #[test]
+    fn serializes_one_status_per_size() {
+        let json = serde_json::to_value(size(status(RunState::Ok), 0)).unwrap();
+        assert_eq!(json["status"]["status"], "ok");
+        assert_eq!(
+            json["captures"][0],
+            serde_json::json!({"name": "main", "check": "pass", "mismatches": 0})
+        );
+        assert_eq!(serde_json::to_value(CheckOutcome::NotApplicable).unwrap(), "n/a");
+        assert_eq!(serde_json::to_value(ScenarioResult::Fail).unwrap(), "fail");
     }
 }

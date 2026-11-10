@@ -2970,6 +2970,7 @@ dependencies = [
  "insta",
  "jiff",
  "lazy-github-core",
+ "lazy-github-tui",
  "portable-pty",
  "regex",
  "serde",

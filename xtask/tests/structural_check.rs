@@ -1,6 +1,6 @@
-//! The structural check end to end against the Python app: a deliberately changed pane title fails `[expect]`. It
-//! needs uv and the repo's Python dependencies, so it's ignored by default; run it with
-//! `cargo build -p fake-gh && cargo test -p xtask --test structural_check -- --ignored` (the CI `parity` job does).
+//! The structural check end to end against the app: a deliberately changed pane title fails `[expect]`. It runs the
+//! built `lazy-github` and `fake-gh`, which `cargo test --workspace` builds; alone, build them first with
+//! `cargo build -p lazy-github -p fake-gh`.
 
 use std::path::Path;
 use std::process::Command;
@@ -11,7 +11,6 @@ fn read_json(path: &Path) -> serde_json::Value {
 }
 
 #[test]
-#[ignore = "needs uv and the Python app"]
 fn a_rebound_pane_key_fails_the_expected_titles() {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
     let tmp = tempfile::tempdir().unwrap();
@@ -25,14 +24,7 @@ fn a_rebound_pane_key_fails_the_expected_titles() {
     let output = Command::new(env!("CARGO_BIN_EXE_xtask"))
         .arg("parity")
         .arg(&scenario)
-        .args([
-            "--python-only",
-            "--live-python",
-            "--size",
-            "160x48",
-            "--no-build",
-            "--out",
-        ])
+        .args(["--size", "160x48", "--no-build", "--out"])
         .arg(&out)
         .output()
         .unwrap();
@@ -43,7 +35,7 @@ fn a_rebound_pane_key_fails_the_expected_titles() {
         "{stdout}\n{}",
         String::from_utf8_lossy(&output.stderr)
     );
-    assert!(stdout.contains("python expect titles"), "{stdout}");
+    assert!(stdout.contains("expect titles"), "{stdout}");
 
     let check = read_json(&out.join("startup/160x48/main.check.json"));
     let titles: Vec<_> = check["expect"]
@@ -54,7 +46,7 @@ fn a_rebound_pane_key_fails_the_expected_titles() {
         .collect();
     assert_eq!(titles.len(), 1, "{check:#}");
     assert!(
-        titles[0]["python"]
+        titles[0]["actual"]
             .as_array()
             .unwrap()
             .contains(&"[9] Repositories".into()),
@@ -66,8 +58,4 @@ fn a_rebound_pane_key_fails_the_expected_titles() {
     let scenario = &summary["scenarios"][0];
     assert_eq!(scenario["result"], "fail");
     assert_eq!(scenario["sizes"][0]["captures"][0]["check"], "fail");
-    assert_eq!(
-        scenario["sizes"][0]["captures"][0]["against"],
-        serde_json::json!(["python"])
-    );
 }

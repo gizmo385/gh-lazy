@@ -1,12 +1,11 @@
-version = 1
+version = 2
 description = "Create PR modal (P) launched in a clone of the selected repo, on a branch with no upstream: Compare prefilled with the local branch and the no-upstream warning; escape closes"
 # The origin is SSH so both apps pick up the current-directory repo (Py bug B5). Nothing is submitted: a failed create
 # would run git ls-remote against the real origin. The push prompt with a local remote is pr-new-push (#184).
-# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
 # and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
 # the second closes; in Python the second reaches the main screen, where it does nothing.
-gate = true
 parity_rows = [
     "modals.create-pr-branches",
     "modals.create-pr-upstream-warning",
@@ -44,7 +43,6 @@ wait.text = "new-feature"
 
 [[step]]
 capture = "open"
-checks = []
 
 [[step]]
 wait.stable_ms = 500
@@ -57,7 +55,6 @@ wait.gone = "New Pull Request"
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus", "footer"]
 
 [expect.open]
 contains = ["New Pull Request", "Warning: Current local branch has no configured upstream", "Base", "main", "← Compare", "new-feature", "Draft", "Title", "Description"]

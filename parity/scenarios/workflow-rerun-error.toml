@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Run Overview re-run buttons when GitHub refuses: Re-run Failed Jobs and Re-run Workflow each post their request and toast an Error, and the run stays as it was"
 # The same steps as workflow-rerun, with both POSTs answering 403. shift+tab from the Repositories table wraps to the
 # last focus stop on the screen, the Overview's last button, in both apps.
-gate = true
 parity_rows = [
     "toasts.rerun-failed",
 ]
@@ -74,7 +73,6 @@ wait.text = "Failed to re-run failed jobs"
 
 [[step]]
 capture = "failed-jobs-error"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["1"]
@@ -103,7 +101,6 @@ wait.text = "Failed to re-run workflow"
 
 [[step]]
 capture = "workflow-error"
-checks = ["titles", "focus"]
 
 [expect.failed-jobs-error]
 focused = ["[5] Workflow Run #42 Details"]

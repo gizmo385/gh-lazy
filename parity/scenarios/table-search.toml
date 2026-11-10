@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Searchable table: / opens the search box, enter filters the 60-repo table by a substring of each row's repr (including across cells), and an empty search restores every row and hides the box; with the box focused the footer is / and ^p only; / while the table is maximized filters it unseen"
-gate = true
 parity_rows = [
     "searchable-tables.search",
     "searchable-tables.search-hide-on-blur",
@@ -35,7 +34,6 @@ keys = ["/"]
 # `search-box-table-height`). The cursor and focus still match.
 [[step]]
 capture = "open"
-checks = ["cursor", "focus"]
 
 # `india-lazy-…`, `juliett-lazy-…` and `lima-lazy-…`.
 [[step]]
@@ -46,7 +44,6 @@ keys = ["enter"]
 
 [[step]]
 capture = "filtered"
-checks = ["rows", "cursor", "focus"]
 
 # Reopening selects the old query (Textual's `select_on_focus`).
 [[step]]
@@ -54,7 +51,6 @@ keys = ["/"]
 
 [[step]]
 capture = "reopen"
-checks = ["rows", "cursor", "focus"]
 
 # `('☆', 'parity-bot', 'gh-golf-…', …)`: the end of the owner cell and the start of the name cell.
 [[step]]
@@ -68,7 +64,6 @@ keys = ["enter"]
 
 [[step]]
 capture = "cross-cell"
-checks = ["rows", "cursor", "focus"]
 
 # Typed straight over the selected old query, with no ctrl+u: the new text replaces it.
 [[step]]
@@ -82,14 +77,12 @@ keys = ["enter"]
 
 [[step]]
 capture = "typed-over"
-checks = ["rows", "cursor", "focus"]
 
 [[step]]
 keys = ["/", "ctrl+u", "enter"]
 
 [[step]]
 capture = "cleared"
-checks = ["rows", "cursor", "focus"]
 
 # The box takes focus but isn't drawn: it's outside the maximized `DataTable`. Enter filters the maximized table,
 # which re-centers at its new height, and focus goes back to it.
@@ -113,7 +106,6 @@ wait = { gone = "alpha-service", timeout_ms = 5000 }
 
 [[step]]
 capture = "max-filtered"
-checks = ["focus"]
 
 [[step]]
 keys = ["escape"]
@@ -123,7 +115,6 @@ wait = { text = "[1] Repositories", timeout_ms = 5000 }
 
 [[step]]
 capture = "max-restored"
-checks = ["titles", "rows", "focus"]
 
 # Escape with the box focused while the table is maximized minimizes, and focus stays in the box.
 [[step]]
@@ -140,7 +131,6 @@ wait = { text = "[1] Repositories", timeout_ms = 5000 }
 
 [[step]]
 capture = "max-escape-in-box"
-checks = ["focus"]
 
 [expect.open]
 contains = ["Search...", " / Search  ^p Command Pal"]

@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "A large issue body (about 200 KB) is parsed off the frame: it lands below the rule, end reaches its table's last row, and an issue selected while it may still be parsing shows, and only it (#337)"
-gate = true
 # Rust-only: Python stops redrawing for seconds while it mounts a large body's blocks, and an issue selected meanwhile
 # never shows (Py bug B119), as large-account is Rust-only for #325.
-apps = ["rust"]
 parity_rows = ["markdown-links.large-body"]
 sizes = [[160, 48]]
 

@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "PR Diff tab as one continuous diff (#388): tab lands on the body, j crosses from a hunk's last line to the next file's header, J jumps hunks across files, / filters and enter puts the cursor on the first shown file, escape clears, a click moves the cursor, M maximizes the tab area, and the palette's Maximize from the filter; then (#389) ] and [ jump between file headers, z folds every file into the file list, enter unfolds one, and at 100x30 the cursor's file header sticks to the top"
 # Rust-only: the Diff tab is one continuous diff with a line cursor (decision diff-continuous-view), which Python's
 # keys can't follow. The captures check the cursor through the position row under the body (`<path>  Line: n/m`, or
 # `N hunks` on a header), waited on with a regex since the path also shows in its file's header.
-gate = true
-apps = ["rust"]
 parity_rows = [
     "diff-viewer.viewer",
     "diff-viewer.file-header",

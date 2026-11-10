@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Non-default PR filters, open and mine, set the same for issues and pull requests: every page of the PR table asks for open PRs by the logged-in user"
-gate = true
 parity_rows = ["pull-requests.filters"]
 sizes = [[160, 48]]
 
@@ -28,11 +27,8 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Browse fixture pull request 99", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a selection (#209).
 [[step]]
 capture = "loaded"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
-ignore = { boxes = ["Details"] }
 
 # Python moves focus a tick after a focus key (Py bug B98), so wait for the PR table's bindings. G puts the cursor on
 # the last PR of page 1, which asks for page 2 with the `pull_requests.*` filters: Python from the issues endpoint,
@@ -54,8 +50,6 @@ wait = { text = "Browse fixture pull request 48", timeout_ms = 15000 }
 
 [[step]]
 capture = "page-2"
-checks = ["rows", "cursor"]
-ignore = { boxes = ["Details"] }
 
 [expect.loaded]
 contains = ["Browse fixture pull request 51"]

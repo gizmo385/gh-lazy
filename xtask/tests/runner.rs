@@ -1,5 +1,5 @@
 //! Drives the `echo_tui` example through the parity runner: waits, keys, typing, resizing, mouse steps, captures and
-//! failures. Needs no Python.
+//! failures. Runs no real app.
 
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -9,6 +9,7 @@ use xtask::parity::env::RunEnv;
 use xtask::parity::grid::Grid;
 use xtask::parity::runner::{self, AppRunStatus, RunState};
 use xtask::parity::scenario::{Roots, Scenario, Size};
+use xtask::parity::theme;
 
 /// `cargo test` builds examples next to the test binaries: `target/<profile>/deps/runner-*` and
 /// `target/<profile>/examples/echo_tui`.
@@ -33,7 +34,7 @@ fn scenario(steps: &str) -> Scenario {
         configs: parity.join("configs"),
         seeds: parity.join("seeds"),
     };
-    let source = format!("version = 1\nsizes = [[80, 24]]\ntimeout_ms = 15000\n{steps}");
+    let source = format!("version = 2\nsizes = [[80, 24]]\ntimeout_ms = 15000\n{steps}");
     Scenario::parse(Path::new("echo.toml"), &source, &roots).unwrap_or_else(|e| panic!("{e}"))
 }
 
@@ -158,6 +159,41 @@ fn the_focused_wait_passes_once_the_marker_shows() {
     );
     let status = run(&s, out.path());
     assert_eq!(status.status, RunState::Ok, "{status:?}");
+}
+
+#[test]
+fn the_focused_wait_reads_any_theme_the_app_ships() {
+    // `tokyo-night` was never measured for the old `parity/themes.toml`: its colors come from the app's theme.
+    let colors = theme::colors("tokyo-night", None);
+    let border = colors.focus.pane.clone().unwrap();
+    assert!(border.starts_with('#') && border.len() == 7, "{border}");
+    assert_ne!(colors, theme::colors("textual-dark", None));
+
+    let out = tempfile::tempdir().unwrap();
+    let s = scenario(
+        "[[step]]\nwait = { text = \"settled\" }\n\n[[step]]\nkeys = [\"ctrl+g\"]\n\n\
+         [[step]]\nwait = { focused = \"Themed\", timeout_ms = 5000 }\n",
+    );
+    let mut command = CommandBuilder::new(echo_tui());
+    command.env("TERM", "xterm-256color");
+    command.env("ECHO_TUI_BORDER", &border);
+    let mut env = RunEnv::for_command(command, Size { cols: 80, rows: 24 }, s.timing);
+    env.focus = colors.focus.clone();
+    let status = runner::run(env, &s.steps, out.path()).unwrap();
+    assert_eq!(status.status, RunState::Ok, "{status:?}");
+
+    // In another theme's colors the same pane isn't focus.
+    let mut command = CommandBuilder::new(echo_tui());
+    command.env("TERM", "xterm-256color");
+    command.env("ECHO_TUI_BORDER", &border);
+    let short = scenario(
+        "[[step]]\nwait = { text = \"settled\" }\n\n[[step]]\nkeys = [\"ctrl+g\"]\n\n\
+         [[step]]\nwait = { focused = \"Themed\", timeout_ms = 500 }\n",
+    );
+    let mut env = RunEnv::for_command(command, Size { cols: 80, rows: 24 }, short.timing);
+    env.focus = theme::colors("textual-dark", None).focus;
+    let status = runner::run(env, &short.steps, out.path()).unwrap();
+    assert_eq!(status.status, RunState::Timeout, "{status:?}");
 }
 
 #[test]

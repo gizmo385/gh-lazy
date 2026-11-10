@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "Compose sheet on New comment (n on the issue Comments tab): 7 rows empty, growing with a short body, at its cap with a long one (the body scrolls, its scrollbar shown only then), ctrl+t Preview, ctrl+o full screen and back, escape leaving the body (q Close), and ctrl+s posting the same write as Python's Post Comment (#420)"
 # Rust-only: the compose sheet is new behavior (decision compose-dialogs). Checked by eye at both sizes.
-gate = true
-apps = ["rust"]
 parity_rows = [
     "modals.compose-sheet",
     "modals.compose-preview",

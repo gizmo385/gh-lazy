@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Main screen with appearance.theme = catppuccin-latte: the theme applies on mount, and the focused border takes its success color and follows focus"
-gate = true
 parity_rows = ["main-layout.themes", "startup-auth.theme-keymap-on-mount"]
 sizes = [[160, 48]]
 
@@ -17,7 +16,6 @@ wait = { text = "No repository selected", timeout_ms = 15000 }
 # theme isn't applied.
 [[step]]
 capture = "start"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["2"]
@@ -27,7 +25,6 @@ wait = { text = "O Lookup Pull Request" }
 
 [[step]]
 capture = "prs"
-checks = ["titles", "tabs", "focus"]
 
 [expect.start]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]

@@ -1,11 +1,9 @@
-version = 1
+version = 2
 description = "Settings Key Bindings list (#381): one focus stop, a grouped one-line list; enter waits for a key and replaces the binding's keys, a adds one, escape cancels the wait, r resets; a key equal to the default by parsed key is the default; Save applies the keymap at once and reopening shows the change"
 # Rust only: the list is an intentional diff from Python's one row per binding (decision settings-key-bindings-list).
 # The modal is loose text (see settings.toml). The list fills the tab, so 100x30 shows only its first group's first
 # bindings: the expectations name what both sizes show. The harness can't send shift+enter, so Save is reached with
 # tab from the list.
-gate = true
-apps = ["rust"]
 parity_rows = ["modals.settings-key-rebinding"]
 sizes = [[160, 48], [100, 30]]
 

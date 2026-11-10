@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "Notifications modal (ctrl+n) on a saved notifications.json: the saved threads show at once under 'Showing saved notifications - refreshing...', the live first page replaces them, and the next open shows what the first one saved"
 # Rust only: Python writes notifications.json but never reads it (Py bug B29, decision notifications-cache), so it
 # always waits under the loading overlay. The modal's thick border isn't a box to the structure extractor, so its
 # rows are checked with [expect].
-gate = true
-apps = ["rust"]
 parity_rows = [
     "modals.notifications-cached",
     "modals.notifications-cached-refresh",

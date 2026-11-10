@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Started in a clone of a repo in the table: that repo is selected with no key pressed"
 # With the harness's HTTPS remote Python never selects (it keeps the `.git`, Py bug B5), so `origin` is spelled over
 # SSH, which both apps parse.
-gate = true
 parity_rows = [
     "repositories.auto-select-cwd-repo",
     "main-layout.status-current-repo",
@@ -22,12 +21,8 @@ config_overrides = { appearance = { show_command_log = true } }
 [[step]]
 wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and the command log's
-# timestamps differ run to run, so both boxes are ignored.
 [[step]]
 capture = "auto"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
-ignore = { boxes = ["Details", "Command Log"] }
 
 [expect.auto]
 contains = [

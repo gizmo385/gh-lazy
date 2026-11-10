@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Main screen with an unknown appearance.theme: both apps fall back to the default theme (Python's textual-dark, Rust's dark, which draws the same)"
-gate = true
 parity_rows = ["main-layout.themes"]
 sizes = [[160, 48]]
 
@@ -18,7 +17,6 @@ wait = { text = "No repository selected", timeout_ms = 15000 }
 # the boxes checked here.
 [[step]]
 capture = "start"
-checks = ["titles", "tabs", "focus"]
 
 [expect.start]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]

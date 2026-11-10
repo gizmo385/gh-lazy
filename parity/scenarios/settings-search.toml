@@ -1,7 +1,6 @@
-version = 1
+version = 2
 description = "Settings / search: the box opens above the tab strip with focus, Enter filters every tab's fields by fuzzy match on the field name (and Key Bindings rows by description or id), focus stays in the box, tab leaves it with the filter kept, and escape closes the modal"
 # The modal is loose text (see settings.toml).
-gate = true
 parity_rows = ["modals.settings-search", "keybindings.modal-search", "modals.settings-focus"]
 
 [env]
@@ -39,7 +38,6 @@ wait = { text = "Search settings..." }
 
 [[step]]
 capture = "search-open"
-checks = ["footer"]
 
 [[step]]
 type = "filter"
@@ -52,7 +50,6 @@ wait = { gone = "Show Command Log" }
 
 [[step]]
 capture = "search-appearance"
-checks = ["footer"]
 
 # tab leaves the search box for the tab strip; the filter stays. Python moves focus a tick after a tab (Py bug B121),
 # so right waits for the strip's active tab to show it.
@@ -70,7 +67,6 @@ wait = { text = "Changes how pull requests are retrieved" }
 
 [[step]]
 capture = "search-pull-requests"
-checks = ["footer"]
 
 [[step]]
 keys = ["left", "left"]
@@ -80,7 +76,6 @@ wait = { text = "Custom keybinding overrides" }
 
 [[step]]
 capture = "search-key-bindings"
-checks = ["footer"]
 
 [[step]]
 keys = ["escape"]
@@ -90,7 +85,6 @@ wait = { gone = "LazyGithub Settings" }
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus", "footer"]
 
 [expect.search-open]
 contains = ["Search settings...", "Show Command Log:"]

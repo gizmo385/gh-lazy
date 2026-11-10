@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "PR Conversation with body-less reviews of each shape: one that starts no thread of its own shows closed with 'No additional review content' (approved, changes requested) or is hidden (commented), never open and empty"
 # Rust only: Python opens a body-less approved or changes-requested review whose comments are all replies drawn in
 # another review's thread (or replies to a missing comment) with nothing in it, and hides every body-less comment
 # review (Py bug B10). Decision conversation-no-empty-reviews (#346).
-gate = true
-apps = ["rust"]
 parity_rows = ["pull-requests.conversation-empty-review"]
 sizes = [[160, 100]]
 
@@ -51,7 +49,6 @@ wait = { regex = "│━{16}╸━{12}╺", timeout_ms = 5000 }
 
 [[step]]
 capture = "conversation"
-checks = ["titles", "tabs", "rows"]
 
 [expect.conversation]
 tabs = { box = "Details", names = ["Overview", "Diff", "Conversation"], active = "Conversation" }

@@ -16,6 +16,8 @@ fake-gh = { workspace = true }
 form_urlencoded = { workspace = true }
 # The renderer of the Rust scenario snapshots' SVGs (`lazy_github_core::screen`). Core has no UI dependencies.
 lazy-github-core = { workspace = true }
+# The app's themes, for the colors `wait.focused` and structure extraction look for (`parity::theme`).
+lazy-github-tui = { workspace = true }
 # The run timestamp at the top of the parity report's index.html.
 jiff = { workspace = true }
 portable-pty = { workspace = true }
@@ -23,7 +25,7 @@ regex = { workspace = true }
 serde = { workspace = true }
 # `preserve_order` keeps recorded bodies' and config.json keys in their original order.
 serde_json = { workspace = true, features = ["preserve_order"] }
-# Unified diffs of the two apps' captures in the parity report.
+# Unified diffs of a capture and its snapshot in the parity report.
 similar = { workspace = true }
 tempfile = { workspace = true }
 thiserror = { workspace = true }

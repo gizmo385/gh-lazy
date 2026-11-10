@@ -57,11 +57,10 @@ jobs:
     - name: Install toolchain
       run: rustup toolchain install
     - uses: Swatinem/rust-cache@v2
-    # No uv and no Python: Python's side comes from the recorded references in parity/references/. Failing
-    # scenarios still produce a report, which is published.
+    # The app against its scenarios and snapshots. Failing scenarios still produce a report, which is published.
     - name: Parity scenarios
       continue-on-error: true
-      run: cargo xtask parity --all --no-sync --jobs 4
+      run: cargo xtask parity --all --jobs 4
     # Fails when the run wrote no report (no index.html), which leaves the live site as it was.
     - name: Landing page
       run: cargo xtask parity-site --report parity/reports/latest --out _parity

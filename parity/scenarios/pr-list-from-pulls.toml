@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "A repo whose newest 30 issues-endpoint items are all issues still lists its PRs, from /pulls, and paging the PR table asks /pulls for page 2, never the issues endpoint (#384)"
-gate = true
 # Rust-only: Python's PR table is empty here (Py bug B180), and the fix is decision pr-list-from-pulls-endpoint.
-apps = ["rust"]
 parity_rows = ["pull-requests.rows-from-issues", "pull-requests.table", "searchable-tables.lazy-loading"]
 sizes = [[160, 48]]
 

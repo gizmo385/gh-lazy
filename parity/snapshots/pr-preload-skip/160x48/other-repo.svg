@@ -16,7 +16,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 .s11 { fill: #e0e0e0; text-decoration: underline; }
 .s12 { fill: #0178d4; font-weight: bold; }
 .s13 { fill: #4e7bae; }
-.s14 { fill: #d4d4d4; }
+.s14 { fill: #e1e1e1; }
 .s15 { fill: #ffa62b; font-weight: bold; }
 </style>
 <rect width="1600" height="960" fill="#1e1e1e"/>
@@ -74,20 +74,26 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <rect x="10" y="780" width="620" height="20" fill="#242f38"/>
 <rect x="630" y="780" width="970" height="20" fill="#121212"/>
 <rect x="0" y="800" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="800" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="800" width="10" height="20" fill="#121212"/>
 <rect x="0" y="820" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="820" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="820" width="10" height="20" fill="#121212"/>
 <rect x="0" y="840" width="10" height="20" fill="#121212"/>
 <rect x="10" y="840" width="620" height="20" fill="#242f38"/>
 <rect x="630" y="840" width="20" height="20" fill="#121212"/>
+<rect x="1570" y="840" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="840" width="10" height="20" fill="#121212"/>
 <rect x="0" y="860" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="860" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="860" width="10" height="20" fill="#121212"/>
 <rect x="0" y="880" width="650" height="20" fill="#121212"/>
+<rect x="1570" y="880" width="20" height="20" fill="#000000"/>
 <rect x="1590" y="880" width="10" height="20" fill="#121212"/>
 <rect x="0" y="900" width="10" height="20" fill="#121212"/>
 <rect x="10" y="900" width="620" height="20" fill="#242f38"/>
 <rect x="630" y="900" width="20" height="20" fill="#121212"/>
+<rect x="650" y="900" width="940" height="20" fill="#000000"/>
 <rect x="1590" y="900" width="10" height="20" fill="#121212"/>
 <rect x="0" y="920" width="1600" height="20" fill="#121212"/>
 <rect x="0" y="940" width="1600" height="20" fill="#242f38"/>
@@ -263,30 +269,26 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s6" x="10" y="795" textLength="620" lengthAdjust="spacingAndGlyphs"> #  Status  Author         Title                              </text>
 <text class="s4" x="630" y="795" textLength="970" lengthAdjust="spacingAndGlyphs">│┌─ [6] Command Log ────────────────────────────────────────────────────────────────────────────┐</text>
 <text class="s4" x="0" y="815" textLength="650" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘│</text>
-<text class="s14" x="650" y="815" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s14" x="650" y="815" textLength="940" lengthAdjust="spacingAndGlyphs">INFO 2026-01-01 00:00:00 - Selected repo parity-bot/pr-details                                </text>
 <text class="s4" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="0" y="835" textLength="140" lengthAdjust="spacingAndGlyphs">┌─ [3] Issues </text>
 <text class="s13" x="140" y="835" textLength="70" lengthAdjust="spacingAndGlyphs">(empty)</text>
 <text class="s4" x="210" y="835" textLength="440" lengthAdjust="spacingAndGlyphs"> ─────────────────────────────────────────┐│</text>
-<text class="s14" x="650" y="835" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
+<text class="s14" x="650" y="835" textLength="940" lengthAdjust="spacingAndGlyphs">INFO 2026-01-01 00:00:00 - Selected repo parity-bot/dotfiles                                  </text>
 <text class="s4" x="1590" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="0" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s6" x="10" y="855" textLength="620" lengthAdjust="spacingAndGlyphs"> #  Status  Author  Title                                     </text>
 <text class="s4" x="630" y="855" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s14" x="650" y="855" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s4" x="1590" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="0" y="875" textLength="650" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘│</text>
-<text class="s14" x="650" y="875" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s4" x="1590" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="0" y="895" textLength="170" lengthAdjust="spacingAndGlyphs">┌─ [4] Workflows </text>
 <text class="s13" x="170" y="895" textLength="70" lengthAdjust="spacingAndGlyphs">(empty)</text>
 <text class="s4" x="240" y="895" textLength="410" lengthAdjust="spacingAndGlyphs"> ──────────────────────────────────────┐│</text>
-<text class="s14" x="650" y="895" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s4" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s6" x="10" y="915" textLength="620" lengthAdjust="spacingAndGlyphs"> Time  Result  Job Name  Run Name  Run #                      </text>
 <text class="s4" x="630" y="915" textLength="20" lengthAdjust="spacingAndGlyphs">││</text>
-<text class="s14" x="650" y="915" textLength="940" lengthAdjust="spacingAndGlyphs">░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░</text>
 <text class="s4" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="0" y="935" textLength="1600" lengthAdjust="spacingAndGlyphs">└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘</text>
 <text class="s15" x="0" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>

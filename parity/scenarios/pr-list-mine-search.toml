@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "pull_requests.owner_filter = mine searches is:pr repo:<repo> author:@me: the PR table lists only parity-bot's PRs, though the newest 30 issues-endpoint items are all issues (#384)"
-gate = true
 # Rust-only: Python lists `mine` through the issues endpoint with creator=<login>, whose page 1 here holds no PRs
 # (Py bug B180), and the fix is decision pr-list-from-pulls-endpoint.
-apps = ["rust"]
 parity_rows = ["pull-requests.filters"]
 sizes = [[160, 48]]
 

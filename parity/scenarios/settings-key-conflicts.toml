@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "Settings Key Bindings conflict warnings (#382): a changed binding that shares a key with another binding active at the same time is marked ! with the other named on the detail line, its group counts it, a reset clears it, and Save still writes and closes, with a Key conflicts warning after Settings updated"
 # Rust only: Python doesn't check keys against each other (decision settings-key-bindings-list, D4). The modal is
 # loose text (see settings.toml). The harness can't send shift+enter, so Save is reached with tab from the list.
-gate = true
-apps = ["rust"]
 parity_rows = ["modals.settings-key-conflicts"]
 sizes = [[160, 48]]
 

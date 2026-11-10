@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "Notifications modal (ctrl+n) errors: a failed first page leaves both tabs empty and logs the failure; reopened, the first page loads, and a failed second page of Unread logs it again and keeps the rows"
 # The modal's thick border isn't a box to the structure extractor (parity/README.md, "Limits"), so its tabs and rows
-# are checked per app with [expect], and the footer cross-app. The command log's lines carry the time, which differs
-# between the apps, so the captures with the log ignore its box and [expect] checks the lines.
-gate = true
+# are checked with [expect]. The command log's lines carry the fixed clock's time, so the snapshots check them too.
 parity_rows = [
     "modals.notifications-errors",
 ]
@@ -35,7 +33,6 @@ wait = { stable_ms = 500 }
 
 [[step]]
 capture = "first-page-failed"
-checks = ["footer"]
 
 [[step]]
 keys = ["escape"]
@@ -48,8 +45,6 @@ wait = { regex = 'ERROR \d{4}-\d\d-\d\d \d\d:\d\d:\d\d - Failed to retrieve noti
 
 [[step]]
 capture = "first-page-logged"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Command Log"] }
 
 [[step]]
 keys = ["ctrl+n"]
@@ -76,7 +71,6 @@ wait = { stable_ms = 500 }
 
 [[step]]
 capture = "later-page-failed"
-checks = ["footer"]
 
 [[step]]
 keys = ["escape"]
@@ -89,8 +83,6 @@ wait = { regex = '(?s)Failed to retrieve notifications from the Github API.*Fail
 
 [[step]]
 capture = "later-page-logged"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Command Log"] }
 
 [expect.first-page-failed]
 contains = ["Notifications", "•Unread", "✓Read"]

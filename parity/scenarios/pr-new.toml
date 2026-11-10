@@ -1,17 +1,16 @@
-version = 1
+version = 2
 description = "Create PR modal (P): without a repo; the empty modal; missing fields; a head GitHub refuses, the push prompt and its failure outside a git repo; a suggested Compare branch, Draft, a two-line description, the created PR added and opened; escape closes from the title and from the description"
 # The working directory is not a git repo, so the push prompt Yes fails ("Error while pushing branch"); a successful
 # push needs a local git remote in the harness and is in pr-new-push (#184 sub-issues). The PR table after the
 # create is not compared: Python cuts the new number 10 to "1" (Py bug B73), so `created` checks only the titles,
 # tabs and focus. `escaped` and `closed-from-description` leave the footer out: with the PR table focused it's cut
 # inside `^p Command Pallete` (Py bug B14), which Rust spells right, so the cut footers differ.
-# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
-# and has its own footer, `^s Create ...`), and [expect] checks the text both show. The writes are compared as
-# before. Rust's one-row fields draw no outline `wait.focused` reads, so a focus move Python makes late is waited
+# and has its own footer, `^s Create ...`), and [expect] checks the text both show. The writes are in the snapshot's
+# effects. Rust's one-row fields draw no outline `wait.focused` reads, so a focus move Python makes late is waited
 # out with `sleep_ms`. In the sheet the first escape leaves the field and the second closes; in Python the second
 # reaches the main screen, where it does nothing.
-gate = true
 parity_rows = [
     "modals.create-edit-pr",
     "modals.create-pr-branches",
@@ -50,7 +49,6 @@ wait.text = "Please select a repository first!"
 
 [[step]]
 capture = "no-repo"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]
@@ -71,7 +69,6 @@ wait.text = "New Pull Request"
 # Focus is on the title.
 [[step]]
 capture = "open"
-checks = []
 
 # shift+enter, in the kitty keyboard protocol encoding (CSI 13;2 u), which both apps read. Title and Compare are empty.
 [[step]]
@@ -82,7 +79,6 @@ wait.text = "Missing required fields!"
 
 [[step]]
 capture = "missing-fields"
-checks = []
 
 [[step]]
 type = "Parity PR"
@@ -123,7 +119,6 @@ wait.text = "may not exist"
 
 [[step]]
 capture = "push-prompt"
-checks = ["footer"]
 
 [[step]]
 keys = ["y"]
@@ -133,7 +128,6 @@ wait.text = "Error while pushing branch"
 
 [[step]]
 capture = "push-failed"
-checks = []
 
 [[step]]
 wait.stable_ms = 500
@@ -146,7 +140,6 @@ type = "new"
 
 [[step]]
 capture = "suggested"
-checks = []
 
 # Accept the suggestion, turn Draft on, and type a description.
 [[step]]
@@ -175,7 +168,6 @@ type = "Second line"
 
 [[step]]
 capture = "filled"
-checks = []
 
 [[step]]
 type = "\u001b[13;2u"
@@ -205,7 +197,6 @@ wait = { focused = "[5] PR #10 Details" }
 
 [[step]]
 capture = "created"
-checks = ["titles", "tabs", "focus"]
 
 # Open it again from the Pull Requests table and close it with escape (the title has focus).
 [[step]]
@@ -234,7 +225,6 @@ wait.gone = "New Pull Request"
 
 [[step]]
 capture = "escaped"
-checks = ["titles", "focus"]
 
 # And from the description. Rust's sheet has no Cancel button (decision compose-dialogs): escape is the way out.
 [[step]]
@@ -261,7 +251,6 @@ wait.gone = "New Pull Request"
 
 [[step]]
 capture = "closed-from-description"
-checks = ["titles", "focus"]
 
 # In a short terminal the dialog opens with the focused title in view: Python's scrolled past the heading and the
 # branches (#336), Rust's sheet near its top, under the heading and the branches.
@@ -279,7 +268,6 @@ wait.text = "Description"
 
 [[step]]
 capture = "short-terminal"
-checks = []
 
 [expect.no-repo]
 contains = ["Cannot open new pull request", "Please select a repository first!"]

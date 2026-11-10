@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "? toggles the keybindings panel on the right: it narrows the main screen, follows focus, survives escape and maximize, and ? closes it"
-gate = true
 parity_rows = ["main-layout.help-panel", "keybindings.app-open-help"]
 sizes = [[160, 48], [100, 30]]
 
@@ -12,7 +11,6 @@ wait = { text = "Repositories", timeout_ms = 15000 }
 
 [[step]]
 capture = "start"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["?"]
@@ -27,7 +25,6 @@ wait = { text = "Cursor up" }
 # ones neither bug touches.
 [[step]]
 capture = "open"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["5"]
@@ -37,7 +34,6 @@ wait = { text = "Previous tab" }
 
 [[step]]
 capture = "details"
-checks = ["titles", "focus"]
 
 # Escape doesn't close the panel, in Python either.
 [[step]]
@@ -45,7 +41,6 @@ keys = ["escape"]
 
 [[step]]
 capture = "escape-kept"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["?"]
@@ -55,7 +50,6 @@ wait = { gone = "Previous tab" }
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus"]
 
 # Maximizing keeps the panel docked: the maximized table and its hatch fill the narrower area.
 [[step]]
@@ -78,7 +72,6 @@ wait = { text = "View Maximized" }
 
 [[step]]
 capture = "maximized"
-checks = ["titles"]
 
 [[step]]
 keys = ["escape"]
@@ -88,7 +81,6 @@ wait = { text = "[1] Repositories" }
 
 [[step]]
 capture = "minimized"
-checks = ["titles", "focus"]
 
 [expect.start]
 focused = ["[1] Repositories"]

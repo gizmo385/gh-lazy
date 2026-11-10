@@ -1,7 +1,6 @@
-version = 1
+version = 2
 description = "Preload the PR for the current commit: launched on a feature branch of the selected repo with preload_pull_request_for_current_commit on, the one PR for the local commit opens in Details without taking focus"
 # The origin is SSH so both apps pick up the current-directory repo (Py bug B5).
-gate = true
 parity_rows = [
     "pull-requests.preload-current-commit",
     "config.pull-requests-preload-pull-request-for-current-commit",
@@ -34,7 +33,6 @@ wait = { stable_ms = 1000 }
 
 [[step]]
 capture = "preloaded"
-checks = ["titles", "tabs", "focus"]
 
 [expect.preloaded]
 contains = ["Current repo: parity-bot/pr-details", "Overview  Diff  Conversation", "Add a cursor to the viewer"]

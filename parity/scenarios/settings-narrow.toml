@@ -1,7 +1,6 @@
-version = 1
+version = 2
 description = "Settings modal at 100x30: the frame takes the full width and 80% of the rows above the footer, the tab's fields scroll, and tab scrolls the focused field into view"
 # Loose text only, as in settings.toml.
-gate = true
 parity_rows = ["modals.settings", "modals.settings-focus"]
 sizes = [[100, 30]]
 
@@ -34,7 +33,6 @@ wait = { text = "LazyGithub Settings" }
 
 [[step]]
 capture = "open"
-checks = ["footer"]
 
 # tab: the scroll area, then Theme, then the switches below the fold, each scrolled into view.
 [[step]]
@@ -45,7 +43,6 @@ wait = { text = "Show Issues:" }
 
 [[step]]
 capture = "scrolled"
-checks = ["footer"]
 
 [expect.open]
 contains = ["LazyGithub Settings", "Theme:", "Dark", "Save", "Cancel"]

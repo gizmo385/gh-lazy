@@ -1,7 +1,6 @@
-version = 1
+version = 2
 description = "Dialog frame, through the Lookup repository modal: centered over the dimmed main screen, its own footer, focus on the first field, tab order through fields and buttons, q typing in a field, escape and q closing"
 # The frame is #178's, seen through the first modal that uses it: Lookup repository (#224).
-gate = true
 parity_rows = [
     "modals.dialog-frame",
     "modals.dialog-focus-order",
@@ -34,7 +33,6 @@ keys = ["q"]
 
 [[step]]
 capture = "q-typed"
-checks = ["rows", "footer"]
 
 # Tab: the switch, then each button in turn, then around to the input.
 [[step]]
@@ -46,7 +44,6 @@ wait = { focused = "Continue t" }
 
 [[step]]
 capture = "switch-focused"
-checks = ["footer"]
 
 [[step]]
 keys = ["tab"]
@@ -56,7 +53,6 @@ wait = { focused = "Lookup" }
 
 [[step]]
 capture = "submit-focused"
-checks = ["footer"]
 
 [[step]]
 keys = ["tab"]
@@ -75,7 +71,6 @@ sleep_ms = 500
 
 [[step]]
 capture = "wrapped"
-checks = ["footer"]
 
 # Back on the switch, q closes.
 [[step]]

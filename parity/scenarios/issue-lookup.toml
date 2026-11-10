@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Lookup issue (O from the Issues table): the dialog, an empty or invalid number, an unknown issue, an issue not in the table (added and selected), one already in it, a pull request's number (Py bug B61) and escape"
 # The dialog's thick border isn't a box to the extractor, so its text is checked with [expect]. Toasts stay up for 5 s
 # and stack bottom-right over the Details box, inside its border, so they don't hide any box the checks compare.
-gate = true
 parity_rows = [
     "issues.lookup",
     "issues.lookup-pull-request",
@@ -41,7 +40,6 @@ wait = { text = "Search for an issue by number:", timeout_ms = 10000 }
 
 [[step]]
 capture = "open"
-checks = ["titles", "footer"]
 
 # Lookup with nothing typed: the number doesn't parse.
 [[step]]
@@ -59,7 +57,6 @@ wait = { text = "Must enter a valid issue number!", timeout_ms = 10000 }
 
 [[step]]
 capture = "invalid"
-checks = ["titles", "footer"]
 
 # An issue that doesn't exist (a 404).
 [[step]]
@@ -87,7 +84,6 @@ wait = { text = "Could not find issue!", timeout_ms = 10000 }
 
 [[step]]
 capture = "not-found"
-checks = ["titles", "footer"]
 
 # Issue 3 isn't on the listed page: it's added to the table and selected.
 [[step]]
@@ -116,7 +112,6 @@ wait = { text = "An old issue on no listed page (#3)", timeout_ms = 10000 }
 
 [[step]]
 capture = "looked-up"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Issue 12 is in the table already: selected, not added twice.
 [[step]]
@@ -148,7 +143,6 @@ wait = { text = "Crash when the config file is empty (#12)", timeout_ms = 10000 
 
 [[step]]
 capture = "existing"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # 8 is a pull request. Python shows it as an issue and adds it to the Issues table (Py bug B61), so only the titles
 # and focus are compared.
@@ -181,7 +175,6 @@ wait = { text = "A pull request among the issues (#8)", timeout_ms = 10000 }
 
 [[step]]
 capture = "py-bug-b61"
-checks = ["titles", "focus"]
 
 # Escape closes the dialog; focus goes back to the Issues table.
 [[step]]
@@ -204,7 +197,6 @@ wait = { gone = "Search for an issue by number:", timeout_ms = 10000 }
 
 [[step]]
 capture = "closed"
-checks = ["titles", "focus"]
 
 [expect.open]
 contains = ["Search for an issue by number:", "Issue Number:", "Issue number", "Lookup", "Cancel"]

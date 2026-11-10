@@ -19,7 +19,7 @@ fn stdout(output: &Output) -> String {
 fn an_invalid_scenario_file_is_an_error_on_its_line() {
     let dir = tempfile::tempdir().unwrap();
     let file = dir.path().join("broken.toml");
-    std::fs::write(&file, "version = 1\nstpes = []\n").unwrap();
+    std::fs::write(&file, "version = 2\nstpes = []\n").unwrap();
     let output = parity(&[file.as_os_str()]);
     assert_eq!(output.status.code(), Some(2), "{output:?}");
     let out = stdout(&output);

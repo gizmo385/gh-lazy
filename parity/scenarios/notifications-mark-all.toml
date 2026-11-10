@@ -1,7 +1,6 @@
-version = 1
+version = 2
 description = "Notifications: ctrl+r marks all read, toasts and switches to Read; the empty Unread tab; closing refreshes the count; reopening with nothing unread opens on Read; / searches a tab"
-# The modal's thick border isn't a box to the structure extractor, so its content is checked per app with [expect].
-gate = true
+# The modal's thick border isn't a box to the structure extractor, so its content is checked with [expect].
 parity_rows = [
     "modals.notifications-tabs",
     "modals.notifications-keys",
@@ -35,7 +34,6 @@ wait = { text = "Marked all notifications as read" }
 
 [[step]]
 capture = "marked-all"
-checks = ["footer"]
 
 [[step]]
 keys = ["u"]
@@ -45,7 +43,6 @@ wait = { gone = "v1.0.0" }
 
 [[step]]
 capture = "unread-empty"
-checks = ["footer"]
 
 [[step]]
 keys = ["escape"]
@@ -69,7 +66,6 @@ wait = { gone = "Showing saved notifications" }
 
 [[step]]
 capture = "reopened"
-checks = ["footer"]
 
 [[step]]
 keys = ["/"]
@@ -85,7 +81,6 @@ wait = { gone = "v1.0.0" }
 
 [[step]]
 capture = "searched"
-checks = ["footer"]
 
 [expect.marked-all]
 contains = ["Marked all notifications as read", "Add the notifications modal", "v1.0.0", "Typo in the install docs", "Ci Activity", "Fails to load", "State Change"]

@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "Preload the PR for the current commit, when nothing is preloaded: two PRs hold the local commit, so the selected repo's overview stays; selecting another repo looks the commit up there too, and its 422 leaves that repo's overview"
-# The origin is SSH so both apps pick up the current-directory repo (Py bug B5). The command log is shown for the
-# reference screens, but its box is ignored: Python logs the 422 as an error line, which Rust logs at debug only (Py
-# bug B110's answer), and the lines carry the time. No capture checks `tabs`: after a selection Python sometimes
-# draws the Details tab underline zero-width (#209); `contains` checks that the Repo Overview stayed.
-gate = true
+# The origin is SSH so the app picks up the current-directory repo (Py bug B5). The command log is shown: Rust logs
+# the 422 at debug only (Py bug B110's answer), so the log stays clear of it. `contains` checks that the Repo Overview
+# stayed.
 parity_rows = [
     "pull-requests.preload-current-commit",
     "pull-requests.preload-lookup-error",
@@ -34,8 +32,6 @@ wait = { text = "Try a faster parser", timeout_ms = 15000 }
 
 [[step]]
 capture = "two-prs"
-checks = ["titles", "focus", "rows"]
-ignore = { boxes = ["Command Log"] }
 
 [[step]]
 keys = ["j", "enter"]
@@ -51,8 +47,6 @@ wait = { text = "Shell configuration, kept in one place.", timeout_ms = 15000 }
 
 [[step]]
 capture = "other-repo"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Command Log"] }
 
 [expect.two-prs]
 pane_titles = [

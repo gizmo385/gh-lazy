@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Per-repo table caches: a repo's PR, issue and run rows come back from the cache when it's selected again and its live fetches fail"
-gate = true
 parity_rows = [
     "searchable-tables.row-cache",
     "caches-drafts.pull-requests-json",
@@ -26,8 +25,6 @@ wait = { text = "Cached run 3" }
 
 [[step]]
 capture = "live"
-checks = ["titles", "rows"]
-ignore = { boxes = ["Details"] }
 
 # Another repo, then back: the second fetches fail.
 [[step]]
@@ -53,8 +50,6 @@ wait = { text = "Cached run 3" }
 
 [[step]]
 capture = "restored"
-checks = ["titles", "rows"]
-ignore = { boxes = ["Details"] }
 
 [expect.restored]
 contains = ["Current repo: parity-bot/cache-fixture", "Cached pull request 6", "Cached issue 5", "Cached run 3"]

@@ -175,26 +175,14 @@ impl Site {
         let scenarios = &self.summary.scenarios;
         let n = |r: ScenarioResult| scenarios.iter().filter(|s| s.result == r).count();
         let mut html = String::from("<h2>Latest parity run</h2>\n<p>");
-        let mut results = vec![ScenarioResult::Pass, ScenarioResult::Fail, ScenarioResult::RustNotReady];
-        results.extend(
-            [ScenarioResult::PythonOnly, ScenarioResult::RustOnly]
-                .into_iter()
-                .filter(|r| n(*r) > 0),
-        );
-        let parts: Vec<String> = results
+        let parts: Vec<String> = [ScenarioResult::Pass, ScenarioResult::Fail]
             .iter()
             .map(|r| format!("<strong>{}</strong> {}", n(*r), badge(r.as_str())))
             .collect();
+        w!(html, "{} of {} scenario(s).</p>\n", parts.join(" "), scenarios.len());
         w!(
             html,
-            "{} of {} scenario(s). {}</p>\n",
-            parts.join(" "),
-            scenarios.len(),
-            escape(&self.meta.python_line())
-        );
-        w!(
-            html,
-            "<p><a href=\"{REPORT_LINK}\">Full report</a>: every scenario at every size, side by side.</p>\n"
+            "<p><a href=\"{REPORT_LINK}\">Full report</a>: every scenario at every size, against its snapshot.</p>\n"
         );
         let failed: Vec<_> = scenarios.iter().filter(|s| s.result == ScenarioResult::Fail).collect();
         if !failed.is_empty() {
@@ -329,7 +317,6 @@ const SITE_CSS: &str = ".n{text-align:right}tr.total td{font-weight:600}.reason 
 mod tests {
     use super::*;
     use crate::matrix::{Area, Covered, Problem, Row};
-    use crate::parity::report::AppSource;
     use crate::parity::summary::ScenarioSummary;
 
     fn meta() -> RunMeta {
@@ -339,8 +326,6 @@ mod tests {
             timestamp: "2026-10-26T12:00:00Z".into(),
             os: "linux (x86_64)".into(),
             command: "parity --all --no-sync --jobs 4".into(),
-            python: AppSource::Recorded,
-            rust: AppSource::Live,
         }
     }
 
@@ -348,7 +333,6 @@ mod tests {
         ScenarioSummary {
             name: name.into(),
             description: String::new(),
-            gate: result != ScenarioResult::RustNotReady,
             parity_rows: Vec::new(),
             result,
             sizes: Vec::new(),
@@ -402,12 +386,12 @@ mod tests {
         Site {
             meta: meta(),
             summary: Summary {
-                version: 1,
+                version: crate::parity::summary::SUMMARY_VERSION,
                 scenarios: vec![
                     scenario("startup", ScenarioResult::Pass),
                     scenario("help", ScenarioResult::Pass),
                     failed,
-                    scenario("pr-list", ScenarioResult::RustNotReady),
+                    scenario("pr-list", ScenarioResult::Fail),
                 ],
             },
             matrix: matrix(),
@@ -474,15 +458,9 @@ mod tests {
         assert!(
             html.contains(
                 "<strong>2</strong> <span class=\"badge b-pass\">pass</span> \
-                 <strong>1</strong> <span class=\"badge b-fail\">fail</span> \
-                 <strong>1</strong> <span class=\"badge b-rust-not-ready\">rust-not-ready</span> of 4 scenario(s). \
-                 Python: recorded</p>"
+                 <strong>2</strong> <span class=\"badge b-fail\">fail</span> of 4 scenario(s).</p>"
             ),
             "{html}"
-        );
-        assert!(
-            !html.contains("badge b-python-only"),
-            "zero limited results are left out"
         );
         assert!(html.contains("<a href=\"report/index.html\">Full report</a>"));
         assert!(
@@ -545,7 +523,7 @@ mod tests {
         let report = repo.path().join("report");
         std::fs::create_dir_all(&report).unwrap();
         let summary = Summary {
-            version: 1,
+            version: crate::parity::summary::SUMMARY_VERSION,
             scenarios: vec![scenario("startup", ScenarioResult::Pass)],
         };
         report::write_reports(&report, &summary, &meta()).unwrap();

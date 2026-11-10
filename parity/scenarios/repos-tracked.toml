@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "Tracked repos (repositories.additional_repos_to_track): fetched after the user's repos and appended, a tracked favorite first, a tracked repo already listed replaced, and one that 404s left out"
-gate = true
 parity_rows = [
     "repositories.rows",
     "repositories.tracked-repos",
@@ -19,7 +18,6 @@ wait = { text = "tracked-tool", timeout_ms = 15000 }
 
 [[step]]
 capture = "loaded"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [expect.loaded]
 contains = ["tracked-tool", "hello-world"]

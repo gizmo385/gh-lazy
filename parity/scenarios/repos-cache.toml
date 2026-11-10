@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "A seeded repos.json at startup: the cached rows stay hidden under the loading overlay, the current-directory repo is selected from them, then the list replaces them"
-gate = true
 parity_rows = [
     "caches-drafts.repos-json",
     "repositories.loading",
@@ -20,20 +19,14 @@ config_overrides = { appearance = { show_command_log = true } }
 [[step]]
 wait = { text = "Current repo: parity-bot/dotfiles", timeout_ms = 15000 }
 
-# Python sometimes draws the Details tab underline zero-width after a repo is selected (#209), and the command log's
-# timestamps differ run to run, so both boxes are ignored.
 [[step]]
 capture = "cached"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details", "Command Log"] }
 
 [[step]]
 wait = { text = "lazy-demo", timeout_ms = 15000 }
 
 [[step]]
 capture = "fetched"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
-ignore = { boxes = ["Details", "Command Log"] }
 
 [expect.cached]
 contains = ["Loading...", "Current repo: parity-bot/dotfiles"]

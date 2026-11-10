@@ -1,13 +1,12 @@
-version = 1
+version = 2
 description = "Edit PR (E) refused: a merged PR from the table (warning, no dialog), then a refused update of PR 4 (the error toast, the dialog stays open)"
 # shift+enter is sent in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read
 # (terminal-caveats.shift-enter). Python moves focus a tick after a focus key (Py bug B98), so each waits for it.
-# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
 # and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
 # the second closes; in Python the second reaches the main screen, where it does nothing.
 # Split from pr-edit, whose PR 5 captures would otherwise sit under these toasts.
-gate = true
 parity_rows = [
     "modals.edit-pr",
     "pull-requests.edit-from-table",
@@ -57,7 +56,6 @@ wait.text = "This PR has already been merged!"
 
 [[step]]
 capture = "already-merged"
-checks = ["titles", "focus"]
 
 # PR 4: a new title, refused by GitHub.
 [[step]]
@@ -71,7 +69,6 @@ wait.stable_ms = 500
 
 [[step]]
 capture = "open-pr4"
-checks = []
 
 [[step]]
 type = "Drop the old renderer"
@@ -94,7 +91,6 @@ wait.text = "Unexpected error while attempting to update PR"
 
 [[step]]
 capture = "update-failed"
-checks = []
 
 [expect.already-merged]
 focused = ["[2] Pull Requests"]

@@ -1,11 +1,10 @@
-version = 1
+version = 2
 description = "Open Bug Report (command palette): gizmo385/gh-lazy becomes the current repo and loads, and New issue opens with the bug-report template and the debug info in its description; then cancelled"
 # The template's library lines differ on purpose (decision debug-info-versions), so [expect] checks only the lines
-# both apps write. Captures ignore the Details box, whose tab underline Python sometimes draws zero-width (#209).
-# Rust draws New issue as the compose sheet (decision compose-dialogs): the open capture compares nothing across apps
+# both apps write.
+# Rust draws New issue as the compose sheet (decision compose-dialogs): the open capture was never compared with Python's
 # and [expect] checks the text both show. The template is longer than the sheet may be, so Rust's sheet takes the
 # screen less the footer and a margin row, and covers the end of the header's "Current repo: gizmo385/gh-lazy".
-gate = true
 parity_rows = [
     "command-palette.open-bug-report",
     "modals.debug-bug-report",
@@ -48,7 +47,6 @@ wait = { text = "[4] Workflows (empty)" }
 
 [[step]]
 capture = "open"
-checks = []
 
 # escape closes Python's modal. In Rust's sheet the first escape leaves the title and the second closes; in Python the
 # second reaches the main screen, where escape only clears a text selection.
@@ -60,8 +58,6 @@ wait = { gone = "Description" }
 
 [[step]]
 capture = "cancelled"
-checks = ["titles", "headers", "rows", "cursor", "focus", "footer"]
-ignore = { boxes = ["Details"] }
 
 [expect.open]
 contains = [

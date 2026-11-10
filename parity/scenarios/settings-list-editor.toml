@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "Settings list editor (#343): one focus stop per list field; enter adds and keeps adding until an empty enter, shift+up moves an item, enter edits in place, a duplicate is refused with a toast, escape cancels, d removes at once, and Save writes the order shown"
 # Rust only: the editor is an intentional diff from Python's input over a checklist (decision settings-list-editor).
 # The modal is loose text (see settings.toml). The harness can't send shift+enter, so Save is reached with tab from
 # Favorites. The add input's placeholder, "owner/repo", shows only while it's empty, which the waits use.
-gate = true
-apps = ["rust"]
 parity_rows = ["modals.settings-list-field"]
 sizes = [[160, 48], [100, 30]]
 

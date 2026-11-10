@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "M on each focus target: the details content doesn't maximize and leaves the one-time toast for the next maximize; each table, the details tabs and the command log do"
-gate = true
 parity_rows = ["main-layout.maximize"]
 # Which targets maximize is behavior, not layout, so one size is enough (parity/README.md, "Keeping the suite fast").
 sizes = [[160, 48]]
@@ -34,8 +33,6 @@ keys = ["M"]
 
 [[step]]
 capture = "content-noop"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Command Log"] }
 
 [[step]]
 keys = ["1"]
@@ -51,7 +48,6 @@ wait = { gone = "[1] Repositories" }
 
 [[step]]
 capture = "repos-max"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -73,7 +69,6 @@ wait = { gone = "[2] Pull Requests" }
 
 [[step]]
 capture = "prs-max"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -95,7 +90,6 @@ wait = { gone = "[3] Issues" }
 
 [[step]]
 capture = "issues-max"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -117,7 +111,6 @@ wait = { gone = "[4] Workflows" }
 
 [[step]]
 capture = "workflows-max"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["escape"]
@@ -139,7 +132,6 @@ wait = { gone = "[6] Command Log" }
 
 [[step]]
 capture = "log-max"
-checks = ["titles", "focus"]
 
 [expect.content-noop]
 focused = ["[5] Details"]

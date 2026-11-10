@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "An unknown appearance.theme draws the default theme and raises an \"Unknown theme\" warning toast once the main screen is up, which goes away after its 5 s timeout"
 # Rust-only: Python silently falls back to textual-dark and rewrites the name on the next save (decision
 # app-owned-themes, D5). `theme-unknown` checks the fallback colors in both apps. Waits out the toast's timer, so it
 # runs at one size (parity/README.md, "Keeping the suite fast").
-gate = true
-apps = ["rust"]
 parity_rows = ["main-layout.theme-unknown-warning"]
 sizes = [[160, 48]]
 
@@ -24,14 +22,12 @@ wait = { text = "Unknown theme" }
 # draws the default theme.
 [[step]]
 capture = "warned"
-checks = ["titles", "focus"]
 
 [[step]]
 wait = { gone = "Unknown theme", timeout_ms = 8000 }
 
 [[step]]
 capture = "expired"
-checks = ["titles", "focus"]
 
 [expect.warned]
 pane_titles = ["", "[1] Repositories", "[5] Details", "[2] Pull Requests", "[3] Issues", "[4] Workflows"]

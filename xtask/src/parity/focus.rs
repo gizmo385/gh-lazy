@@ -1,7 +1,7 @@
 //! `wait.focused`: where a screen dump shows focus.
 //!
-//! Both apps draw focus the same handful of ways, and [`focused`] reads each from the screen alone, in the colors the
-//! scenario's theme gives (`parity/themes.toml`):
+//! The app draws focus a handful of ways, and [`focused`] reads each from the screen alone, in the colors the
+//! scenario's theme gives (`theme.rs`, from the app's own themes):
 //!
 //! - **Pane**: a closed box outline (light, rounded, heavy, double, ascii, or Textual's heavy-dashed `┏╍┓╏┗┛`) whose
 //!   border cells are all in the focus color. Labelled by its title, or by its interior text when it has none.
@@ -11,8 +11,7 @@
 //! - **Cursor**: a run of cells on the block-cursor background. Labelled by its text.
 //!
 //! The module is self-contained on purpose: it traces its own outlines rather than using `structure.rs`, so changes
-//! to the structural extractor can't move capture timing. It's a reference input (`HARNESS_INPUTS`) for the same
-//! reason. The rules and their limits are documented in `parity/README.md` (`wait.focused`).
+//! to the structural extractor can't move capture timing. The rules and their limits are documented in `parity/README.md` (`wait.focused`).
 
 use std::fmt;
 
@@ -21,11 +20,11 @@ use super::grid::{Grid, Style};
 /// The theme colors [`focused`] reads. A kind whose color is `None` finds nothing; buttons need no color.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct FocusColors {
-    /// The focused pane's border, Textual's `$success` (`focus` in `themes.toml`).
+    /// The focused pane's border, the theme's `border.pane_focused`.
     pub pane: Option<String>,
-    /// A focused field's `tall` outline, Textual's `$border` (`border`).
+    /// A focused field's `tall` outline, the theme's `border.field_focused`.
     pub border: Option<String>,
-    /// The focused widget's cursor background, Textual's `$block-cursor-background` (`block_cursor`).
+    /// The focused widget's cursor background, the theme's `cursor.focused.bg`.
     pub block_cursor: Option<String>,
 }
 

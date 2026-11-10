@@ -1,12 +1,11 @@
-version = 1
+version = 2
 description = "Create PR push prompt against a local remote: refused for an unpushed branch, Yes pushes it, the same submit then creates the PR; reopened, the upstream warning is gone"
 # origin is git@github.com:parity-bot/pr-details.git, served by fake-ssh from a local bare repo with only `main`
 # (git_remote_branches), so `git ls-remote` and `git push` run offline.
-# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the dialog as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 100 x 36 modal hides the panes and leaves the main footer under it, Rust's sheet leaves the panes in view
 # and has its own footer), and [expect] checks the text both show. In the sheet the first escape leaves the field and
 # the second closes; in Python the second reaches the main screen, where it does nothing.
-gate = true
 parity_rows = [
     "modals.create-pr-push-prompt",
     "modals.create-pr-upstream-warning",
@@ -62,7 +61,6 @@ wait.text = "may not exist"
 
 [[step]]
 capture = "push-prompt"
-checks = ["footer"]
 
 [[step]]
 keys = ["y"]
@@ -75,7 +73,6 @@ wait.text = "Pushed branch new-feature to remote"
 
 [[step]]
 capture = "pushed"
-checks = []
 
 [[step]]
 wait.stable_ms = 500
@@ -100,7 +97,6 @@ wait.timeout_ms = 15000
 
 [[step]]
 capture = "created"
-checks = ["titles", "tabs", "focus"]
 
 [[step]]
 keys = ["2"]
@@ -120,7 +116,6 @@ wait.text = "New Pull Request"
 # Python prints nothing over the screen here (Py bug B74 doesn't show).
 [[step]]
 capture = "reopened"
-checks = []
 
 [expect.push-prompt]
 contains = ["Error creating pull request", "Warning: Branch new-feature may not exist", "Do you want to create it?"]

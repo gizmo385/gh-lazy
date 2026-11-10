@@ -1,8 +1,6 @@
-version = 1
+version = 2
 description = "A 1,000-repo account (20 pages): every page lands in the repos table, G reaches the last repo, and a / search filters the 1,000 rows (#325)"
-gate = true
 # Rust-only: the check is that the app stays usable at this size, not a comparison with Python (#325).
-apps = ["rust"]
 parity_rows = ["repositories.rows"]
 sizes = [[160, 48]]
 

@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "The palette's Screenshot with no Downloads directory in HOME: the save fails, the directory isn't created, and an error toast titled Screenshot says so"
 # Rust's toast also names the path and the I/O error (Py bug B170's answer, decision screenshot-failure-toast), so its
-# text is checked per app with [expect], where both apps' texts contain "Failed to save screenshot".
-gate = true
+# text is checked with [expect], where both apps' texts contain "Failed to save screenshot".
 parity_rows = [
     "command-palette.screenshot",
     "toasts.screenshot-failed",
@@ -37,7 +36,6 @@ wait = { text = "Failed to save screenshot" }
 
 [[step]]
 capture = "failed"
-checks = ["titles", "focus"]
 
 [expect.failed]
 contains = ["Screenshot", "Failed to save screenshot"]

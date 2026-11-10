@@ -1,13 +1,12 @@
-version = 1
+version = 2
 description = "New issue modal (I): without a repo, the empty modal, an empty title, typing a title and a two-line description, submitting with shift+enter, and the created issue added to the Issues table and opened; then closed with escape"
 # The toast after `I` without a repo is titled "Cannot open new pull request" in Python and "Cannot open new issue"
 # in Rust (Py bug B14, answered), so [expect] only checks its message. The empty-body toast (Py bug B25) isn't
 # exercised: Rust follows B25's recommendation and creates an issue with an empty body.
-# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures were never compared with Python's
 # (Python's 80% modal with labels above tall fields and Save / Cancel buttons hides the panes, Rust's sheet leaves them
 # in view, opens with the title focused and has footer keys), and [expect] checks the text both show. The sheet's own
-# texts (its heading, `^s Save`) are checked by the Rust-only compose-issue scenario. The write is compared as before.
-gate = true
+# texts (its heading, `^s Save`) are checked by the Rust-only compose-issue scenario. The write is in the snapshot's effects.
 parity_rows = [
     "modals.new-issue",
     "modals.text-editor",
@@ -35,7 +34,6 @@ wait.text = "Please select a repository first!"
 
 [[step]]
 capture = "no-repo"
-checks = ["titles", "focus"]
 
 [[step]]
 keys = ["enter"]
@@ -62,7 +60,6 @@ wait.text = "Description"
 
 [[step]]
 capture = "open"
-checks = []
 
 # shift+enter with an empty title, in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read: from
 # Python's scroll area and from Rust's title.
@@ -74,7 +71,6 @@ wait.text = "Must have a non-empty issue title!"
 
 [[step]]
 capture = "empty-title"
-checks = []
 
 # The title's input: the second "Title" on each screen is Python's placeholder (after its label) and Rust's label
 # (after the Pull Requests table's header, which Rust's sheet leaves in view). A click on either focuses the title.
@@ -106,7 +102,6 @@ wait.text = "Second line"
 
 [[step]]
 capture = "typed"
-checks = []
 
 [[step]]
 type = "\u001b[13;2u"
@@ -128,7 +123,6 @@ wait.text = "Parity title (#13)"
 
 [[step]]
 capture = "created"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 # Open it again and close it without saving: escape closes Python's modal. In Rust's sheet the first escape leaves the
 # title and the second closes; in Python the second reaches the main screen, where escape only clears a text
@@ -153,7 +147,6 @@ wait.gone = "Description"
 
 [[step]]
 capture = "cancelled"
-checks = ["titles", "headers", "rows", "cursor", "focus"]
 
 [expect.no-repo]
 contains = ["Please select a repository first!"]

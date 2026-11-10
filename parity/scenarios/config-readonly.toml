@@ -1,7 +1,5 @@
-version = 1
+version = 2
 description = "A read-only config folder: the app starts without a log file (one warning in the command log), and a favorite toggle keeps the star for the session and shows the save error as a toast"
-gate = true
-apps = ["rust"]
 parity_rows = [
     "toasts.settings-save-failed",
     "infrastructure.log-file-unavailable",

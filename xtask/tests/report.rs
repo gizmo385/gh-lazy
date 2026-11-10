@@ -1,22 +1,22 @@
-//! Writes a report from synthetic dumps on disk: the text diff, `check.json` and `structure.json` when present,
-//! a failed run's screen, and the index and `summary.md`. Needs no PTY and no Python.
+//! Writes a report from synthetic dumps on disk: `check.json` and `structure.json` when present, a run that differs
+//! from its snapshot, a failed run's screen, and the index and `summary.md`. Needs no PTY.
 
-use std::collections::BTreeMap;
 use std::num::NonZeroU16;
 use std::path::Path;
 
 use xtask::parity::check::{self, CheckFile, Kind};
 use xtask::parity::ci;
 use xtask::parity::grid::Grid;
-use xtask::parity::report::{AppSource, META_FILE, RunMeta, write_reports};
+use xtask::parity::report::{META_FILE, RunMeta, write_reports};
 use xtask::parity::runner::{AppRunStatus, RunState};
-use xtask::parity::scenario::{App, Roots, Scenario};
+use xtask::parity::scenario::{Roots, Scenario};
+use xtask::parity::screen;
 use xtask::parity::structure::ThemeColors;
 use xtask::parity::summary::{CaptureSummary, CheckOutcome, ScenarioResult, ScenarioSummary, SizeSummary, Summary};
 
 const SIZE: &str = "24x4";
 
-fn screen(bytes: &[u8]) -> Grid {
+fn grid(bytes: &[u8]) -> Grid {
     let mut parser = vt100::Parser::new(NonZeroU16::new(4).unwrap(), NonZeroU16::new(24).unwrap(), 0);
     parser.process(bytes);
     Grid::from_screen(parser.screen())
@@ -41,19 +41,36 @@ fn write_grid(dir: &Path, name: &str, grid: &Grid) {
     write(&dir.join(format!("{name}.txt")), &grid.to_text());
 }
 
-fn scenario(name: &str, result: ScenarioResult, rust: RunState) -> ScenarioSummary {
+fn scenario(name: &str, result: ScenarioResult, state: RunState, mismatches: usize) -> ScenarioSummary {
     ScenarioSummary {
         name: name.into(),
         description: format!("<{name}> & friends"),
-        gate: false,
         parity_rows: vec!["main-layout.layout".into()],
         result,
         sizes: vec![SizeSummary {
             size: SIZE.into(),
-            apps: BTreeMap::from([(App::Python, status(RunState::Ok)), (App::Rust, status(rust))]),
-            captures: vec![CaptureSummary::unchecked("main")],
+            status: status(state),
+            captures: vec![CaptureSummary {
+                name: "main".into(),
+                check: if mismatches == 0 {
+                    CheckOutcome::NotApplicable
+                } else {
+                    CheckOutcome::Fail
+                },
+                mismatches,
+            }],
         }],
         error: None,
+    }
+}
+
+fn meta(command: &str) -> RunMeta {
+    RunMeta {
+        git_sha: "abc123".into(),
+        subject: "Add <things>".into(),
+        timestamp: "2026-01-01T00:00:00Z".into(),
+        os: "test".into(),
+        command: command.into(),
     }
 }
 
@@ -66,81 +83,68 @@ fn writes_every_report_file_from_the_dumps() {
     let out = tempfile::tempdir().unwrap();
     let out = out.path();
 
-    // `demo`: both apps captured, one cell differs, #93's files are present.
+    // `demo`: one cell differs from the snapshot, and an `[expect]` failed. Its structure and log are present.
     let demo = out.join("demo").join(SIZE);
-    write_grid(
-        &demo.join("python"),
-        "main",
-        &screen(b"\x1b[38;2;78;191;113m[1] Repositories\x1b[0m\r\nalpha <b>\r\nq Quit"),
-    );
-    write_grid(
-        &demo.join("rust"),
-        "main",
-        &screen(b"\x1b[38;2;78;191;113m[1] Repositories\x1b[0m\r\nalphA <b>\r\nq Quit"),
+    let snapshot = grid(b"\x1b[38;2;78;191;113m[1] Repositories\x1b[0m\r\nalpha <b>\r\nq Quit");
+    let run = grid(b"\x1b[38;2;78;191;113m[1] Repositories\x1b[0m\r\nalphA <b>\r\nq Quit");
+    write_grid(&demo, "main", &run);
+    write(&demo.join("main.screen.snapshot"), &screen::render(&snapshot).unwrap());
+    write(&demo.join("main.screen.new"), &screen::render(&run).unwrap());
+    write(
+        &demo.join("main.snapshot.diff.txt"),
+        "--- snapshot\n+++ run\n-alpha <b>\n+alphA <b>\n",
     );
     write(
-        &demo.join("python/main.structure.json"),
+        &demo.join("main.structure.json"),
         r#"{"version":1,"focused":["[1] Repositories"]}"#,
     );
-    write(
-        &demo.join("python/fake-gh.log"),
-        "{\"seq\":1,\"command\":\"auth status\"}\n",
-    );
+    write(&demo.join("fake-gh.log"), "{\"seq\":1,\"command\":\"auth status\"}\n");
     write(
         &demo.join("main.check.json"),
         r#"{"capture":"main","size":[24,4],
-            "expect":[{"check":"titles","box":null,"python":["[9] Repos"],"rust":null,"expected":["[1] Repos"],
+            "expect":[{"check":"titles","box":null,"actual":null,"expected":["[1] Repos"],
                        "message":"pane titles differ"}],
-            "cross":[{"check":"rows","box":"[1] Repositories","python":"alpha","rust":"alphA","message":"cell differs"}]}"#,
+            "snapshot":[{"check":"snapshot","box":null,"actual":null,"message":"1 line(s) differ"}]}"#,
     );
 
-    // `broken`: the Rust app exited before capturing; only its failure screen exists. No check.json.
+    // `broken`: the app exited before capturing; only its failure screen exists. No check.json.
     let broken = out.join("broken").join(SIZE);
-    write_grid(&broken.join("python"), "main", &screen(b"hello"));
-    write_grid(&broken.join("rust"), "failure", &screen(b"Error: <panic> & exit"));
+    write_grid(&broken, "failure", &grid(b"Error: <panic> & exit"));
 
     let summary = Summary {
-        version: 1,
+        version: 2,
         scenarios: vec![
-            scenario("demo", ScenarioResult::RustNotReady, RunState::Ok),
-            scenario("broken", ScenarioResult::RustNotReady, RunState::Exited),
+            scenario("demo", ScenarioResult::Fail, RunState::Ok, 2),
+            scenario("broken", ScenarioResult::Fail, RunState::Exited, 0),
         ],
     };
-    let meta = RunMeta {
-        git_sha: "abc123".into(),
-        subject: "Add <things>".into(),
-        timestamp: "2026-01-01T00:00:00Z".into(),
-        os: "test".into(),
-        command: "parity demo broken".into(),
-        python: AppSource::Recorded,
-        rust: AppSource::Live,
-    };
+    let meta = meta("parity demo broken");
     write_reports(out, &summary, &meta).unwrap();
-
-    let diff = read(&demo.join("main.diff.txt"));
-    assert!(diff.starts_with("--- python\n+++ rust\n"), "{diff}");
-    assert!(diff.contains("-alpha <b>\n+alphA <b>\n"), "{diff}");
-    assert!(!broken.join("main.diff.txt").exists(), "no diff without both captures");
 
     let report = read(&out.join("demo/report.html"));
     assert!(report.contains("&lt;demo&gt; &amp; friends"));
-    assert!(report.contains("1 cell(s) differ"));
+    assert!(report.contains("1 cell(s) differ"), "{report}");
+    assert!(report.contains("<figcaption>Snapshot</figcaption>"));
+    assert!(report.contains("<figcaption>Run</figcaption>"));
     assert!(report.contains(
         "<li><code>main-layout.layout</code> in <code>docs/rust-rewrite/parity/areas/main-layout.md</code></li>"
     ));
-    assert!(report.contains("<td><code>alpha</code></td><td><code>alphA</code></td><td></td><td>cell differs</td>"));
     assert!(
         report.contains(
             "<td><code>(none)</code></td><td><code>[&quot;[1] Repos&quot;]</code></td><td>pane titles differ</td>"
         ),
-        "an [expect] mismatch shows what was expected"
+        "an [expect] mismatch shows what was expected: {report}"
     );
+    assert!(
+        report.contains("<td>1 line(s) differ <a href=\"24x4/main.snapshot.diff.txt\">diff</a></td>"),
+        "{report}"
+    );
+    assert!(report.contains("+alphA &lt;b&gt;"), "the text diff is shown");
     assert!(
         report.contains("&quot;focused&quot;: ["),
         "structure.json is pretty-printed"
     );
-    assert!(report.contains("fake-gh.log (python, last 50 lines)"));
-    assert!(report.contains("&lt;b&gt;"));
+    assert!(report.contains("fake-gh.log (last 50 lines)"));
 
     let broken_report = read(&out.join("broken/report.html"));
     assert!(broken_report.contains("No capture: exited with code 1 at step 0 (0.9s)."));
@@ -150,197 +154,113 @@ fn writes_every_report_file_from_the_dumps() {
     let index = read(&out.join("index.html"));
     assert!(index.contains("<a href=\"demo/report.html\">demo</a>"));
     assert!(index.contains("<code>cargo xtask parity demo broken</code>"));
+    assert!(index.contains("<p>0 pass, 2 fail</p>"), "{index}");
 
     let md = read(&out.join("summary.md"));
-    assert!(md.starts_with("## Parity: 0 pass, 0 fail, 2 rust-not-ready\n"), "{md}");
+    assert!(md.starts_with("## Scenarios: 0 pass, 2 fail\n"), "{md}");
+    assert!(md.contains("| demo | skipped | skipped | fail | 2 |"), "{md}");
     assert!(
-        md.contains("| demo | no | skipped | skipped | rust-not-ready | 2 |"),
+        md.contains(r#"- demo/24x4/main: titles: actual=(none) expected=["[1] Repos"]"#),
         "{md}"
     );
-    assert!(
-        md.contains("- demo/24x4/main: rows [1] Repositories: python=alpha rust=alphA"),
-        "{md}"
-    );
-    assert!(
-        md.contains(r#"- demo/24x4/main: titles: python=["[9] Repos"] rust=(none) expected=["[1] Repos"]"#),
-        "{md}"
-    );
+    assert!(md.contains("- demo/24x4/main: snapshot: 1 line(s) differ"), "{md}");
 
     // The run metadata sits next to summary.md, machine-readable, and reads back as written.
     assert_eq!(RunMeta::read(out).unwrap(), meta);
     let json: serde_json::Value = serde_json::from_str(&read(&out.join(META_FILE))).unwrap();
     assert_eq!(json["git_sha"], "abc123");
-    assert_eq!(json["python"], "recorded");
+    assert!(json.get("python").is_none(), "{json}");
+    assert!(RunMeta::read(&out.join("missing")).is_err());
 }
 
-/// A fake-gh log line for a served `method path` request with `body`.
-fn log_line(method: &str, path: &str, body: &serde_json::Value) -> String {
-    let entry = serde_json::json!({
-        "seq": 1, "argv": ["api", path], "command": "api", "method": method, "path": path, "query": {},
-        "accept": "json", "cache": null, "cache_control": null, "body": body, "fixture": "base/x.json",
-        "status": 200, "miss": false, "error": null
-    });
-    format!("{entry}\n")
-}
-
-/// Runs the structural check on scenario `writer` in `out`: two captures with the same screen in both apps, and
-/// request logs that agree on a `PUT` but each have a `POST` the other doesn't (Rust's sent twice).
-fn check_writer(out: &Path) -> (BTreeMap<App, AppRunStatus>, Vec<CaptureSummary>, Vec<ci::Finding>) {
+/// Checks scenario `titled` in `out`: two captures of the same screen, the last one expecting a title it doesn't
+/// show.
+fn check_titled(out: &Path) -> (Vec<CaptureSummary>, Vec<ci::Finding>) {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("..");
     let roots = Roots {
         fixtures: repo.join("parity/fixtures"),
         configs: repo.join("parity/configs"),
         seeds: repo.join("parity/seeds"),
     };
-    let source = "version = 1\ngate = false\n[[step]]\ncapture = \"first\"\n[[step]]\ncapture = \"last\"\n";
-    let scenario = Scenario::parse(Path::new("writer.toml"), source, &roots).unwrap();
+    let source = "version = 2\n[[step]]\ncapture = \"first\"\n[[step]]\ncapture = \"last\"\n\
+                  [expect.last]\npane_titles = [\"[9] Repos\"]\n";
+    let scenario = Scenario::parse(Path::new("titled.toml"), source, &roots).unwrap();
 
-    let dir = out.join("writer").join(SIZE);
-    let get = log_line("GET", "/user", &serde_json::Value::Null);
-    let shared = log_line(
-        "PUT",
-        "/repos/o/r/pulls/1/merge",
-        &serde_json::json!({"merge_method": "squash"}),
-    );
-    let python_only = log_line(
-        "POST",
-        "/repos/o/r/issues",
-        &serde_json::json!({"title": "x", "body": "y"}),
-    );
-    let rust_only = log_line("POST", "/repos/o/r/issues", &serde_json::json!({"title": "x"}));
-    for (app, log) in [
-        (App::Python, [get.as_str(), &shared, &python_only].concat()),
-        (App::Rust, [shared.as_str(), &rust_only, &rust_only, &get].concat()),
-    ] {
-        let app_dir = dir.join(app.name());
-        for capture in ["first", "last"] {
-            write_grid(&app_dir, capture, &screen(b"same screen"));
-        }
-        write(&app_dir.join("fake-gh.log"), &log);
+    let dir = out.join("titled").join(SIZE);
+    let boxed = grid("┌─ [1] Repos ─┐\r\n│ alpha       │\r\n└─────────────┘".as_bytes());
+    for capture in ["first", "last"] {
+        write_grid(&dir, capture, &boxed);
     }
-    let statuses = BTreeMap::from([(App::Python, status(RunState::Ok)), (App::Rust, status(RunState::Ok))]);
-    let (captures, findings) =
-        check::check_size(&scenario, &dir, &statuses, &ThemeColors::default(), &[], None).unwrap();
-    (statuses, captures, findings)
+    check::check_size(&scenario, &dir, &ThemeColors::default(), None).unwrap()
 }
 
 #[test]
-fn a_write_sent_by_only_one_app_shows_on_the_last_capture() {
+fn an_expect_mismatch_reaches_check_json_ci_and_the_report() {
     let out = tempfile::tempdir().unwrap();
     let out = out.path();
-    let dir = out.join("writer").join(SIZE);
-    let (statuses, captures, findings) = check_writer(out);
+    let dir = out.join("titled").join(SIZE);
+    let (captures, findings) = check_titled(out);
 
-    // Only the last capture carries it, against Rust.
-    assert_eq!((captures[0].check, captures[0].mismatches), (CheckOutcome::Pass, 0));
+    // The first capture has no `[expect]` and no snapshot was compared: nothing checked it.
+    assert_eq!(captures[0].check, CheckOutcome::NotApplicable);
+    assert!(!dir.join("first.check.json").exists());
+    assert!(dir.join("first.structure.json").exists());
     assert_eq!((captures[1].check, captures[1].mismatches), (CheckOutcome::Fail, 1));
-    assert_eq!(captures[1].against, [App::Rust]);
     let check: CheckFile = serde_json::from_str(&read(&dir.join("last.check.json"))).unwrap();
-    assert_eq!(check.cross.len(), 1, "{check:#?}");
-    let m = &check.cross[0];
-    assert_eq!(m.check, Kind::Writes);
-    assert_eq!(
-        m.message,
-        r#"2 writes differ: only in python: POST /repos/o/r/issues {"body":"y","title":"x"}; only in rust: POST /repos/o/r/issues {"title":"x"}"#
-    );
-    assert_eq!(
-        m.python,
-        serde_json::json!([r#"POST /repos/o/r/issues {"body":"y","title":"x"}"#])
-    );
-    assert_eq!(m.rust, serde_json::json!([r#"POST /repos/o/r/issues {"title":"x"}"#]));
+    assert_eq!(check.expect.len(), 1, "{check:#?}");
+    assert!(check.snapshot.is_empty());
+    let m = &check.expect[0];
+    assert_eq!(m.check, Kind::Titles);
+    assert_eq!(m.actual, serde_json::json!(["[1] Repos"]));
+    assert_eq!(m.expected, Some(serde_json::json!(["[9] Repos"])));
 
     let sizes = vec![SizeSummary {
         size: SIZE.into(),
-        apps: statuses,
+        status: status(RunState::Ok),
         captures,
     }];
     let summary = ScenarioSummary {
-        name: "writer".into(),
+        name: "titled".into(),
         description: String::new(),
-        gate: false,
         parity_rows: Vec::new(),
-        result: ScenarioResult::from_statuses(false, &sizes),
+        result: ScenarioResult::from_sizes(&sizes),
         sizes,
         error: None,
     };
-    assert_eq!(summary.result, ScenarioResult::RustNotReady);
-    // Gated, it fails the scenario, and `--ci` names the write.
-    let gated = ScenarioSummary {
-        gate: true,
-        result: ScenarioResult::from_statuses(true, &summary.sizes),
-        ..summary.clone()
-    };
-    assert_eq!(gated.result, ScenarioResult::Fail);
-    let annotations: Vec<String> = ci::annotations("parity/scenarios/writer.toml", &gated, &findings)
+    assert_eq!(summary.result, ScenarioResult::Fail);
+    let annotations: Vec<String> = ci::annotations("parity/scenarios/titled.toml", &summary, &findings)
         .iter()
         .map(ToString::to_string)
         .collect();
     assert!(
         annotations
             .iter()
-            .any(|a| a.contains("writer/24x4/last: cross writes: 2 writes differ: only in python: POST")),
+            .any(|a| a.starts_with("::error file=parity/scenarios/titled.toml::")
+                && a.contains("titled/24x4/last: expect titles")),
         "{annotations:#?}"
     );
 
-    let meta = RunMeta {
-        git_sha: "abc123".into(),
-        subject: String::new(),
-        timestamp: "2026-01-01T00:00:00Z".into(),
-        os: "test".into(),
-        command: "parity writer".into(),
-        python: AppSource::Recorded,
-        rust: AppSource::Live,
-    };
     let summary = Summary {
-        version: 1,
+        version: 2,
         scenarios: vec![summary],
     };
-    write_reports(out, &summary, &meta).unwrap();
+    write_reports(out, &summary, &meta("parity titled")).unwrap();
     let md = read(&out.join("summary.md"));
+    assert!(md.contains("| titled | skipped | skipped | fail | 1 |"), "{md}");
     assert!(
-        md.contains("| writer | no | skipped | skipped | rust-not-ready | 1 |"),
+        md.contains(r#"- titled/24x4/last: titles: actual=["[1] Repos"] expected=["[9] Repos"]"#),
         "{md}"
     );
-    assert!(
-        md.contains(
-            r#"- writer/24x4/last: writes: python=["POST /repos/o/r/issues {\"body\":\"y\",\"title\":\"x\"}"]"#
-        ),
-        "{md}"
-    );
-    let report = read(&out.join("writer/report.html"));
+    let report = read(&out.join("titled/report.html"));
     assert!(
         report.contains(
-            "<tr><td>writes <span class=\"muted\">(cross)</span></td><td></td><td><code>[&quot;POST \
-             /repos/o/r/issues"
+            "<tr><td>titles <span class=\"muted\">(expect)</span></td><td></td>\
+             <td><code>[&quot;[1] Repos&quot;]</code></td><td><code>[&quot;[9] Repos&quot;]</code></td>"
         ),
         "{report}"
     );
     assert!(
-        report.contains(
-            "<td>2 writes differ: only in python: POST /repos/o/r/issues \
-             {&quot;body&quot;:&quot;y&quot;,&quot;title&quot;:&quot;x&quot;}; only in rust:"
-        ),
-        "{report}"
+        report.contains("<p class=\"muted\">not checked</p>"),
+        "the first capture"
     );
-}
-
-#[test]
-fn run_metadata_round_trips_every_app_source() {
-    let out = tempfile::tempdir().unwrap();
-    let meta = RunMeta {
-        git_sha: "abc123".into(),
-        subject: String::new(),
-        timestamp: "2026-01-01T00:00:00Z".into(),
-        os: "test".into(),
-        command: "parity --all".into(),
-        python: AppSource::LiveFor(vec!["a".into(), "b".into()]),
-        rust: AppSource::NotRun,
-    };
-    let summary = Summary {
-        version: 1,
-        scenarios: Vec::new(),
-    };
-    write_reports(out.path(), &summary, &meta).unwrap();
-    assert_eq!(RunMeta::read(out.path()).unwrap(), meta);
-    assert!(RunMeta::read(&out.path().join("missing")).is_err());
 }

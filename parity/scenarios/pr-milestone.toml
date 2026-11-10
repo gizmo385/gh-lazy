@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "PR milestone: a milestoned pull request's Overview shows the milestone line under its title; with the content focused, m opens the Search modal on is:pr milestone:\"<title>\" repo:<owner>/<name> and runs it; escape returns to the Overview; a pull request without a milestone shows no line and no m (#417)"
 # Rust-only: Python has no milestone support (decision pr-milestone). The Details box's text and the modal's loose
 # text are checked with [expect].
-gate = true
-apps = ["rust"]
 parity_rows = [
     "pull-requests.overview-milestone",
     "pull-requests.overview-milestone-search",

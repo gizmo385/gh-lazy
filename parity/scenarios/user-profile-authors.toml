@@ -1,6 +1,5 @@
-version = 1
+version = 2
 description = "User profile (u) from the Pull Requests and Issues tables: the highlighted author's profile, a picked repo selected without joining the repos table, and the error toasts on empty tables"
-gate = true
 parity_rows = [
     "pull-requests.user-profile",
     "issues.user-profile",
@@ -37,7 +36,6 @@ wait = { text = "Parity Bot (@parity-bot)" }
 # title isn't read there, while Rust draws the usual footer row below it.
 [[step]]
 capture = "pr-author"
-checks = ["rows"]
 
 [[step]]
 keys = ["escape"]
@@ -62,7 +60,6 @@ wait = { text = "Parity Friend (@parity-friend)" }
 # title isn't read there, while Rust draws the usual footer row below it.
 [[step]]
 capture = "issue-author"
-checks = ["rows"]
 
 [[step]]
 keys = ["tab"]
@@ -79,8 +76,6 @@ wait = { text = "Current repo: parity-friend/friend-tools" }
 
 [[step]]
 capture = "picked"
-checks = ["titles", "rows", "focus"]
-ignore = { boxes = ["Details"] }
 
 # A repo with no PRs or issues: both tables toast.
 [[step]]
@@ -124,8 +119,6 @@ wait = { text = "No issue currently selected" }
 
 [[step]]
 capture = "empty-tables"
-checks = ["titles", "focus"]
-ignore = { boxes = ["Details"] }
 
 [expect.pr-author]
 contains = ["Parity Bot (@parity-bot) — user"]

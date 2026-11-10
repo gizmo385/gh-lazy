@@ -500,7 +500,7 @@ fn find(buffer: &Buffer, y: u16, needle: &str) -> u16 {
 
 #[test]
 fn the_dim_matches_pythons_colors() {
-    let python = Capture::read("parity/references/modal-frame/160x48/open.screen");
+    let python = Capture::read("crates/lazy-github-tui/tests/fixtures/python_screens/modal-frame/160x48/open.screen");
     let mut app = app_with(TestDialog::new(1));
     let rust = app.render(160, 48);
     let cells = [
@@ -663,7 +663,9 @@ fn dialog_focus_button() {
 #[test]
 fn the_buttons_match_pythons_colors() {
     for (capture, presses) in [("open", &[][..]), ("submit-focused", &["tab", "tab"][..])] {
-        let python = Capture::read(&format!("parity/references/modal-frame/160x48/{capture}.screen"));
+        let python = Capture::read(&format!(
+            "crates/lazy-github-tui/tests/fixtures/python_screens/modal-frame/160x48/{capture}.screen"
+        ));
         let mut app = app_with(TestDialog::new(1));
         app.press(presses);
         let rust = app.render(160, 48);
@@ -752,7 +754,9 @@ fn the_switch_matches_pythons_cells() {
         ("modal-frame/160x48/switch-focused", &["tab"][..]),
         ("repo-lookup/160x48/switch-on", &["tab", "space"][..]),
     ] {
-        let python = Capture::read(&format!("parity/references/{capture}.screen"));
+        let python = Capture::read(&format!(
+            "crates/lazy-github-tui/tests/fixtures/python_screens/{capture}.screen"
+        ));
         let mut app = app_with(TestDialog::new(1));
         app.press(presses);
         let rust = app.render(160, 48);

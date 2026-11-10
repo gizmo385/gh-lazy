@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "Compose sheet on the diff's Add comment (c on a line of the diff body): 9 rows empty with the line quoted, growing with a short body, at its cap with a long one (the body scrolls, its scrollbar shown only then), ctrl+t Preview, ctrl+o full screen and back, and ctrl+s adding the pending comment, which shows inline under its line (#423)"
 # Rust-only: the compose sheet is new behavior (decision compose-dialogs), and the line is reached the continuous
 # diff's way (decision diff-continuous-view). Checked by eye at both sizes. Nothing is written: the comment stays
 # pending until a review is submitted (diff-review covers that).
-gate = true
-apps = ["rust"]
 parity_rows = [
     "modals.compose-sheet",
     "modals.compose-preview",

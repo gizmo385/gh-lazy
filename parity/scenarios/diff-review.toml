@@ -1,10 +1,8 @@
-version = 1
+version = 2
 description = "Diff review on the continuous diff (#388): c on a line of the body opens Add Comment on the compose sheet (#423), an empty comment is refused, ctrl+s and shift+enter add one, the comment shows under its line (#391) with the body keeping focus and its cursor, a second one is added and removed with x, and the review posts the one left with the line's diff position"
 # Rust-only: the line is reached the new way, `tab` into the body and `j` down to it (decision
 # diff-continuous-view), which Python's keys can't follow. `pr-review` keeps the review form's steps both apps share.
 # shift+enter is sent as CSI 13;2 u.
-gate = true
-apps = ["rust"]
 parity_rows = [
     "diff-viewer.add-comment",
     "diff-viewer.pending-comments",

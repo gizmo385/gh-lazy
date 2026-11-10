@@ -1,8 +1,7 @@
-version = 1
+version = 2
 description = "Single-line input clipboard keys in the Lookup repository modal: focusing the input selects its text, ctrl+x cuts it, ctrl+v pastes the in-app clipboard back, and ctrl+v again pastes at the cursor"
 # The scenario can't send shift+arrow keys, so it selects through select-on-focus. Selection keys are checked by the
 # text-input-keys golden instead (#145).
-gate = true
 parity_rows = ["modals.text-input-clipboard"]
 
 [env]
@@ -37,7 +36,6 @@ wait = { focused = "Repository (owner/name):" }
 
 [[step]]
 capture = "selected"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["ctrl+x"]
@@ -47,7 +45,6 @@ wait.gone = "parity-bot/dotfiles"
 
 [[step]]
 capture = "cut"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["ctrl+v"]
@@ -57,7 +54,6 @@ wait.text = "parity-bot/dotfiles"
 
 [[step]]
 capture = "pasted"
-checks = ["titles", "focus", "footer"]
 
 [[step]]
 keys = ["ctrl+v"]
@@ -67,7 +63,6 @@ wait.text = "parity-bot/dotfilesparity-bot/dotfiles"
 
 [[step]]
 capture = "pasted-twice"
-checks = ["titles", "focus", "footer"]
 
 [expect.selected]
 contains = ["parity-bot/dotfiles", "Repository (owner/name):"]

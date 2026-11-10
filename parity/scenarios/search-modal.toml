@@ -1,9 +1,7 @@
-version = 1
+version = 2
 description = "Search modal: s on the PR table opens it prefilled with is:pr is:open and the repo scope; enter lists the hits; / goes back to the query and escape back to the results; enter on a hit opens it in Details; s restores the session and q closes it; the palette opens it too, and a cross-repo search with all of GitHub pages to the 1,000-result cap (#394, #408)"
 # Rust-only: Python has no search beyond the tables' / box (decision search-issues-and-prs). The modal's tall frame
 # isn't a box to the extractor, so its content is loose text, checked with [expect].
-gate = true
-apps = ["rust"]
 parity_rows = [
     "modals.search",
     "modals.search-scope",

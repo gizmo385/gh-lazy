@@ -1,0 +1,11 @@
+---
+source: xtask/src/parity/report.rs
+expression: "&html[from..from + len]"
+---
+<div class="toolbar"><label data-js hidden><input type="checkbox" data-hl> Highlight differences</label><span class="muted">1 cell(s) differ</span></div>
+<div class="panels">
+<figure class="panel"><figcaption>Snapshot</figcaption><div class="scroll"><pre class="term">hi<span class="d"> </span>
+</pre></div></figure>
+<figure class="panel"><figcaption>Run</figcaption><div class="scroll"><pre class="term">hi<span class="d">!</span>
+</pre></div></figure>
+</div>

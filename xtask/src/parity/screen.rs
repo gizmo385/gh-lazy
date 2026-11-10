@@ -1,6 +1,6 @@
-//! The `.screen` format for recorded Python references (#150), and the `fake-gh.log` normalization stored next to it.
+//! The `.screen` format of the scenario snapshots (first written for #150), and the `fake-gh.log` normalization.
 //!
-//! A `.screen` file is a [`Grid`] written one line per screen row, so reference changes read as text diffs. It is
+//! A `.screen` file is a [`Grid`] written one line per screen row, so snapshot changes read as text diffs. It is
 //! lossless: [`parse`] of [`render`]'s output is the same `Grid`.
 //!
 //! ```text

@@ -475,6 +475,9 @@ impl PrConversation {
                     let threads: Vec<Vec<usize>> = threads
                         .iter()
                         .map(|thread| {
+                            // GitHub takes replies only to a thread's first comment, so a reply to a reply goes to
+                            // the root (#418, Py bug B182).
+                            let root = thread.first().map(|root| root.comment.id);
                             thread
                                 .iter()
                                 .map(|comment| {
@@ -482,7 +485,13 @@ impl PrConversation {
                                         CommentRef::Review(comment.comment.id),
                                         CommentBlock::new(&comment.comment, &repo.full_name),
                                     ));
-                                    targets.push(ReplyTarget::ReviewComment(Box::new((*comment).clone())));
+                                    let quoted = Box::new((*comment).clone());
+                                    targets.push(match root {
+                                        Some(root) if root != comment.comment.id => {
+                                            ReplyTarget::Thread { quoted, root }
+                                        }
+                                        _ => ReplyTarget::ReviewComment(quoted),
+                                    });
                                     blocks.len() - 1
                                 })
                                 .collect()

@@ -11,31 +11,31 @@ expression: "app.screen(160, 48)"
 │                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
 │                                                              ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
 │                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                                              ││     4  │ }                                                                                   │
+│                                                              ││▶ 🗑️   docs/old.md (deleted)                                                                   │
+│                                                              ││▼ 📄  src/viewer.rs (+5 -2)                                                                    │
+│                                                              ││  Lines 1-8 (+2)                                                                              │
+│                                                              ││     1  │ use std::io;                                                                        │
+│                                                              ││     2  │ use std::fmt;                                                                       │
+│                                                              ││     3  │                                                                                     │
+│                                                              ││     4  │ pub struct Viewer {                                                                 │
+│                                                              ││     5  │     lines: Vec<String>,                                                             │
+│                                                              ││     6  │     cursor: usize,                                                                  │
+│                                                              ││     7  │ }                                                                                   │
+│                                                              ││     8  │                                                                                     │
+│                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                       ▆▆│
+│                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+└──────────────────────────────────────────────────────────────┘│    22  │             println!("{line}");                                                     │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
+│ #  Status  Author         Title                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││    25  │             println!("{marker} {line}");                                            │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││    26  │         }                                                                           │
+│ 3  closed  parity-bot     Release 0.2.0                      ││    27  │         Ok(())                                                                      │
+│ 2  open    parity-friend  Try a faster parser                ││    28  │     }                                                                               │
+│                                                              ││ README.md                                                                        Line: 4/6   │
 │                                                              ││                                                                                              │
-│                                                              ││                                     Pending Comments:                                        │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││┌──────────────────────────────────────────────────────────────────────────────────────────┐  │
-│                                                              │││                                                                                          │  │
-│                                                              │││                                                                                          │  │
-│                                                              │││ ┌──────────────────────────────────────────────────────────────────────────────────────┐ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │ README.md:5 - +Run `viewer FILE`, then press `j` and `k` to move.                    │ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │  Mention the arrow keys too.                                                         │ │  │
-│                                                              │││ │                                                                                      │ │  │
-└──────────────────────────────────────────────────────────────┘││ │                                                                                      │ │  │
-┌─ [2] Pull Requests ──────────────────────────────────────────┐││ │ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                     │ │  │
-│ #  Status  Author         Title                              │││ │      Remove                                                                          │ │  │
-│ 5  open    parity-friend  Add a cursor to the viewer         │││ │ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                                                     │ │▁▁│
-│ 4  closed  parity-bot     Drop the legacy renderer           │││ │                                                                                      │ │  │
-│ 3  closed  parity-bot     Release 0.2.0                      │││ └──────────────────────────────────────────────────────────────────────────────────────┘ │  │
-│ 2  open    parity-friend  Try a faster parser                │││                                                                                          │  │
-│                                                              │││                                                                                          │  │
-│                                                              ││└──────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                              ││                                                                                              │
+│                                                              ││1 pending comment will be sent with the review                                                │
 │                                                              ││                                                                                              │
 │                                                              ││Review Status:                                                                                │
 │                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
@@ -46,7 +46,7 @@ expression: "app.screen(160, 48)"
 │                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │
 │                                                              ││                                                                                              │
 │                                                              ││ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                             │
-│                                                              ││  Submit Review                  ▌                                                           ▃│
+│                                                              ││  Submit Review                  ▌                                                           ▇│
 │                                                              ││ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                ▌ New comment added                                          │
 └──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
  J Next Hunk  K Previous Hunk  / Filter Files  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M Maximize  ? Keybindings

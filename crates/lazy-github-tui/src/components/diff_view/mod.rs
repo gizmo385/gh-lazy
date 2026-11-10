@@ -1,18 +1,20 @@
 //! The Diff tab's viewer (#344, decision `diff-continuous-view`): the file filter at the top, then one scroll holding
-//! the continuous diff body ([`DiffBody`]) and its position row, the pending review comments ([`PendingComment`],
-//! #272), which Add Comment adds, and once the owner shows it the Submit review form (#273), which the owner submits.
+//! the continuous diff body ([`DiffBody`]) and its position row, then once the owner shows it the Submit review form
+//! (#273), which the owner submits. The pending review comments ([`PendingComment`], #272), which Add Comment adds,
+//! show under their lines in the body (#391, decision `diff-inline-comments`), and a row above the form counts them.
 //!
 //! The viewer doesn't know about pull requests: it takes a parsed [`Diff`]. Inside the details content it has an inner
-//! focus ring ([`DiffStop`]): the filter, the body, then the Remove buttons and the form's fields. The filter is a
-//! text input that takes its keys before the binding chain, as the table's search box does.
+//! focus ring ([`DiffStop`]): the filter, the body, then the form's fields. The filter is a text input that takes its
+//! keys before the binding chain, as the table's search box does.
 //!
 //! The body draws only the rows on screen, so the scroll isn't a laid-out text: [`Window`] maps its rows to the body's
-//! rows, the position row and the lines of the pending comments and the form (the "tail", laid out each frame, as
-//! it's short). While the body's rows fill the view, its position row stays at the view's bottom, and the body may
-//! draw its cursor's file header over its top row (the sticky header), which clicks and the wheel account for.
+//! rows, the position row and the lines of the form (the "tail", laid out each frame, as it's short). While the
+//! body's rows fill the view, its position row stays at the view's bottom, and the body may draw its cursor's file
+//! header over its top row (the sticky header), which clicks and the wheel account for.
 
 mod body;
 mod highlight;
+mod pending;
 mod review;
 mod threads;
 
@@ -32,7 +34,7 @@ pub use body::{Cursor, CursorPosition, DIFF_BODY_BINDINGS, DiffBody, Row};
 pub use highlight::code_spans;
 pub use review::{DiffLineRef, MissingStatus, PendingComment, line_text};
 
-use review::{ButtonPlaced, FormFocus, FormPlaced, ReviewForm};
+use review::{FormFocus, FormPlaced, ReviewForm};
 
 use super::button::BUTTON_BINDINGS;
 use super::command_log::Wheel;
@@ -55,8 +57,8 @@ const FILTER_PLACEHOLDER: &str = "Filter files (press '/' to focus, ESC to clear
 /// How many rows a wheel notch scrolls the view, as Textual's containers and the app's other scrolls do.
 const WHEEL_ROWS: usize = 2;
 
-/// `SplitDiffViewer.BINDINGS`: next and previous hunk, and the filter key, with focus on the filter, a Remove button
-/// or the review form. The body's own link ([`DIFF_BODY_BINDINGS`]) has them too.
+/// `SplitDiffViewer.BINDINGS`: next and previous hunk, and the filter key, with focus on the filter or the review
+/// form. The body's own link ([`DIFF_BODY_BINDINGS`]) has them too.
 pub const DIFF_VIEWER_BINDINGS: &[BindingId] = &[
     BindingId::DiffNextHunk,
     BindingId::DiffPreviousHunk,
@@ -92,17 +94,14 @@ const FILTER_BINDINGS: &[BindingId] = &[
     BindingId::TextualInputPaste,
 ];
 
-/// A focus stop inside the viewer, in ring order: the filter, the body (while it has rows), then each pending
-/// comment's Remove button, then the review form's status (not on the author's form), summary and button. Comments
-/// are by index.
+/// A focus stop inside the viewer, in ring order: the filter, the body (while it has rows), then the review form's
+/// status (not on the author's form), summary and button.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DiffStop {
     /// The file filter.
     Filter,
     /// The continuous diff body and its line cursor.
     Body,
-    /// A pending comment's Remove button.
-    RemoveComment(usize),
     /// The review form's status select, its list open or closed.
     ReviewStatus,
     /// The review form's summary input.
@@ -116,8 +115,6 @@ pub enum DiffStop {
 pub enum ViewMouse {
     /// Not the viewer's.
     Ignored,
-    /// Taken (a click on Remove dropped its comment).
-    Consumed,
     /// A click on the review form's button: the owner submits the review.
     SubmitReview,
 }
@@ -127,7 +124,7 @@ pub enum ViewMouse {
 enum Reveal {
     /// The body's cursor, inside its margin.
     Cursor,
-    /// A stop after the body: a Remove button or a form field.
+    /// A stop after the body: a form field.
     Stop(DiffStop),
 }
 
@@ -195,7 +192,7 @@ impl Window {
     }
 }
 
-/// The pending comments and the form laid out, for one draw: their lines, and where their stops landed in them.
+/// The form laid out, for one draw: its lines, and where its stops landed in them.
 #[derive(Debug, Default)]
 struct Tail {
     rendered: Rendered,
@@ -205,8 +202,6 @@ struct Tail {
 /// Where the tail's stops landed, by line.
 #[derive(Debug, Clone, Default)]
 struct TailPlaced {
-    /// Each pending comment's Remove button.
-    removes: Vec<ButtonPlaced>,
     /// The review form's fields, while it shows.
     form: Option<FormPlaced>,
 }
@@ -215,7 +210,6 @@ impl TailPlaced {
     /// The lines of a stop after the body.
     fn lines_of(&self, stop: DiffStop) -> Option<Range<usize>> {
         match stop {
-            DiffStop::RemoveComment(i) => self.removes.get(i).map(|p| p.rows.clone()),
             DiffStop::ReviewStatus => self.form.as_ref()?.status.clone(),
             DiffStop::ReviewSummary => self.form.as_ref().map(|p| p.summary.clone()),
             DiffStop::ReviewSubmit => self.form.as_ref().map(|p| p.submit.rows.clone()),
@@ -225,9 +219,6 @@ impl TailPlaced {
 
     /// The stop drawn at `line` and column `x` of the tail.
     fn hit(&self, line: usize, x: u16) -> Option<DiffStop> {
-        if let Some(index) = self.removes.iter().position(|placed| placed.contains(line, x)) {
-            return Some(DiffStop::RemoveComment(index));
-        }
         let form = self.form.as_ref()?;
         if form.status.as_ref().is_some_and(|rows| rows.contains(&line)) {
             Some(DiffStop::ReviewStatus)
@@ -269,16 +260,14 @@ enum Hit {
     Nothing,
 }
 
-/// The diff viewer: the filter, the body, the pending comments and the form, the scroll they share, and the inner
-/// focus.
+/// The diff viewer: the filter, the body (with the pending comments) and the form, the scroll they share, and the
+/// inner focus.
 #[derive(Debug)]
 pub struct DiffView {
     filter: TextInput,
     body: DiffBody,
     /// A line under the filter in place of the body: why the diff couldn't be parsed.
     notice: Option<String>,
-    /// The comments added with Add Comment, in the order they were added.
-    pending: Vec<PendingComment>,
     /// The Submit review form, once the owner shows it.
     form: Option<ReviewForm>,
     stop: DiffStop,
@@ -317,7 +306,6 @@ impl DiffView {
             filter: TextInput::new(FILTER_PLACEHOLDER),
             body,
             notice,
-            pending: Vec::new(),
             form: None,
             stop,
             focused: false,
@@ -364,13 +352,13 @@ impl DiffView {
         self.body.links()
     }
 
-    /// The pending comments, in the order they were added.
+    /// The pending comments, in the order they were added, those on files the filter hides included.
     pub fn pending(&self) -> &[PendingComment] {
-        &self.pending
+        self.body.pending()
     }
 
-    /// Shows the Submit review form after the body and the pending comments: the author's (`author`, only a summary
-    /// and "Add Comments") or a reviewer's. A diff that couldn't be parsed shows no form, as in Python.
+    /// Shows the Submit review form after the body: the author's (`author`, only a summary and "Add Comments") or a
+    /// reviewer's. A diff that couldn't be parsed shows no form, as in Python.
     pub fn show_review_form(&mut self, author: bool) {
         if self.notice.is_none() && self.form.is_none() {
             self.form = Some(ReviewForm::new(author));
@@ -399,10 +387,10 @@ impl DiffView {
     }
 
     /// The review the form would send for commit `commit_id`, with every pending comment in the order they were
-    /// added. `None` without a form.
+    /// added, those on files the filter hides included. `None` without a form.
     pub fn review_request(&self, commit_id: &str) -> Option<Result<NewReview, MissingStatus>> {
         let form = self.form.as_ref()?;
-        Some(form.review(commit_id, &self.pending))
+        Some(form.review(commit_id, self.body.pending()))
     }
 
     /// Whether a submitted review is in flight: the button is disabled until the answer comes.
@@ -428,30 +416,9 @@ impl DiffView {
         PendingComment::on(&file.path, file.hunks.get(line.hunk)?, line)
     }
 
-    /// Adds `comment` after the others, showing the section with the first one. Focus stays where it is.
+    /// Adds `comment` after the others, under its line in the body. Focus and the cursor stay where they are.
     pub fn add_comment(&mut self, comment: PendingComment) {
-        self.pending.push(comment);
-    }
-
-    /// Drops pending comment `index`, hiding the section with the last one. A focused Remove button that goes takes
-    /// focus to the stop before it, as Textual does when the focused widget is removed.
-    fn remove_comment(&mut self, index: usize) {
-        if index >= self.pending.len() {
-            return;
-        }
-        let stop = match self.stop {
-            DiffStop::RemoveComment(i) if i == index => {
-                let stops = self.stops();
-                let at = stops.iter().position(|&stop| stop == self.stop).unwrap_or(0);
-                Some(stops[at.saturating_sub(1)])
-            }
-            DiffStop::RemoveComment(i) if i > index => Some(DiffStop::RemoveComment(i - 1)),
-            _ => None,
-        };
-        self.pending.remove(index);
-        if let Some(stop) = stop {
-            self.focus(stop);
-        }
+        self.with_body(|body| body.add_pending(comment));
     }
 
     /// A `textual.scroll.*` binding the focused stop doesn't take (the body takes them all, moving its cursor): up,
@@ -520,7 +487,6 @@ impl DiffView {
         if self.has_body() {
             stops.push(DiffStop::Body);
         }
-        stops.extend((0..self.pending.len()).map(DiffStop::RemoveComment));
         if let Some(form) = &self.form {
             if form.status.is_some() {
                 stops.push(DiffStop::ReviewStatus);
@@ -596,9 +562,7 @@ impl DiffView {
         match self.stop {
             DiffStop::Filter => vec![ChainLink::new(Owner::DiffFilter, FILTER_BINDINGS), viewer],
             DiffStop::Body => vec![ChainLink::new(Owner::DiffBody, DIFF_BODY_BINDINGS)],
-            DiffStop::RemoveComment(_) | DiffStop::ReviewSubmit => {
-                vec![ChainLink::new(Owner::DetailsButton, BUTTON_BINDINGS), viewer]
-            }
+            DiffStop::ReviewSubmit => vec![ChainLink::new(Owner::DetailsButton, BUTTON_BINDINGS), viewer],
             DiffStop::ReviewSummary => vec![ChainLink::new(Owner::DetailsInput, INPUT_BINDINGS), viewer],
             DiffStop::ReviewStatus if self.status_open() => {
                 vec![
@@ -620,8 +584,9 @@ impl DiffView {
 
     /// How the footer and help panel show a binding of [`Self::chain`]: Add Comment is hidden while the cursor isn't
     /// on a diff line; `enter` reads Fold on a file header, Expand or Collapse on a review thread or a line with
-    /// threads, and is hidden elsewhere; Next and Previous Comment are hidden without threads; and Fold Files reads
-    /// Unfold Files once every shown file is folded.
+    /// threads, and is hidden elsewhere; Next and Previous Comment are hidden without threads or pending comments;
+    /// Remove Comment shows only on a pending comment; and Fold Files reads Unfold Files once every shown file is
+    /// folded.
     pub fn binding_state(&self, owner: Owner, id: BindingId) -> BindingState {
         if owner != Owner::DiffBody {
             return BindingState::Enabled;
@@ -634,7 +599,10 @@ impl DiffView {
                 Some(false) => BindingState::Relabeled("Collapse"),
                 None => BindingState::Hidden,
             },
-            BindingId::DiffNextComment | BindingId::DiffPreviousComment if self.body.thread_count() == 0 => {
+            BindingId::DiffNextComment | BindingId::DiffPreviousComment if self.body.comment_count() == 0 => {
+                BindingState::Hidden
+            }
+            BindingId::DiffRemoveComment if !matches!(self.body.cursor(), Some(Cursor::Pending { .. })) => {
                 BindingState::Hidden
             }
             BindingId::DiffFoldAll if self.body.all_folded() => BindingState::Relabeled("Unfold Files"),
@@ -653,7 +621,7 @@ impl DiffView {
                     return None;
                 }
             }
-            // `J` / `K` from the Remove buttons or the form: the body takes focus and its cursor jumps.
+            // `J` / `K` from the form: the body takes focus and its cursor jumps.
             (Owner::DiffViewer, BindingId::DiffNextHunk | BindingId::DiffPreviousHunk) => {
                 if !self.has_body() {
                     return None;
@@ -661,10 +629,6 @@ impl DiffView {
                 self.focus(DiffStop::Body);
                 self.with_body(|body| body.handle(id));
             }
-            (Owner::DetailsButton, BindingId::TextualButtonPress) => match self.stop {
-                DiffStop::RemoveComment(index) => self.remove_comment(index),
-                _ => return None,
-            },
             (Owner::DetailsSelect | Owner::DetailsSelectOverlay, _) => {
                 let status = self.form.as_mut()?.status.as_mut()?;
                 if status.on_binding(id) == SelectOutcome::Ignored {
@@ -815,9 +779,9 @@ impl DiffView {
                 self.focus(DiffStop::Body);
                 self.reveal = None;
             }
-            Hit::Stop(stop @ (DiffStop::RemoveComment(_) | DiffStop::ReviewSubmit)) => {
-                self.armed = Some(stop);
-                self.focus(stop);
+            Hit::Stop(DiffStop::ReviewSubmit) => {
+                self.armed = Some(DiffStop::ReviewSubmit);
+                self.focus(DiffStop::ReviewSubmit);
             }
             Hit::Stop(DiffStop::ReviewStatus) => {
                 self.focus(DiffStop::ReviewStatus);
@@ -876,10 +840,6 @@ impl DiffView {
             return ViewMouse::Ignored;
         }
         match armed {
-            DiffStop::RemoveComment(index) => {
-                self.remove_comment(index);
-                ViewMouse::Consumed
-            }
             DiffStop::ReviewSubmit => ViewMouse::SubmitReview,
             _ => ViewMouse::Ignored,
         }
@@ -920,12 +880,8 @@ impl DiffView {
 
     // Drawing.
 
-    /// The pending comments and the form laid out `width` cells wide, focused as the view is.
+    /// The form laid out `width` cells wide, focused as the view is, with the pending comments' count above it.
     fn layout_tail(&mut self, width: u16, theme: &Theme) -> Tail {
-        let remove_focused = match self.stop {
-            DiffStop::RemoveComment(index) if self.focused => Some(index),
-            _ => None,
-        };
         let form_focused = match self.stop {
             DiffStop::ReviewStatus if self.focused => Some(FormFocus::Status),
             DiffStop::ReviewSummary if self.focused => Some(FormFocus::Summary),
@@ -933,14 +889,14 @@ impl DiffView {
             _ => None,
         };
         let mut rendered = Rendered::default();
-        let removes = review::layout_pending(&mut rendered, &self.pending, remove_focused, width, theme);
+        let pending = self.body.pending().len();
         let form = self
             .form
             .as_mut()
-            .map(|form| review::layout_form(&mut rendered, form, form_focused, width, theme));
+            .map(|form| review::layout_form(&mut rendered, form, form_focused, pending, width, theme));
         Tail {
             rendered,
-            placed: TailPlaced { removes, form },
+            placed: TailPlaced { form },
         }
     }
 
@@ -990,8 +946,10 @@ impl DiffView {
             tail = self.layout_tail(width, theme);
             window.tail = tail.rendered.lines.len();
         }
-        self.scroll.resize(window.content(), height);
         self.body.fit(width, height.saturating_sub(1), window.tail);
+        // A new code width rewraps expanded threads and pending comments, which changes the body's rows.
+        window.body = self.body.rows();
+        self.scroll.resize(window.content(), height);
         let reveal = self
             .reveal
             .take()

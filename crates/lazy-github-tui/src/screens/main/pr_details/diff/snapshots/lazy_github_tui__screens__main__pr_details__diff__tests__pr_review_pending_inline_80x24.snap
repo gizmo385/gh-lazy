@@ -1,0 +1,28 @@
+---
+source: crates/lazy-github-tui/src/screens/main/pr_details/diff/tests.rs
+expression: "app.screen(80, 24)"
+---
+┌──────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────┐┌─ [5] PR #5 Details ──────────────────────────┐
+│ ★  Owner       Name        Pr││ Overview  Diff  Conversation                 │
+│ ☆  parity-bot  pr-details  ✘ ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│                              ││▊  Filter files (press '/' to focus, ESC to  ▎│
+│                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                              ││▼ 📄  src/viewer.rs (+5 -2) · 4 comments       │
+│                              ││     2  │ use std::fmt;                       │
+│                              ││     3  │                                     │
+└──────────────────────────────┘│     4  │ pub struct Viewer {                 │
+┌─ [2] Pull Requests ──────────┐│     5  │     lines: Vec<String>,             │
+│ #  Status  Author         Tit││     6● │     cursor: usize,                  │
+│ 5  open    parity-friend  Add││          ▶ parity-bot: Should t…  · 1 reply▄▄│
+│ 4  closed  parity-bot     Dro││          ▎ Pending comment                   │
+│ 3  closed  parity-bot     Rel││►         ▎ Should this wrap?                 │
+│ 2  open    parity-friend  Try││     7  │ }                                   │
+│                ▊             ││     8  │                                     │
+│                              ││  Lines 22-28 (+3 -2) • impl Viewer {         │
+│                              ││ src/viewer.rs                  Comment 2/4   │
+└──────────────────────────────┘└──────────────────────────────────────────────┘
+ j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous F

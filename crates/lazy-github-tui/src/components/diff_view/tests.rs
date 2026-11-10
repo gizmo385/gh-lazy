@@ -1,5 +1,5 @@
 //! The viewer on its own: its focus ring, the filter, the body's keys, the shared scroll, the mouse, the pending
-//! comments and the review form, against PR 5's diff from the `pr-details` fixtures.
+//! comments under their lines and the review form, against PR 5's diff from the `pr-details` fixtures.
 
 use std::path::Path;
 
@@ -10,7 +10,7 @@ use ratatui::layout::Position;
 
 use super::*;
 use crate::keymap::{KeySpec, Keymap};
-use crate::test_util::{buffer_to_string, buffer_to_styled_string};
+use crate::test_util::buffer_to_string;
 use lazy_github_core::github::ReviewEvent;
 
 /// PR 5's diff: README.md (one hunk of 6 lines), assets/app.css (added, 3), build.rs (4), docs/old.md (deleted) and
@@ -105,24 +105,17 @@ fn row_of(screen: &str, text: &str) -> u16 {
 // The ring.
 
 #[test]
-fn the_ring_is_the_filter_the_body_then_the_comments_and_the_form() {
-    use DiffStop::{Body, Filter, RemoveComment, ReviewStatus, ReviewSubmit, ReviewSummary};
+fn the_ring_is_the_filter_the_body_then_the_form() {
+    use DiffStop::{Body, Filter, ReviewStatus, ReviewSubmit, ReviewSummary};
     let mut view = view();
     assert_eq!(ring(&mut view), [Filter, Body]);
     let mut view = with_two_comments();
     view.show_review_form(false);
     assert_eq!(
         ring(&mut view),
-        [
-            Filter,
-            Body,
-            RemoveComment(0),
-            RemoveComment(1),
-            ReviewStatus,
-            ReviewSummary,
-            ReviewSubmit
-        ]
+        [Filter, Body, ReviewStatus, ReviewSummary, ReviewSubmit]
     );
+    // The pending comments are in the body: they're no stops of their own.
     // From before, focus lands on the body; from after, on the last stop. Past either end it leaves.
     view.focus_first();
     assert_eq!(view.stop(), Body);
@@ -300,12 +293,7 @@ fn an_invalid_diff_shows_the_filter_and_the_reason() {
 fn slash_from_anywhere_focuses_the_filter() {
     let mut view = with_two_comments();
     view.show_review_form(false);
-    for stop in [
-        DiffStop::Body,
-        DiffStop::RemoveComment(1),
-        DiffStop::ReviewStatus,
-        DiffStop::ReviewSubmit,
-    ] {
+    for stop in [DiffStop::Body, DiffStop::ReviewStatus, DiffStop::ReviewSubmit] {
         view.focus(stop);
         press(&mut view, &["/"]);
         assert_eq!(view.stop(), DiffStop::Filter, "from {stop:?}");
@@ -465,25 +453,17 @@ fn fold_shows_on_a_header_and_fold_files_reads_unfold_files_once_everything_is_f
 }
 
 #[test]
-fn a_click_on_remove_drops_its_comment() {
+fn a_click_on_a_pending_comment_moves_the_cursor_there() {
     let mut view = with_two_comments();
-    view.focus(DiffStop::RemoveComment(1));
-    let screen = draw(&mut view, 80, 40);
-    // The focused button is revealed: find its label's row.
-    let row = screen
-        .lines()
-        .enumerate()
-        .filter(|(_, line)| line.contains("Remove"))
-        .map(|(row, _)| row)
-        .last()
-        .unwrap();
-    let row = u16::try_from(row).unwrap();
-    view.click(Position::new(8, row));
-    assert_eq!(view.stop(), DiffStop::RemoveComment(1));
-    assert_eq!(view.mouse(up(8, row)), ViewMouse::Consumed);
-    assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
-    // A release without a press on a button does nothing.
-    assert_eq!(view.mouse(up(8, row)), ViewMouse::Ignored);
+    view.focus(DiffStop::Filter);
+    let screen = draw(&mut view, 100, 40);
+    let row = row_of(&screen, "Mention the arrow keys too.");
+    view.click(Position::new(30, row));
+    assert_eq!(view.stop(), DiffStop::Body);
+    assert_eq!(cursor(&view), on_pending(0, 1));
+    // There's nothing to release on: the comment stays.
+    assert_eq!(view.mouse(up(30, row)), ViewMouse::Ignored);
+    assert_eq!(view.pending().len(), 2);
 }
 
 // Pending comments (#272).
@@ -541,42 +521,209 @@ fn the_comment_target_is_the_body_s_cursor_line() {
     assert_eq!(view.comment_target(), None);
 }
 
+/// The cursor on row `row` of pending comment `index`, in README.md.
+#[allow(clippy::unnecessary_wraps)]
+fn on_pending(index: usize, row: usize) -> Option<Cursor> {
+    Some(Cursor::Pending {
+        file: README,
+        index,
+        row,
+    })
+}
+
+/// Whether `key` is taken by the view's chain (not before it).
+fn chain_takes(view: &mut DiffView, key: &str) -> bool {
+    let keymap = Keymap::defaults();
+    let KeySpec::Chord(chord) = KeySpec::parse(key) else {
+        panic!("{key} isn't a key");
+    };
+    let chain = view.chain();
+    chain.iter().any(|link| {
+        keymap
+            .link_matches(link, &chord)
+            .into_iter()
+            .any(|id| view.on_binding(link.owner, id).is_some())
+    })
+}
+
 #[test]
-fn the_section_is_hidden_with_no_comments() {
-    let mut view = view();
-    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
-    let first = comment(&view, 3, "x");
-    view.add_comment(first);
-    let screen = draw(&mut view, 80, 200);
-    assert!(screen.contains("Pending Comments:"), "{screen}");
-    assert!(screen.contains("README.md:5 - +Run `viewer FILE`"), "{screen}");
-    // After the body and its position row.
-    assert!(
-        row_of(&screen, "Pending Comments:") > row_of(&screen, "1 hunk"),
-        "{screen}"
+fn pending_comments_show_under_their_lines_in_the_order_added() {
+    let mut view = with_two_comments();
+    let third = comment(&view, 3, "And `q`.");
+    view.add_comment(third);
+    let screen = draw(&mut view, 100, 40);
+    let pending = |index, row| Row::Pending {
+        file: README,
+        index,
+        row,
+    };
+    let line = |l| Row::Line(at(README, 0, l));
+    assert_eq!(
+        (0..15).map(|r| view.body().row(r).unwrap()).collect::<Vec<_>>(),
+        [
+            Row::FileHeader(README),
+            Row::HunkSeparator(README, 0),
+            line(0),
+            pending(1, 0),
+            pending(1, 1),
+            pending(1, 2),
+            line(1),
+            line(2),
+            line(3),
+            pending(0, 0),
+            pending(0, 1),
+            pending(2, 0),
+            pending(2, 1),
+            line(4),
+            line(5),
+        ]
+    );
+    // The title, then the body as typed (its line break kept), behind the bar; the line's flag cell is marked.
+    let title = usize::from(row_of(&screen, "▎ Pending comment"));
+    assert!(screen.lines().nth(title - 1).unwrap().contains('●'), "{screen}");
+    assert!(screen.contains("          ▎ A heading for"), "{screen}");
+    assert!(screen.contains("          ▎ the usage."), "{screen}");
+    assert!(screen.contains("          ▎ And `q`."), "{screen}");
+    // README.md's header counts them.
+    assert!(screen.contains("README.md (+3 -1) · 3 comments"), "{screen}");
+}
+
+#[test]
+fn x_on_each_row_of_a_comment_removes_it_and_the_cursor_goes_to_its_line() {
+    for row in 0..3 {
+        let mut view = with_two_comments();
+        view.focus_first();
+        draw(&mut view, 100, 40);
+        // From the header: line 1 (the separator is skipped), then the comment's rows.
+        press(&mut view, &["j"]);
+        for _ in 0..=row {
+            press(&mut view, &["j"]);
+        }
+        assert_eq!(cursor(&view), on_pending(1, row));
+        assert_eq!(
+            view.binding_state(Owner::DiffBody, BindingId::DiffRemoveComment),
+            BindingState::Enabled
+        );
+        press(&mut view, &["x"]);
+        assert_eq!(bodies(&view), ["Mention the arrow keys too."], "row {row}");
+        assert_eq!(cursor(&view), on_line(README, 0, 0));
+        assert!(!draw(&mut view, 100, 40).contains("A heading for"));
+    }
+}
+
+#[test]
+fn remove_comment_is_hidden_off_a_pending_comment_and_x_does_nothing_there() {
+    let mut view = with_two_comments();
+    view.focus_first();
+    draw(&mut view, 100, 40);
+    let state = |view: &DiffView| view.binding_state(Owner::DiffBody, BindingId::DiffRemoveComment);
+    // A header, a line with comments, a line without.
+    for keys in [&[][..], &["j"], &["j", "j", "j", "j"]] {
+        press(&mut view, keys);
+        assert_eq!(state(&view), BindingState::Hidden, "{:?}", cursor(&view));
+        assert!(!chain_takes(&mut view, "x"), "{:?}", cursor(&view));
+        assert_eq!(view.pending().len(), 2);
+    }
+    // `c` is hidden on a pending comment, as on a thread.
+    press(&mut view, &["k"]);
+    assert_eq!(cursor(&view), on_pending(1, 2));
+    assert_eq!(
+        view.binding_state(Owner::DiffBody, BindingId::DiffAddComment),
+        BindingState::Hidden
     );
 }
 
 #[test]
-fn remove_drops_the_first_the_last_and_the_only_comment() {
-    use DiffStop::{Body, RemoveComment};
-    // The first: focus on the second button follows it, now first.
+fn removing_a_comment_before_the_cursor_s_keeps_the_cursor_on_its_comment() {
     let mut view = with_two_comments();
-    view.focus(RemoveComment(1));
-    view.remove_comment(0);
-    assert_eq!(bodies(&view), ["A heading for\nthe usage."]);
-    assert_eq!(view.stop(), RemoveComment(0));
-    // The last, focused: focus goes to the stop before it.
+    let third = comment(&view, 5, "third");
+    view.add_comment(third);
+    view.focus_first();
+    draw(&mut view, 100, 40);
+    // On the third comment added, then the first one added goes: the cursor stays on the third, now second.
+    press(&mut view, &["n", "n", "n"]);
+    assert_eq!(cursor(&view), on_pending(2, 0));
+    view.with_body(|body| body.remove_pending(0));
+    assert_eq!(cursor(&view), on_pending(1, 0));
+    assert_eq!(bodies(&view), ["A heading for\nthe usage.", "third"]);
+    assert!(draw(&mut view, 100, 40).contains("Comment 2/2"));
+    // One after it going leaves it be.
+    press(&mut view, &["N"]);
+    assert_eq!(cursor(&view), on_pending(0, 0));
+    view.with_body(|body| body.remove_pending(1));
+    assert_eq!(cursor(&view), on_pending(0, 0));
+}
+
+#[test]
+fn n_and_big_n_stop_on_pending_comments_and_show_without_threads() {
+    let state = |view: &DiffView| view.binding_state(Owner::DiffBody, BindingId::DiffNextComment);
+    let mut view = view();
+    view.focus_first();
+    assert_eq!(state(&view), BindingState::Hidden);
     let mut view = with_two_comments();
-    view.focus(RemoveComment(1));
+    view.focus_first();
+    draw(&mut view, 100, 40);
+    assert_eq!(state(&view), BindingState::Enabled);
+    press(&mut view, &["n"]);
+    assert_eq!(cursor(&view), on_pending(1, 0));
+    assert!(draw(&mut view, 100, 40).contains("Comment 1/2"));
+    press(&mut view, &["n"]);
+    assert_eq!(cursor(&view), on_pending(0, 0));
+    assert!(draw(&mut view, 100, 40).contains("Comment 2/2"));
+    // The last: `n` stays.
+    press(&mut view, &["n"]);
+    assert_eq!(cursor(&view), on_pending(0, 0));
+    // From the comment's second row, `N` goes to its title, then the one before.
+    press(&mut view, &["j", "N"]);
+    assert_eq!(cursor(&view), on_pending(0, 0));
+    press(&mut view, &["N"]);
+    assert_eq!(cursor(&view), on_pending(1, 0));
+    // `J` from a comment goes on from its line; `K` back to its hunk's first line.
+    press(&mut view, &["J"]);
+    assert_eq!(cursor(&view), on_line(CSS, 0, 0));
+    press(&mut view, &["N", "K"]);
+    assert_eq!(cursor(&view), on_line(README, 0, 0));
+    // `enter` isn't shown on one, and does nothing.
+    press(&mut view, &["n"]);
+    assert_eq!(
+        view.binding_state(Owner::DiffBody, BindingId::DiffToggle),
+        BindingState::Hidden
+    );
     press(&mut view, &["enter"]);
-    assert_eq!(bodies(&view), ["Mention the arrow keys too."]);
-    assert_eq!(view.stop(), RemoveComment(0));
-    // The only one: the section hides and focus goes back to the body.
-    press(&mut view, &["enter"]);
-    assert!(view.pending().is_empty());
-    assert_eq!(view.stop(), Body);
-    assert!(!draw(&mut view, 80, 200).contains("Pending Comments:"));
+    assert_eq!(cursor(&view), on_pending(1, 0));
+}
+
+#[test]
+fn a_comment_on_a_filtered_out_file_is_hidden_but_still_sent_and_counted() {
+    let mut view = with_two_comments();
+    view.show_review_form(false);
+    press(&mut view, &["/", "v", "i", "e", "w"]);
+    let screen = draw(&mut view, 100, 60);
+    assert!(!screen.contains("Pending comment"), "{screen}");
+    assert!(
+        screen.contains("2 pending comments will be sent with the review"),
+        "{screen}"
+    );
+    assert_eq!(view.body().comment_count(), 0);
+    assert_eq!(view.review_request("abc").unwrap().unwrap().comments.len(), 2);
+    // Folding hides them with their file too.
+    press(&mut view, &["escape", "home", "enter"]);
+    assert!(view.body().is_folded(README));
+    assert!(!draw(&mut view, 100, 60).contains("Pending comment"));
+}
+
+#[test]
+fn the_note_above_the_form_counts_the_pending_comments() {
+    let mut view = view();
+    view.show_review_form(false);
+    assert!(!draw(&mut view, 100, 80).contains("will be sent with the review"));
+    let first = comment(&view, 3, "x");
+    view.add_comment(first);
+    let screen = draw(&mut view, 100, 80);
+    // After the body's position row, then a blank row, then the form.
+    let note = row_of(&screen, "1 pending comment will be sent with the review");
+    assert!(row_of(&screen, "1 hunk") < note, "{screen}");
+    assert_eq!(row_of(&screen, "Review Status:"), note + 2, "{screen}");
 }
 
 #[test]
@@ -589,7 +736,7 @@ fn a_stop_after_the_body_scrolls_into_view_and_the_body_s_cursor_back() {
     view.focus(DiffStop::ReviewSubmit);
     let screen = draw(&mut view, 80, 30);
     assert!(screen.contains("Submit Review"), "{screen}");
-    assert!(!screen.contains("README.md (+3 -1)"), "{screen}");
+    assert!(view.offset() > 0);
     // Back on the body, its cursor (on README.md's header) shows again.
     view.focus(DiffStop::Body);
     let screen = draw(&mut view, 80, 30);
@@ -597,25 +744,15 @@ fn a_stop_after_the_body_scrolls_into_view_and_the_body_s_cursor_back() {
     assert_eq!(view.offset(), 0);
 }
 
-#[test]
-fn pr_review_pending_comments() {
-    let mut view = with_two_comments();
-    view.focus(DiffStop::RemoveComment(1));
-    insta::assert_snapshot!(buffer_to_styled_string(&draw_buffer(&mut view, 96, 40)));
-}
-
 // The review form (#273).
 
 #[test]
 fn the_author_s_form_has_no_status() {
-    use DiffStop::{RemoveComment, ReviewSubmit, ReviewSummary};
+    use DiffStop::{Body, ReviewSubmit, ReviewSummary};
     let mut view = with_two_comments();
     view.show_review_form(true);
     let stops = ring(&mut view);
-    assert_eq!(
-        stops[stops.len() - 3..],
-        [RemoveComment(1), ReviewSummary, ReviewSubmit]
-    );
+    assert_eq!(stops[stops.len() - 3..], [Body, ReviewSummary, ReviewSubmit]);
     assert_eq!(view.review_button(), Some("Add Comments"));
 }
 

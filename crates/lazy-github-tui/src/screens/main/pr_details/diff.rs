@@ -1,6 +1,7 @@
 //! A pull request's Diff tab: Python's `PrDiffTabPane`. The diff is fetched with the pull request, whatever tab is
 //! active; until it arrives the tab shows the loading overlay, then the diff viewer, or one line saying why there's
-//! no diff. `c` on a line of the diff body opens Add Comment, whose comment joins the viewer's pending comments.
+//! no diff. `c` on a line of the diff body opens Add Comment, whose comment joins the viewer's pending comments, shown
+//! under its line; `x` on one removes it, which is the viewer's own.
 //!
 //! Once the diff is in, the tab asks for the current user, to show the Submit review form the viewer may use (the
 //! author's, or a reviewer's), and submits the review from it.
@@ -388,7 +389,6 @@ impl PrDiff {
     pub(super) fn mouse(&mut self, event: MouseEvent) -> Option<Action> {
         match self.view_mut()?.mouse(event) {
             ViewMouse::Ignored => None,
-            ViewMouse::Consumed => Some(Action::Consumed),
             ViewMouse::SubmitReview => Some(Action::Main(MainAction::DetailsCommand(
                 Owner::DetailsButton,
                 BindingId::TextualButtonPress,

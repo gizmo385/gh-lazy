@@ -653,8 +653,8 @@ mod tests {
     #[test]
     fn the_lines_are_every_group_under_its_header_with_the_first_binding_highlighted() {
         let list = list();
-        // Python's 59 ids, the eight Rust-only diff ids, `main.refresh`, `search.open` and `search.save_query`.
-        assert_eq!(list.lines.len(), 70 + BINDING_GROUPS.len());
+        // Python's 59 ids, the nine Rust-only diff ids, `main.refresh`, `search.open` and `search.save_query`.
+        assert_eq!(list.lines.len(), 71 + BINDING_GROUPS.len());
         assert_eq!(list.lines[0], Line::Header(0));
         assert_eq!(list.lines[1], Line::Binding(0));
         assert_eq!(highlighted(&list), BindingId::AppQuit);
@@ -771,7 +771,7 @@ mod tests {
     #[test]
     fn reset_puts_the_defaults_back() {
         let mut overrides = IndexMap::new();
-        overrides.insert("app.quit".to_owned(), "x".to_owned());
+        overrides.insert("app.quit".to_owned(), "w".to_owned());
         let mut list = KeyList::new(&overrides);
         assert_eq!(list.detail(), "app.quit · default q · changed");
         let _ = list.on_binding(BindingId::SettingsKeysReset);

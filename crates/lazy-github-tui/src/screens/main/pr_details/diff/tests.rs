@@ -832,14 +832,15 @@ fn a_closed_dialog_adds_nothing() {
     app.press(&["c", "x", "escape"]);
     assert!(modals(&app).is_empty());
     assert!(view(&app).pending().is_empty());
-    assert!(!app.screen(160, 48).contains("Pending Comments:"));
+    assert!(!app.screen(160, 48).contains("Pending comment"));
 }
 
 #[test]
 fn comments_stay_in_the_order_they_were_added() {
     let mut app = readme_line_at(1);
     add(&mut app, "first");
-    app.press(&["j", "j"]);
+    // Past the comment's two rows under the line.
+    app.press(&["j", "j", "j", "j"]);
     add(&mut app, "second");
     app.press(&["k"]);
     add(&mut app, "third");
@@ -848,31 +849,38 @@ fn comments_stay_in_the_order_they_were_added() {
 }
 
 #[test]
-fn the_section_shows_with_the_first_comment_and_hides_with_the_last() {
+fn the_comment_shows_under_its_line_and_x_removes_it() {
     let mut app = readme_line_at(4);
-    assert!(!app.screen(160, 48).contains("Pending Comments:"));
+    assert!(!app.screen(160, 48).contains("Pending comment"));
     add(&mut app, "only");
-    // The Remove button is the ring's last stop.
+    let screen = app.screen(160, 48);
+    let line = find(&screen, "Run `viewer FILE`, then press").1;
+    assert_eq!(find(&screen, "▎ Pending comment").1, line + 1, "{screen}");
+    assert_eq!(find(&screen, "▎ only").1, line + 2, "{screen}");
+    assert!(!screen.contains("Pending Comments:"), "{screen}");
+    // The ring has no stop for it: the filter, the body, and no form without the user.
     app.press(&["5", "tab"]);
     let mut ring = vec![stop(&app)];
-    while focus(&app) == FocusTarget::DetailsContent {
+    loop {
         app.press(&["tab"]);
-        if focus(&app) == FocusTarget::DetailsContent {
-            ring.push(stop(&app));
+        if focus(&app) != FocusTarget::DetailsContent {
+            break;
         }
+        ring.push(stop(&app));
     }
-    assert_eq!(ring.last(), Some(&DiffStop::RemoveComment(0)));
+    assert_eq!(ring, [DiffStop::Body]);
+    // Onto the comment: `x Remove Comment` in the footer, then `x` removes it and the cursor goes back to its line.
     app.press(&["5", "tab"]);
-    while stop(&app) != DiffStop::RemoveComment(0) {
-        app.press(&["tab"]);
-    }
-    let screen = app.screen(160, 48);
-    assert!(screen.contains("Pending Comments:"), "{screen}");
-    app.press(&["enter"]);
+    assert_eq!(cursor(&app), on_line(README, 0, 3));
+    app.press(&["j"]);
+    assert!(footer(&mut app).contains("x Remove Comment"), "{}", footer(&mut app));
+    assert!(!footer(&mut app).contains("c Add Comment"), "{}", footer(&mut app));
+    app.press(&["x"]);
     assert!(view(&app).pending().is_empty());
-    assert!(!app.screen(160, 48).contains("Pending Comments:"));
-    // Focus went to the stop before the button: the body. No toast for a removal.
-    assert_eq!(stop(&app), DiffStop::Body);
+    assert_eq!(cursor(&app), on_line(README, 0, 3));
+    assert!(!app.screen(160, 48).contains("Pending comment"));
+    assert!(!footer(&mut app).contains("Remove Comment"), "{}", footer(&mut app));
+    // No toast for a removal.
     assert_eq!(toasts(&app), ["New comment added"]);
 }
 
@@ -1288,7 +1296,6 @@ fn every_stop_maximizes_the_tab_area() {
         seen,
         [
             DiffStop::Body,
-            DiffStop::RemoveComment(0),
             DiffStop::ReviewStatus,
             DiffStop::ReviewSummary,
             DiffStop::ReviewSubmit
@@ -1399,21 +1406,6 @@ fn a_rebound_maximize_key_on_the_summary_maximizes_the_tab_area_and_m_still_type
     app.press(&["M"]);
     assert_eq!(view(&app).review_summary(), Some("okM"));
     assert_eq!(app.app().maximized(), Some(tab_area()));
-}
-
-#[test]
-fn m_on_a_remove_button_maximizes_the_tab_area_and_escape_keeps_its_focus() {
-    let mut app = reviewing();
-    app.press(&["shift+tab"]);
-    assert_eq!(stop(&app), DiffStop::RemoveComment(0));
-    app.press(&["M"]);
-    assert_eq!(app.app().maximized(), Some(tab_area()));
-    assert_eq!(maximize_toasts(&app), 1);
-    app.press(&["escape"]);
-    assert_eq!(app.app().maximized(), None);
-    assert_eq!(stop(&app), DiffStop::RemoveComment(0));
-    assert_eq!(focus(&app), FocusTarget::DetailsContent);
-    assert_eq!(pending(&app).len(), 1);
 }
 
 #[test]
@@ -1939,4 +1931,97 @@ fn a_new_selection_starts_collapsed() {
     app.press(&["2", "k", "enter"]);
     settle(&mut app);
     assert!(!view(&app).body().is_expanded(T_9005));
+}
+
+// Pending comments under their lines (#391).
+
+/// PR 5's Diff tab with its threads and two comments pending: the arrow-keys one on README.md's `+Run ...` line, then
+/// one on src/viewer.rs's `+    cursor: usize,`, which has thread 9001. The cursor is on that line, toasts gone.
+fn two_pending_inline() -> TestApp {
+    let mut app = threads_tab();
+    app.press(&["tab", "J", "j", "j", "j"]);
+    assert_eq!(cursor(&app), on_line(README, 0, 3));
+    add(&mut app, "Mention the arrow keys too.");
+    app.press(&["J", "J", "J", "j", "j", "j", "j", "j"]);
+    assert_eq!(cursor(&app), on_line(VIEWER, 0, 5));
+    add(&mut app, "Should this wrap?");
+    app.advance(std::time::Duration::from_secs(30));
+    app
+}
+
+#[test]
+fn a_pending_comment_comes_after_its_line_s_threads() {
+    let mut app = two_pending_inline();
+    app.press(&["j"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+    app.press(&["j"]);
+    assert_eq!(
+        cursor(&app),
+        Some(Cursor::Pending {
+            file: VIEWER,
+            index: 1,
+            row: 0
+        })
+    );
+    let screen = app.screen(160, 48);
+    // The file headers count the pending comments with the threads.
+    assert!(screen.contains("src/viewer.rs (+5 -2) · 4 comments"), "{screen}");
+    assert!(screen.contains("Comment 2/4"), "{screen}");
+    // Expanding the line's thread keeps the comment after it.
+    app.press(&["k", "enter"]);
+    assert!(view(&app).body().is_expanded(T_9001));
+    app.press(&["j", "j", "j", "j", "j"]);
+    assert_eq!(
+        cursor(&app),
+        Some(Cursor::Pending {
+            file: VIEWER,
+            index: 1,
+            row: 0
+        })
+    );
+    let screen = app.screen(160, 48);
+    let reply = find(&screen, "No, it stops at the last line.").1;
+    assert_eq!(find(&screen, "▎ Should this wrap?").1, reply + 2, "{screen}");
+    // `n` stops on README.md's, after that file's comment on the whole file.
+    app.press(&["g", "n", "n"]);
+    assert_eq!(
+        cursor(&app),
+        Some(Cursor::Pending {
+            file: README,
+            index: 0,
+            row: 0
+        })
+    );
+}
+
+#[test]
+fn pr_review_pending_inline() {
+    let mut app = two_pending_inline();
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+/// Narrow, the cursor on the second comment's body row, under the line's collapsed thread.
+#[test]
+fn pr_review_pending_inline_80x24() {
+    let mut app = two_pending_inline();
+    app.press(&["j", "j", "j"]);
+    insta::assert_snapshot!(app.screen(80, 24));
+}
+
+#[test]
+fn the_form_counts_the_pending_comments_and_the_review_sends_the_one_left() {
+    let mut app = reviewing();
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("1 pending comment will be sent with the review"),
+        "{screen}"
+    );
+    app.press(&["5", "tab", "j"]);
+    assert!(footer(&mut app).contains("x Remove Comment"), "{}", footer(&mut app));
+    app.press(&["x"]);
+    assert!(view(&app).pending().is_empty());
+    app.press(&["1", "shift+tab", "shift+tab", "shift+tab"]);
+    assert_eq!(stop(&app), DiffStop::ReviewStatus);
+    let screen = app.screen(160, 48);
+    assert!(!screen.contains("will be sent with the review"), "{screen}");
 }

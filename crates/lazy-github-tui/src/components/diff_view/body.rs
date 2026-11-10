@@ -10,13 +10,15 @@
 //!
 //! The pull request's review threads (#390) take rows too: a file's comments on the whole file after its header, a
 //! line's threads under it (collapsed to a summary row, or expanded to their comments, see `threads.rs`), and the
-//! outdated ones under a separator after the file's last hunk. The cursor visits their rows like lines.
+//! outdated ones under a separator after the file's last hunk. The cursor visits their rows like lines. The pending
+//! comments added with Add Comment (#391) show under their lines too, after the line's threads, always expanded (see
+//! `pending.rs`), and `x` removes the one under the cursor.
 //!
 //! Files fold one at a time (`enter` on a header, a click on its title) or all at once (`z`): everything folded is the
 //! file list (decision `diff-file-navigation`). While the cursor's file header is scrolled above the rows shown, a
 //! copy of it sticks over the top row ([`DiffBody::sticky_file`]).
 //!
-//! The Diff tab (`DiffView`) owns it and scrolls it together with the pending comments and the review form below it:
+//! The Diff tab (`DiffView`) owns it and scrolls it together with the review form below it:
 //! [`DiffBody::fit`], [`DiffBody::set_scroll`] and [`DiffBody::draw`] are for that owner, and [`DiffBody::render`]
 //! draws the body on its own, with its own scrollbar.
 
@@ -32,7 +34,8 @@ use ratatui::text::{Line, Span};
 use ratatui::widgets::{Clear, Widget as _};
 
 use super::highlight::HunkCode;
-use super::review::DiffLineRef;
+use super::pending::PendingLayout;
+use super::review::{DiffLineRef, PendingComment};
 use super::threads::{Place, ThreadStyles, ThreadView};
 use crate::components::link_map::ScreenLink;
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
@@ -41,7 +44,8 @@ use crate::keymap::BindingId;
 use crate::theme::{Paint, Rgb, Theme};
 
 /// The body's chain link, in footer order: `j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ]
-/// Next File  [ Previous File  enter Fold  z Fold Files  n Next Comment  N Previous Comment  / Filter Files`, then the hidden keys: `g` and `G`, and the
+/// Next File  [ Previous File  enter Fold  z Fold Files  n Next Comment  N Previous Comment  x Remove Comment  / Filter
+/// Files`, then the hidden keys: `g` and `G`, and the
 /// scroll keys, of which `down` and `up` move the cursor as `j` and `k` do. Add Comment and Filter Files are the Diff
 /// tab's to act on, so [`DiffBody::handle`] passes on them.
 pub const DIFF_BODY_BINDINGS: &[BindingId] = &[
@@ -56,6 +60,7 @@ pub const DIFF_BODY_BINDINGS: &[BindingId] = &[
     BindingId::DiffFoldAll,
     BindingId::DiffNextComment,
     BindingId::DiffPreviousComment,
+    BindingId::DiffRemoveComment,
     BindingId::DiffFilterFiles,
     BindingId::DiffFirstLine,
     BindingId::DiffLastLine,
@@ -93,6 +98,8 @@ pub enum Cursor {
     Removed(usize),
     /// Row `row` of a review thread (its summary is row 0): the file, and the thread's index in the body's threads.
     Thread { file: usize, thread: usize, row: usize },
+    /// Row `row` of a pending comment (its title is row 0): the file, and the comment's index among the pending ones.
+    Pending { file: usize, index: usize, row: usize },
 }
 
 impl Cursor {
@@ -108,6 +115,7 @@ impl Cursor {
             Cursor::Line(line) => Row::Line(line),
             Cursor::Removed(f) => Row::Removed(f),
             Cursor::Thread { file, thread, row } => Row::Thread { file, thread, row },
+            Cursor::Pending { file, index, row } => Row::Pending { file, index, row },
         }
     }
 }
@@ -127,6 +135,8 @@ pub enum Row {
     Thread { file: usize, thread: usize, row: usize },
     /// The separator before a file's outdated threads.
     OutdatedSeparator(usize),
+    /// Row `row` of a pending comment: the file, the comment's index among the pending ones, and the row in it.
+    Pending { file: usize, index: usize, row: usize },
 }
 
 impl Row {
@@ -134,7 +144,7 @@ impl Row {
     pub fn file(self) -> usize {
         match self {
             Row::FileHeader(f) | Row::HunkSeparator(f, _) | Row::Removed(f) | Row::OutdatedSeparator(f) => f,
-            Row::Thread { file, .. } => file,
+            Row::Thread { file, .. } | Row::Pending { file, .. } => file,
             Row::Line(line) => line.file,
         }
     }
@@ -145,6 +155,7 @@ impl Row {
             Row::FileHeader(f) => Some(Cursor::File(f)),
             Row::HunkSeparator(..) | Row::OutdatedSeparator(_) => None,
             Row::Thread { file, thread, row } => Some(Cursor::Thread { file, thread, row }),
+            Row::Pending { file, index, row } => Some(Cursor::Pending { file, index, row }),
             Row::Line(line) => Some(Cursor::Line(line)),
             Row::Removed(f) => Some(Cursor::Removed(f)),
         }
@@ -164,8 +175,9 @@ pub struct CursorPosition {
 /// One file of the diff and how it shows.
 ///
 /// Its rows are numbered from its header (row 0) as if it were unfolded. Without threads ("base" rows) a hunk's lines
-/// follow its separator one row each; the review threads of #390 come as [`Insert`]s after a base row (the header,
-/// a line, the last row), each taking its threads' rows, so a lookup steps over the inserts above it.
+/// follow its separator one row each; the review threads of #390 and the pending comments of #391 come as
+/// [`Insert`]s after a base row (the header, a line, the last row), each taking its items' rows, so a lookup steps
+/// over the inserts above it.
 #[derive(Debug, Clone)]
 struct FileState {
     file: ChangedFile,
@@ -182,6 +194,8 @@ struct FileState {
     inserts: Vec<Insert>,
     /// How many threads the file shows.
     threads: usize,
+    /// How many pending comments the file shows.
+    pending: usize,
     /// Each hunk's code, made the first time a row of it is drawn: highlighting is slow, and most hunks of a large
     /// diff are never on screen.
     code: Vec<Option<HunkCode>>,
@@ -208,7 +222,7 @@ struct Insert {
 enum InsertKind {
     /// The header: comments on the whole file.
     File,
-    /// A line, or a deleted file's `file was removed` row: the threads on it.
+    /// A line, or a deleted file's `file was removed` row: the threads on it, then its pending comments.
     Line,
     /// The file's last row: its outdated threads, under a separator.
     Outdated,
@@ -221,6 +235,24 @@ enum Item {
     Separator,
     /// A thread, by its index in the body's threads.
     Thread(usize),
+    /// A pending comment, by its index among the pending ones.
+    Pending(usize),
+}
+
+impl Item {
+    /// The row of this item at `row` in it, in file `file`.
+    fn row(self, file: usize, row: usize) -> Row {
+        match self {
+            Item::Separator => Row::OutdatedSeparator(file),
+            Item::Thread(thread) => Row::Thread { file, thread, row },
+            Item::Pending(index) => Row::Pending { file, index, row },
+        }
+    }
+
+    /// Whether it's a comment `n` and `N` stop on: a thread or a pending comment.
+    fn is_comment(self) -> bool {
+        matches!(self, Item::Thread(_) | Item::Pending(_))
+    }
 }
 
 impl FileState {
@@ -240,6 +272,7 @@ impl FileState {
             unfolded: base_rows,
             inserts: Vec::new(),
             threads: 0,
+            pending: 0,
             code: vec![None; file.hunks.len()],
             widest: None,
             hunk_starts,
@@ -306,18 +339,8 @@ impl FileState {
     fn unfolded_local_of(&self, row: Row) -> Option<usize> {
         let base = match row {
             Row::FileHeader(_) => return Some(0),
-            Row::Thread { thread, row, .. } => {
-                return self.inserts.iter().find_map(|insert| {
-                    let mut at = insert.start;
-                    for &(item, rows) in &insert.items {
-                        if item == Item::Thread(thread) {
-                            return (row < rows).then_some(at + row);
-                        }
-                        at += rows;
-                    }
-                    None
-                });
-            }
+            Row::Thread { thread, row, .. } => return self.item_local(Item::Thread(thread), row),
+            Row::Pending { index, row, .. } => return self.item_local(Item::Pending(index), row),
             Row::OutdatedSeparator(_) => {
                 return self
                     .inserts
@@ -333,6 +356,20 @@ impl FileState {
         Some(base + self.rows_inserted_before(base))
     }
 
+    /// How many rows below the header row `row` of `item` is, unfolded, when the file has it.
+    fn item_local(&self, item: Item, row: usize) -> Option<usize> {
+        self.inserts.iter().find_map(|insert| {
+            let mut at = insert.start;
+            for &(other, rows) in &insert.items {
+                if other == item {
+                    return (row < rows).then_some(at + row);
+                }
+                at += rows;
+            }
+            None
+        })
+    }
+
     /// The thread rows above base row `base`.
     fn rows_inserted_before(&self, base: usize) -> usize {
         let i = self.inserts.partition_point(|insert| insert.after < base);
@@ -342,46 +379,55 @@ impl FileState {
         })
     }
 
-    /// The threads on base row `base`: a line's, or a deleted file's `file was removed` row's.
-    fn threads_on(&self, base: usize) -> impl Iterator<Item = usize> + '_ {
+    /// What's under base row `base`: a line's (or a deleted file's `file was removed` row's) threads, then its
+    /// pending comments.
+    fn items_on(&self, base: usize) -> impl Iterator<Item = Item> + '_ {
         let i = self.inserts.partition_point(|insert| insert.after < base);
         self.inserts[i..]
             .iter()
             .take_while(move |insert| insert.after == base)
             .filter(|insert| insert.kind == InsertKind::Line)
-            .flat_map(|insert| insert.items.iter())
-            .filter_map(|&(item, _)| match item {
-                Item::Thread(t) => Some(t),
-                Item::Separator => None,
-            })
+            .flat_map(|insert| insert.items.iter().map(|&(item, _)| item))
     }
 
-    /// The file's threads in row order.
-    fn thread_order(&self) -> impl Iterator<Item = usize> + '_ {
+    /// The threads on base row `base`: a line's, or a deleted file's `file was removed` row's.
+    fn threads_on(&self, base: usize) -> impl Iterator<Item = usize> + '_ {
+        self.items_on(base).filter_map(|item| match item {
+            Item::Thread(t) => Some(t),
+            Item::Separator | Item::Pending(_) => None,
+        })
+    }
+
+    /// The file's comments (threads and pending comments) in row order.
+    fn comment_order(&self) -> impl Iterator<Item = Item> + '_ {
         self.inserts
             .iter()
-            .flat_map(|insert| insert.items.iter())
-            .filter_map(|&(item, _)| match item {
-                Item::Thread(t) => Some(t),
-                Item::Separator => None,
-            })
+            .flat_map(|insert| insert.items.iter().map(|&(item, _)| item))
+            .filter(|item| item.is_comment())
     }
 
-    /// Sets the file's inserts from its threads (`threads`, with this file's ones at `mine`, in creation order), then
-    /// sizes them at `width`.
-    fn place_threads(&mut self, mine: &[usize], threads: &mut [ThreadView], width: u16) {
+    /// Sets the file's inserts, unsized, from its threads (`threads`, each with where it goes, in creation order) and
+    /// its pending comments (`pending`, each with its line, in the order they were added).
+    fn place(&mut self, threads: &[(usize, Place)], pending: &[(usize, DiffLineRef)]) {
         let mut file_level = Vec::new();
-        let mut lines: BTreeMap<usize, Vec<usize>> = BTreeMap::new();
+        let mut lines: BTreeMap<usize, Vec<Item>> = BTreeMap::new();
         let mut outdated = Vec::new();
-        for &t in mine {
-            match threads[t].place {
+        for &(t, place) in threads {
+            match place {
                 Place::File => file_level.push(t),
                 Place::Line { hunk, line } => match self.line_base(hunk, line) {
-                    Some(base) => lines.entry(base).or_default().push(t),
+                    Some(base) => lines.entry(base).or_default().push(Item::Thread(t)),
                     None => outdated.push(t),
                 },
-                Place::Removed => lines.entry(1).or_default().push(t),
+                Place::Removed => lines.entry(1).or_default().push(Item::Thread(t)),
                 Place::Outdated => outdated.push(t),
+            }
+        }
+        // After the line's threads, in the order they were added. A comment is made on a line of this diff, so its
+        // line is there.
+        for &(p, line) in pending {
+            if let Some(base) = self.line_base(line.hunk, line.line) {
+                lines.entry(base).or_default().push(Item::Pending(p));
             }
         }
         let mut inserts = Vec::new();
@@ -399,12 +445,8 @@ impl FileState {
                 file_level.into_iter().map(Item::Thread).collect(),
             ));
         }
-        for (base, ts) in lines {
-            inserts.push(insert(
-                base,
-                InsertKind::Line,
-                ts.into_iter().map(Item::Thread).collect(),
-            ));
+        for (base, items) in lines {
+            inserts.push(insert(base, InsertKind::Line, items));
         }
         if !outdated.is_empty() {
             let items = std::iter::once(Item::Separator)
@@ -412,19 +454,19 @@ impl FileState {
                 .collect();
             inserts.push(insert(self.base_rows - 1, InsertKind::Outdated, items));
         }
-        self.threads = mine.len();
+        self.threads = threads.len();
+        self.pending = pending.len();
         self.inserts = inserts;
-        self.size_threads(threads, width);
     }
 
-    /// Sizes the inserts from their threads' rows at `width`.
-    fn size_threads(&mut self, threads: &mut [ThreadView], width: u16) {
+    /// Sizes the inserts from their items' rows, which `rows_of` gives for threads and pending comments.
+    fn size_items(&mut self, mut rows_of: impl FnMut(Item) -> usize) {
         let mut inserted = 0;
         for insert in &mut self.inserts {
             for (item, rows) in &mut insert.items {
                 *rows = match *item {
                     Item::Separator => 1,
-                    Item::Thread(t) => threads[t].rows(width),
+                    other => rows_of(other),
                 };
             }
             insert.rows = insert.items.iter().map(|&(_, rows)| rows).sum();
@@ -467,14 +509,7 @@ impl Insert {
         let mut at = 0;
         for &(item, rows) in &self.items {
             if offset < at + rows {
-                return match item {
-                    Item::Separator => Row::OutdatedSeparator(f),
-                    Item::Thread(thread) => Row::Thread {
-                        file: f,
-                        thread,
-                        row: offset - at,
-                    },
-                };
+                return item.row(f, offset - at);
             }
             at += rows;
         }
@@ -551,6 +586,10 @@ pub struct DiffBody {
     expanded: HashSet<u64>,
     /// The links the last draw put on screen, in expanded threads.
     links: Vec<ScreenLink>,
+    /// The comments added with Add Comment, in the order they were added.
+    pending: Vec<PendingComment>,
+    /// Each pending comment's rows, as `pending` has them.
+    pending_layouts: Vec<PendingLayout>,
 }
 
 impl DiffBody {
@@ -569,6 +608,8 @@ impl DiffBody {
             threads: Vec::new(),
             expanded: HashSet::new(),
             links: Vec::new(),
+            pending: Vec::new(),
+            pending_layouts: Vec::new(),
         };
         body.settle();
         body
@@ -606,10 +647,7 @@ impl DiffBody {
             })
             .collect();
         let width = self.thread_width();
-        for f in 0..self.files.len() {
-            let mine: Vec<usize> = (0..self.threads.len()).filter(|&t| self.threads[t].file == f).collect();
-            self.files[f].place_threads(&mine, &mut self.threads, width);
-        }
+        self.place_all();
         if let Some((file, root, row)) = kept {
             self.cursor = Some(match self.threads.iter().position(|view| view.root_id() == root) {
                 Some(thread) => {
@@ -627,6 +665,39 @@ impl DiffBody {
         self.reindex();
     }
 
+    /// Sets every file's inserts from the threads and the pending comments, and sizes them.
+    fn place_all(&mut self) {
+        for f in 0..self.files.len() {
+            let threads: Vec<(usize, Place)> = (self.threads.iter().enumerate())
+                .filter(|(_, view)| view.file == f)
+                .map(|(t, view)| (t, view.place))
+                .collect();
+            let pending: Vec<(usize, DiffLineRef)> = (self.pending.iter().enumerate())
+                .filter(|(_, comment)| comment.line.file == f)
+                .map(|(p, comment)| (p, comment.line))
+                .collect();
+            self.files[f].place(&threads, &pending);
+            self.size_file(f);
+        }
+    }
+
+    /// Sizes file `f`'s inserts at the code column's width.
+    fn size_file(&mut self, f: usize) {
+        let width = self.thread_width();
+        let (threads, pending, layouts) = (&mut self.threads, &self.pending, &mut self.pending_layouts);
+        let Some(state) = self.files.get_mut(f) else {
+            return;
+        };
+        state.size_items(|item| match item {
+            Item::Thread(t) => threads.get_mut(t).map_or(1, |view| view.rows(width)),
+            Item::Pending(p) => match (pending.get(p), layouts.get_mut(p)) {
+                (Some(comment), Some(layout)) => layout.rows(comment, width),
+                _ => 1,
+            },
+            Item::Separator => 1,
+        });
+    }
+
     /// How many review threads the shown files show.
     pub fn thread_count(&self) -> usize {
         self.files
@@ -634,6 +705,49 @@ impl DiffBody {
             .filter(|state| state.shown)
             .map(|state| state.threads)
             .sum()
+    }
+
+    /// How many comments `n` and `N` can stop on: the shown files' threads and pending comments.
+    pub fn comment_count(&self) -> usize {
+        self.files
+            .iter()
+            .filter(|state| state.shown)
+            .map(|state| state.threads + state.pending)
+            .sum()
+    }
+
+    /// The pending comments, in the order they were added, the files the filter hides included.
+    pub fn pending(&self) -> &[PendingComment] {
+        &self.pending
+    }
+
+    /// Adds `comment` after the others, under its line after the line's threads. The cursor stays where it is.
+    pub fn add_pending(&mut self, comment: PendingComment) {
+        self.pending.push(comment);
+        self.pending_layouts.push(PendingLayout::default());
+        self.place_all();
+        self.reindex();
+    }
+
+    /// Drops pending comment `index`. A cursor on it goes to its line; one on a later comment stays on that comment.
+    pub fn remove_pending(&mut self, index: usize) {
+        let Some(comment) = self.pending.get(index) else {
+            return;
+        };
+        let line = comment.line;
+        self.cursor = match self.cursor {
+            Some(Cursor::Pending { index: i, .. }) if i == index => Some(Cursor::Line(line)),
+            Some(Cursor::Pending { file, index: i, row }) if i > index => Some(Cursor::Pending {
+                file,
+                index: i - 1,
+                row,
+            }),
+            other => other,
+        };
+        self.pending.remove(index);
+        self.pending_layouts.remove(index);
+        self.place_all();
+        self.reindex();
     }
 
     /// Whether thread `t` is expanded.
@@ -671,7 +785,7 @@ impl DiffBody {
         let base = match cursor {
             Cursor::Line(line) => state.line_base(line.hunk, line.line),
             Cursor::Removed(_) => Some(1),
-            Cursor::File(_) | Cursor::Thread { .. } => None,
+            Cursor::File(_) | Cursor::Thread { .. } | Cursor::Pending { .. } => None,
         };
         base.map_or_else(Vec::new, |base| state.threads_on(base).collect())
     }
@@ -684,7 +798,6 @@ impl DiffBody {
     /// Expands or collapses `threads` and resizes their files' rows. A cursor inside a thread that collapses goes to
     /// its summary row.
     fn set_expanded(&mut self, threads: &[usize], expanded: bool) {
-        let width = self.thread_width();
         let mut files = Vec::new();
         for &t in threads {
             let Some(view) = self.threads.get_mut(t) else {
@@ -706,7 +819,7 @@ impl DiffBody {
         }
         files.dedup();
         for f in files {
-            self.files[f].size_threads(&mut self.threads, width);
+            self.size_file(f);
         }
         self.reindex();
     }
@@ -773,38 +886,36 @@ impl DiffBody {
         Some((f, self.files.get(f)?.unfolded_local_of(cursor.row())?))
     }
 
-    /// The threads of the shown files in diff order, each with its file and its first row in its file unfolded.
-    fn thread_places(&self) -> impl Iterator<Item = (usize, usize, usize)> + '_ {
+    /// The comments (threads and pending comments) of the shown files in diff order, each as its first row, with its
+    /// file and that row's place in its file unfolded.
+    fn comment_places(&self) -> impl Iterator<Item = (usize, Row, usize)> + '_ {
         self.files
             .iter()
             .enumerate()
             .filter(|(_, state)| state.shown)
             .flat_map(|(f, state)| {
-                state.thread_order().filter_map(move |t| {
-                    let row = state.unfolded_local_of(Row::Thread {
-                        file: f,
-                        thread: t,
-                        row: 0,
-                    })?;
-                    Some((f, t, row))
+                state.comment_order().filter_map(move |item| {
+                    let first = item.row(f, 0);
+                    Some((f, first, state.unfolded_local_of(first)?))
                 })
             })
     }
 
-    /// `n`: the next thread's summary row in diff order, unfolding its file; `N`: the previous one, or the cursor's
-    /// own thread's when the cursor is below its summary. Nothing past either end.
+    /// `n`: the next comment's first row in diff order (a thread's summary, a pending comment's title), unfolding its
+    /// file; `N`: the previous one, or the cursor's own comment's when the cursor is below its first row. Nothing past
+    /// either end.
     fn jump_comment(&mut self, forward: bool) {
         let Some(at) = self.cursor_place() else {
             return;
         };
         let target = if forward {
-            self.thread_places().find(|&(f, _, row)| (f, row) > at)
+            self.comment_places().find(|&(f, _, row)| (f, row) > at)
         } else {
-            self.thread_places().take_while(|&(f, _, row)| (f, row) < at).last()
+            self.comment_places().take_while(|&(f, _, row)| (f, row) < at).last()
         };
-        if let Some((file, thread, _)) = target {
+        if let Some((file, row, _)) = target {
             self.set_folded(file, false);
-            self.cursor = Some(Cursor::Thread { file, thread, row: 0 });
+            self.cursor = row.cursor();
             self.follow();
         }
     }
@@ -818,7 +929,7 @@ impl DiffBody {
     pub fn cursor_line(&self) -> Option<DiffLineRef> {
         match self.cursor? {
             Cursor::Line(line) => Some(line),
-            Cursor::File(_) | Cursor::Removed(_) | Cursor::Thread { .. } => None,
+            Cursor::File(_) | Cursor::Removed(_) | Cursor::Thread { .. } | Cursor::Pending { .. } => None,
         }
     }
 
@@ -917,10 +1028,9 @@ impl DiffBody {
             return;
         }
         self.code_width = width;
-        if self.threads.iter().any(|view| view.expanded) {
-            let width = self.thread_width();
-            for state in &mut self.files {
-                state.size_threads(&mut self.threads, width);
+        if !self.pending.is_empty() || self.threads.iter().any(|view| view.expanded) {
+            for f in 0..self.files.len() {
+                self.size_file(f);
             }
             self.index = RowIndex::build(&self.files);
             self.settle();
@@ -961,7 +1071,7 @@ impl DiffBody {
     /// A click on row `row`, `x` cells from the body's left edge: the cursor moves to it, or from a hunk separator to
     /// the hunk's first line, without scrolling. A click on a file header's title (its glyph, path and counts) also
     /// folds or unfolds the file, as a collapsible's title does, and one on a thread's summary row expands or
-    /// collapses the thread. Says whether the row was there.
+    /// collapses the thread. A pending comment's rows only take the cursor. Says whether the row was there.
     pub fn click_row(&mut self, row: usize, x: usize) -> bool {
         let Some(target) = self.cursor_from(row, true) else {
             return false;
@@ -995,9 +1105,10 @@ impl DiffBody {
     }
 
     /// The file whose header sticks to the body's top row while the body's `rows` show: the cursor's file, once its
-    /// header has scrolled above them, when more than [`STICKY_MIN_ROWS`] show.
+    /// header has scrolled above them, when more than [`STICKY_MIN_ROWS`] show. None while the cursor itself is out
+    /// of them (focus on the review form below, say): the header would name a file the rows shown aren't in.
     pub fn sticky_file(&self, rows: Range<usize>) -> Option<usize> {
-        if rows.len() <= STICKY_MIN_ROWS {
+        if rows.len() <= STICKY_MIN_ROWS || !rows.contains(&self.cursor_row()?) {
             return None;
         }
         let f = self.cursor?.file();
@@ -1023,7 +1134,8 @@ impl DiffBody {
     }
 
     /// A binding of [`DIFF_BODY_BINDINGS`]. Says whether it's the body's to handle: every one but Add Comment and
-    /// Filter Files, whether or not the cursor could move. `enter` off a header does nothing, but is still the body's.
+    /// Filter Files, whether or not the cursor could move, and Remove Comment only on a pending comment's row. `enter`
+    /// off a header does nothing, but is still the body's.
     pub fn handle(&mut self, id: BindingId) -> bool {
         match id {
             BindingId::DiffCursorDown | BindingId::TextualScrollDown => self.step(true),
@@ -1040,6 +1152,10 @@ impl DiffBody {
             BindingId::DiffFoldAll => self.fold_all(),
             BindingId::DiffNextComment => self.jump_comment(true),
             BindingId::DiffPreviousComment => self.jump_comment(false),
+            BindingId::DiffRemoveComment => match self.cursor {
+                Some(Cursor::Pending { index, .. }) => self.remove_pending(index),
+                _ => return false,
+            },
             BindingId::TextualScrollPageDown => self.page(true),
             BindingId::TextualScrollPageUp => self.page(false),
             BindingId::DiffFirstLine | BindingId::TextualScrollHome => {
@@ -1078,16 +1194,23 @@ impl DiffBody {
                 n => format!("{n} hunks"),
             },
             Cursor::Removed(_) => String::new(),
-            Cursor::Thread { thread, .. } => {
-                let state = &self.files[cursor.file()];
-                let at = state.thread_order().position(|t| t == thread).map_or(0, |i| i + 1);
-                format!("Comment {at}/{}", state.threads)
-            }
+            Cursor::Thread { thread, .. } => self.comment_position(cursor.file(), Item::Thread(thread)),
+            Cursor::Pending { index, .. } => self.comment_position(cursor.file(), Item::Pending(index)),
         };
         Some(CursorPosition {
             path: display::sanitize(&file.path).into_owned(),
             detail,
         })
+    }
+
+    /// `Comment n/m`: `item`'s place among file `f`'s comments, threads and pending comments together.
+    fn comment_position(&self, f: usize, item: Item) -> String {
+        let state = &self.files[f];
+        let at = state
+            .comment_order()
+            .position(|other| other == item)
+            .map_or(0, |i| i + 1);
+        format!("Comment {at}/{}", state.threads + state.pending)
     }
 
     /// Rebuilds the row index after a fold or filter change, and keeps the cursor and the view in step.
@@ -1184,7 +1307,7 @@ impl DiffBody {
         let after = match self.place_for_hunks(cursor) {
             Cursor::Line(line) => (line.file, line.hunk + 1),
             Cursor::File(f) => (f, 0),
-            Cursor::Removed(f) | Cursor::Thread { file: f, .. } => (f + 1, 0),
+            Cursor::Removed(f) | Cursor::Thread { file: f, .. } | Cursor::Pending { file: f, .. } => (f + 1, 0),
         };
         let target = self.hunks().find(|&hunk| hunk >= after);
         if let Some(target) = target {
@@ -1192,9 +1315,15 @@ impl DiffBody {
         }
     }
 
-    /// Where `J` goes from as a row that isn't a thread's: a thread under a line as the line, one on the file as the
-    /// header; an outdated thread, or one under `file was removed`, is past the file's hunks.
+    /// Where `J` goes from as a row that isn't a comment's: a thread or a pending comment under a line as the line, a
+    /// thread on the file as the header; an outdated thread, or one under `file was removed`, is past the file's hunks.
     fn place_for_hunks(&self, cursor: Cursor) -> Cursor {
+        if let Cursor::Pending { index, .. } = cursor {
+            return self
+                .pending
+                .get(index)
+                .map_or(cursor, |comment| Cursor::Line(comment.line));
+        }
         let Cursor::Thread { file, thread, .. } = cursor else {
             return cursor;
         };
@@ -1216,8 +1345,12 @@ impl DiffBody {
             _ => None,
         };
         let target = match (cursor, place) {
-            // A thread under a line is below the line's hunk's first line.
+            // A thread or a pending comment under a line is below the line's hunk's first line.
             (Cursor::Thread { file, .. }, Some(Place::Line { hunk, .. })) => Some((file, hunk)),
+            (Cursor::Pending { file, index, .. }, _) => match self.pending.get(index) {
+                Some(comment) => Some((file, comment.line.hunk)),
+                None => self.hunks().take_while(|&(g, _)| g < file).last(),
+            },
             // An outdated thread is after the file's hunks.
             (Cursor::Thread { file, .. }, Some(Place::Outdated)) => self.hunks().take_while(|&(g, _)| g <= file).last(),
             (Cursor::Line(line), _) if line.line > 0 => Some((line.file, line.hunk)),
@@ -1472,25 +1605,7 @@ impl DiffBody {
                     style,
                 )
             }
-            Row::HunkSeparator(f, h) => {
-                let label = self.files[f].file.hunks[h].label();
-                let mut spans = vec![Span::styled("  ", styles.separator)];
-                spans.push(Span::styled(
-                    display::sanitize(&label.text).into_owned(),
-                    styles.separator,
-                ));
-                spans.extend(count_spans(
-                    label.counts,
-                    styles.separator,
-                    styles.stat_added,
-                    styles.stat_removed,
-                ));
-                spans.push(Span::styled(
-                    display::sanitize(&label.suffix).into_owned(),
-                    styles.separator,
-                ));
-                (spans, styles.separator)
-            }
+            Row::HunkSeparator(f, h) => (self.separator_spans(f, h, styles), styles.separator),
             Row::Removed(_) => {
                 let marker = if current && focused { "► " } else { "  " };
                 (
@@ -1549,30 +1664,92 @@ impl DiffBody {
                 spans.extend(code_spans);
                 (spans, code_style)
             }
-            Row::OutdatedSeparator(f) => {
-                let count = self.files[f].outdated_count();
-                (
-                    vec![Span::styled(format!("  Outdated comments ({count})"), styles.separator)],
+            Row::OutdatedSeparator(f) => (
+                vec![Span::styled(
+                    format!("  Outdated comments ({})", self.files[f].outdated_count()),
                     styles.separator,
-                )
-            }
+                )],
+                styles.separator,
+            ),
             Row::Thread { thread, row, .. } => {
                 self.thread_row_spans(thread, row, current, focused, width, theme, styles)
+            }
+            Row::Pending { index, row, .. } => {
+                self.pending_row_spans(index, row, current && focused, width, theme, styles)
             }
         }
     }
 
-    /// A line's flag cell: `●` when review threads are under it.
+    /// Hunk `h` of file `f`'s separator row: its label, with the counts colored.
+    fn separator_spans(&self, f: usize, h: usize, styles: &Styles) -> Vec<Span<'static>> {
+        let label = self.files[f].file.hunks[h].label();
+        let mut spans = vec![Span::styled("  ", styles.separator)];
+        spans.push(Span::styled(
+            display::sanitize(&label.text).into_owned(),
+            styles.separator,
+        ));
+        spans.extend(count_spans(
+            label.counts,
+            styles.separator,
+            styles.stat_added,
+            styles.stat_removed,
+        ));
+        spans.push(Span::styled(
+            display::sanitize(&label.suffix).into_owned(),
+            styles.separator,
+        ));
+        spans
+    }
+
+    /// A line's flag cell: `●` when review threads or pending comments are under it, in `$warning` when a pending
+    /// comment is (it's what will be sent), else in `$accent`.
     fn line_flag(&self, line: DiffLineRef, theme: &Theme, styles: &Styles) -> Span<'static> {
         let state = &self.files[line.file];
-        let flagged = state
-            .line_base(line.hunk, line.line)
-            .is_some_and(|base| state.threads_on(base).next().is_some());
-        if flagged {
-            Span::styled("●", ThreadStyles::new(theme).flag)
+        let (mut threads, mut pending) = (false, false);
+        if let Some(base) = state.line_base(line.hunk, line.line) {
+            for item in state.items_on(base) {
+                threads |= matches!(item, Item::Thread(_));
+                pending |= matches!(item, Item::Pending(_));
+            }
+        }
+        let thread_styles = ThreadStyles::new(theme);
+        if pending {
+            Span::styled("●", thread_styles.flag_outdated.bg(theme.paint(styles.base)))
+        } else if threads {
+            Span::styled("●", thread_styles.flag)
         } else {
             Span::styled(" ", styles.gutter)
         }
+    }
+
+    /// Row `row` of pending comment `index`, as [`Self::row_spans`] gives it; `on_cursor` puts the `►` in its gutter.
+    fn pending_row_spans(
+        &mut self,
+        index: usize,
+        row: usize,
+        on_cursor: bool,
+        width: usize,
+        theme: &Theme,
+        styles: &Styles,
+    ) -> (Vec<Span<'static>>, Style) {
+        let fill = ThreadStyles::new(theme).fill;
+        let layout_width = self.thread_width();
+        let (Some(comment), Some(layout)) = (self.pending.get(index), self.pending_layouts.get_mut(index)) else {
+            return (Vec::new(), styles.gutter);
+        };
+        let line = layout
+            .lines(comment, layout_width, theme)
+            .lines
+            .get(row)
+            .cloned()
+            .unwrap_or_default();
+        let marker = if on_cursor { "► " } else { "  " };
+        let mut spans = vec![Span::styled(
+            format!("{marker}{}", " ".repeat(GUTTER_WIDTH - 2)),
+            styles.gutter,
+        )];
+        spans.extend(display::cut_spans(line.spans, width.saturating_sub(GUTTER_WIDTH)).0);
+        (spans, fill)
     }
 
     /// Row `row` of thread `thread`, as [`Self::row_spans`] gives it.
@@ -1633,7 +1810,7 @@ impl DiffBody {
 }
 
 /// A file's header: `▼` or `▶`, then `📄 <path>` and its counts, or `🗑️  <path> (deleted)`; then ` · N comments`
-/// when it has review threads.
+/// when it has review threads or pending comments.
 fn header_spans(state: &FileState, style: Style, added: Color, removed: Color) -> Vec<Span<'static>> {
     let file = &state.file;
     let glyph = if state.folded { "▶" } else { "▼" };
@@ -1645,7 +1822,7 @@ fn header_spans(state: &FileState, style: Style, added: Color, removed: Color) -
         spans.extend(count_spans(file.counts(), style, added, removed));
         spans
     };
-    match state.threads {
+    match state.threads + state.pending {
         0 => {}
         1 => spans.push(Span::styled(" · 1 comment", style)),
         n => spans.push(Span::styled(format!(" · {n} comments"), style)),

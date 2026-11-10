@@ -17,13 +17,13 @@ use crate::display;
 use crate::theme::{Paint, Theme};
 
 /// The bar in front of an expanded thread's comment rows, and the cell after it.
-const BAR: &str = "▎ ";
+pub(super) const BAR: &str = "▎ ";
 /// The cells [`BAR`] takes.
-const BAR_WIDTH: u16 = 2;
+pub(super) const BAR_WIDTH: u16 = 2;
 /// How many more cells a reply is indented than the thread's first comment.
 const REPLY_INDENT: u16 = 2;
 /// The narrowest a comment's body is laid out, so a thread measured before the body's first draw has a height.
-const MIN_BODY_WIDTH: u16 = 10;
+pub(super) const MIN_BODY_WIDTH: u16 = 10;
 
 /// Where a thread shows in its file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -209,8 +209,12 @@ pub struct ThreadStyles {
     pub bar: Style,
     /// The flag cell of a line with threads (`$accent`).
     pub flag: Style,
-    /// The flag cell of an outdated thread's original line (`$warning`).
+    /// The flag cell of an outdated thread's original line, and of a line with pending comments (`$warning`).
     pub flag_outdated: Style,
+    /// The bar in front of a pending comment's rows (`$warning`).
+    pub pending_bar: Style,
+    /// A pending comment's `Pending comment` title: bold `$warning`.
+    pub pending_title: Style,
 }
 
 impl ThreadStyles {
@@ -234,6 +238,13 @@ impl ThreadStyles {
                 .fg(theme.color(roles.brand.accent, base))
                 .bg(theme.paint(base)),
             flag_outdated: Style::new().fg(theme.color(roles.status.warning, base)),
+            pending_bar: Style::new()
+                .fg(theme.color(roles.status.warning, under))
+                .bg(theme.paint(under)),
+            pending_title: Style::new()
+                .fg(theme.color(roles.status.warning, under))
+                .bg(theme.paint(under))
+                .add_modifier(Modifier::BOLD),
         }
     }
 }

@@ -1,6 +1,6 @@
-//! The review part of the diff viewer, below the files: the pending comments (Python's "Pending Comments:" header
-//! and its `CommentPreview`s), which Add Comment fills, then the Submit review form (`SubmitReview`), which sends them
-//! with the review.
+//! The review part of the diff viewer: the pending comments ([`PendingComment`]), which Add Comment fills and the body
+//! shows under their lines (#391), and the Submit review form below the files (`SubmitReview`), which sends them with
+//! the review, with a row above it counting them.
 
 use std::ops::Range;
 
@@ -9,23 +9,13 @@ use lazy_github_core::github::{DraftReviewComment, NewReview, ReviewEvent};
 use ratatui::buffer::Buffer;
 use ratatui::layout::Rect;
 use ratatui::style::Style;
-use ratatui::widgets::{Block, Widget};
 
 use super::buffer_line;
 use crate::components::button::{self, Button, ButtonVariant};
-use crate::components::markdown::{self, Rendered, TextRun};
+use crate::components::markdown::Rendered;
 use crate::components::select::{self, DEFAULT_PROMPT, Select};
 use crate::components::text_input::{self, TextInput};
 use crate::theme::Theme;
-
-/// The header's text.
-const HEADER: &str = "Pending Comments:";
-
-/// The header's `height: 3`.
-const HEADER_HEIGHT: usize = 3;
-
-/// Columns a box takes each side of what it holds: its `solid` border and its `padding: 1`.
-const BOX_SIDE: u16 = 2;
 
 /// The form's `margin: 2 0`.
 const FORM_MARGIN: usize = 2;
@@ -78,11 +68,6 @@ impl PendingComment {
             line_text: line_text(diff_line),
             body: String::new(),
         })
-    }
-
-    /// The preview's first line: `<path>:<line> - <line text>`.
-    fn heading(&self) -> String {
-        format!("{}:{} - {}", self.path, self.line_number, self.line_text)
     }
 }
 
@@ -183,13 +168,24 @@ pub(super) struct FormPlaced {
     pub(super) submit: ButtonPlaced,
 }
 
+/// What the row above the form says while `pending` comments will be sent with the review: nothing without any.
+fn pending_note(pending: usize) -> Option<String> {
+    match pending {
+        0 => None,
+        1 => Some("1 pending comment will be sent with the review".to_owned()),
+        n => Some(format!("{n} pending comments will be sent with the review")),
+    }
+}
+
 /// Adds `form` to `out`, `width` cells wide, with `focused` drawn focused, and returns where its fields landed:
-/// its top margin, "Review Status:" and the select, the summary, the button with a row of margin above and below,
-/// then its bottom margin.
+/// its top margin, with `pending` comments to send a muted row counting them inside it, then
+/// "Review Status:" and the select, the summary, the button with a row of margin above and below, then its bottom
+/// margin.
 pub(super) fn layout_form(
     out: &mut Rendered,
     form: &mut ReviewForm,
     focused: Option<FormFocus>,
+    pending: usize,
     width: u16,
     theme: &Theme,
 ) -> FormPlaced {
@@ -197,6 +193,9 @@ pub(super) fn layout_form(
     let base = Style::new()
         .fg(theme.color(theme.roles().text.plain, under))
         .bg(theme.paint(under));
+    let note = pending_note(pending);
+    // The note takes the middle of three blank rows: the form's top margin with a row more.
+    let note_rows = usize::from(note.is_some());
     let status_rows = if form.status.is_some() {
         1 + usize::from(select::HEIGHT)
     } else {
@@ -204,13 +203,17 @@ pub(super) fn layout_form(
     };
     let input = usize::from(text_input::HEIGHT);
     let button_rows = usize::from(button::HEIGHT);
-    let height = FORM_MARGIN + status_rows + input + 1 + button_rows + 1 + FORM_MARGIN;
+    let height = note_rows + FORM_MARGIN + status_rows + input + 1 + button_rows + 1 + FORM_MARGIN;
     let area = Rect::new(0, 0, width, u16::try_from(height).unwrap_or(u16::MAX));
     let mut buf = Buffer::empty(area);
     buf.set_style(area, base);
     let row = |r: usize| u16::try_from(r).unwrap_or(u16::MAX);
     let start = out.lines.len();
-    let mut y = FORM_MARGIN;
+    if let Some(note) = &note {
+        let muted = Style::new().fg(theme.color(theme.roles().text.muted, under));
+        buf.set_stringn(0, 1, note, usize::from(width), base.patch(muted));
+    }
+    let mut y = note_rows + FORM_MARGIN;
     let mut placed = FormPlaced::default();
     if let Some(status) = &form.status {
         buf.set_stringn(0, row(y), "Review Status:", usize::from(width), base);
@@ -262,118 +265,6 @@ impl ButtonPlaced {
     pub(super) fn contains(&self, row: usize, x: u16) -> bool {
         self.rows.contains(&row) && self.columns.contains(&x)
     }
-}
-
-/// Adds the Pending Comments section for `comments` to `out`, `width` cells wide, with the Remove button of comment
-/// `focused` drawn focused, and returns where each Remove button landed. With no comments the section is hidden:
-/// nothing is added.
-pub(super) fn layout_pending(
-    out: &mut Rendered,
-    comments: &[PendingComment],
-    focused: Option<usize>,
-    width: u16,
-    theme: &Theme,
-) -> Vec<ButtonPlaced> {
-    if comments.is_empty() || width == 0 {
-        return Vec::new();
-    }
-    let roles = theme.roles();
-    let under = theme.background();
-    let base = Style::new()
-        .fg(theme.color(roles.text.plain, under))
-        .bg(theme.paint(under));
-    let panel = roles.diff.review_body.over(under);
-    let muted = Style::new().fg(theme.color(roles.text.muted, under));
-    let body_text = Style::new()
-        .fg(theme.color(roles.text.normal, panel))
-        .bg(theme.paint(panel));
-    // Inside the container's border and padding, then each preview's.
-    let inner = width.saturating_sub(2 * BOX_SIDE);
-    let text_width = inner.saturating_sub(2 * BOX_SIDE);
-    let previews: Vec<(Rendered, Rendered)> = comments
-        .iter()
-        .map(|comment| {
-            let heading = markdown::wrap_text(&[TextRun::new(comment.heading(), muted)], text_width);
-            let body = markdown::wrap_text(
-                &[TextRun::new(comment.body.as_str(), body_text)],
-                text_width.saturating_sub(2),
-            );
-            (heading, body)
-        })
-        .collect();
-    // A preview: its border and padding rows, the heading, its margin, the body with its padding, its margin, the
-    // button.
-    let preview_height =
-        |(heading, body): &(Rendered, Rendered)| 4 + heading.lines.len() + 1 + body.lines.len() + 2 + 1 + 3;
-    // The container: its border and padding rows, then the previews, each with `margin: 1 0` collapsing between them.
-    let container: usize = 4 + previews.iter().map(|p| preview_height(p) + 1).sum::<usize>() + 1;
-    // The header's `margin: 2 0 1 0`.
-    let top = 2 + HEADER_HEIGHT + 1;
-    let height = u16::try_from(top + container).unwrap_or(u16::MAX);
-    let area = Rect::new(0, 0, width, height);
-    let mut buf = Buffer::empty(area);
-    buf.set_style(area, base);
-
-    // The header: bold `$text` on `$accent`, centered on its first row.
-    let review_header = roles.diff.review_header;
-    let accent = review_header.bg.over(under);
-    let header = Rect::new(0, 2, width, 3);
-    buf.set_style(header, Style::new().bg(theme.paint(accent)));
-    let header_width = u16::try_from(HEADER.len()).unwrap_or(u16::MAX);
-    buf.set_stringn(
-        width.saturating_sub(header_width) / 2,
-        header.y,
-        HEADER,
-        usize::from(width),
-        review_header.style.apply(
-            Style::new()
-                .fg(theme.color(review_header.fg, accent))
-                .bg(theme.paint(accent)),
-        ),
-    );
-
-    let row = |r: usize| u16::try_from(r).unwrap_or(u16::MAX);
-    let container_top = top;
-    Block::bordered()
-        .border_style(Style::new().fg(theme.color(roles.border.emphasis, under)))
-        .render(Rect::new(0, row(container_top), width, row(container)), &mut buf);
-    let secondary = Style::new().fg(theme.color(roles.diff.review_comment_border, under));
-    let mut placed = Vec::with_capacity(comments.len());
-    let mut y = container_top + 3;
-    for (index, preview) in previews.iter().enumerate() {
-        let (heading, body) = preview;
-        let preview_rows = preview_height(preview);
-        let boxed = Rect::new(BOX_SIDE, row(y), inner, row(preview_rows));
-        Block::bordered().border_style(secondary).render(boxed, &mut buf);
-        let x = 2 * BOX_SIDE;
-        let mut line_y = y + 2;
-        for line in &heading.lines {
-            buf.set_line(x, row(line_y), line, text_width);
-            line_y += 1;
-        }
-        line_y += 1;
-        let body_rows = body.lines.len() + 2;
-        buf.set_style(Rect::new(x, row(line_y), text_width, row(body_rows)), body_text);
-        for (offset, line) in body.lines.iter().enumerate() {
-            buf.set_line(x + 1, row(line_y + 1 + offset), line, text_width.saturating_sub(2));
-        }
-        line_y += body_rows + 1;
-        let mut remove = Button::new("Remove", ButtonVariant::Warning);
-        let button_width = remove.width(theme).min(text_width);
-        remove.render(
-            &mut buf,
-            Rect::new(x, row(line_y), button_width, button::HEIGHT),
-            theme,
-            focused == Some(index),
-        );
-        placed.push(ButtonPlaced {
-            rows: out.lines.len() + line_y..out.lines.len() + line_y + usize::from(button::HEIGHT),
-            columns: x..x + button_width,
-        });
-        y += preview_rows + 1;
-    }
-    out.lines.extend((0..height).map(|y| buffer_line(&buf, y)));
-    placed
 }
 
 #[cfg(test)]
@@ -437,7 +328,19 @@ mod tests {
         let numbers: Vec<u32> = (0..4).map(|i| at(i).line_number).collect();
         assert_eq!(numbers, [3, 4, 4, 4]);
         assert_eq!(at(1).position, 2);
-        assert_eq!(at(1).heading(), "README.md:4 - -Run it.");
+    }
+
+    #[test]
+    fn the_note_counts_the_pending_comments() {
+        assert_eq!(pending_note(0), None);
+        assert_eq!(
+            pending_note(1).as_deref(),
+            Some("1 pending comment will be sent with the review")
+        );
+        assert_eq!(
+            pending_note(3).as_deref(),
+            Some("3 pending comments will be sent with the review")
+        );
     }
 
     #[test]

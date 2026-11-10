@@ -181,7 +181,7 @@ pub enum Owner {
     /// A run's Jobs tab (`WorkflowRunJobsTabPane`): view job logs, in front of the content's scroll link.
     RunJobs,
     /// The diff viewer (`SplitDiffViewer`, #236): next and previous hunk, and the file filter key, while focus is on
-    /// the filter, a pending comment's Remove button or the review form.
+    /// the filter or the review form.
     DiffViewer,
     /// The continuous diff body with focus (#387, #388): the line cursor, hunk jumps, paging and panning, add comment
     /// and the filter key.

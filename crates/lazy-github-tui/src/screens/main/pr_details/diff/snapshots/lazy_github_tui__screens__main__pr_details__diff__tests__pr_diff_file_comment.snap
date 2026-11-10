@@ -36,10 +36,10 @@ expression: screen
 │                                                              ││▶ 🗑️   docs/old.md (deleted)                                                                   │
 │                                                              ││▼ 📄  src/viewer.rs (+5 -2) · 3 comments                                                       │
 │                                                              ││  Lines 1-8 (+2)                                                                              │
-│                                                              ││     1  │ use std::io;                                                                      ▅▅│
+│                                                              ││     1  │ use std::io;                                                                        │
 │                                                              ││     2  │ use std::fmt;                                                                       │
 │                                                              ││     3  │                                                                                     │
-│                                                              ││     4  │ pub struct Viewer {                                                                 │
+│                                                              ││     4  │ pub struct Viewer {                                                               ▃▃│
 │                                                              ││     5  │     lines: Vec<String>,                                                             │
 │                                                              ││     6● │     cursor: usize,                                                                  │
 │                                                              ││          ▶ parity-bot: Should the cursor wrap at the end?  · 1 reply                         │

@@ -180,6 +180,9 @@ registry! {
     // the diff has none.
     DiffNextComment("diff.next_comment", "n", "next_comment", "Next Comment");
     DiffPreviousComment("diff.previous_comment", "N", "previous_comment", "Previous Comment");
+    // Rust-only (decision diff-inline-comments): removes the pending comment under the cursor. Hidden by the body on
+    // every other row.
+    DiffRemoveComment("diff.remove_comment", "x", "remove_comment", "Remove Comment");
     // Shown, and active only while `notifications.enabled` (Py bug B7: Python decides `show` once at import). The
     // component that declares it hides it through `Component::binding_state`.
     NotificationsOpen("notifications.open", "ctrl+n", "view_notifications", "Notifications")

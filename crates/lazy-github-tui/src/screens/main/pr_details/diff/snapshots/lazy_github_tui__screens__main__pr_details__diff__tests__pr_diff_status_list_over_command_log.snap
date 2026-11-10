@@ -11,32 +11,32 @@ expression: screen
 │                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
 │                                                              ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
 │                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
-│                                                              ││                                     Pending Comments:                                        │
+│                                                              ││▶ 🗑️   docs/old.md (deleted)                                                                   │
+│                                                              ││▼ 📄  src/viewer.rs (+5 -2)                                                                    │
+│                                                              ││  Lines 1-8 (+2)                                                                              │
+│                                                              ││     1  │ use std::io;                                                                        │
+│                                                              ││     2  │ use std::fmt;                                                                       │
+│                                                              ││     3  │                                                                                     │
+│                                                              ││     4  │ pub struct Viewer {                                                                 │
+│                                                              ││     5  │     lines: Vec<String>,                                                             │
+│                                                              ││     6  │     cursor: usize,                                                                  │
+│                                                              ││     7  │ }                                                                                   │
+│                                                              ││     8  │                                                                                   ▇▇│
+│                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
+│                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+│                                                              ││    22  │             println!("{line}");                                                     │
+└──────────────────────────────────────────────────────────────┘│    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
+│ #  Status  Author         Title                              ││    25  │             println!("{marker} {line}");                                            │
+│ 5  open    parity-friend  Add a cursor to the viewer         ││    26  │         }                                                                           │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││    27  │         Ok(())                                                                      │
+│ 3  closed  parity-bot     Release 0.2.0                      ││    28  │     }                                                                               │
+│ 2  open    parity-friend  Try a faster parser                ││ build.rs                                                                         Line: 4/4   │
 │                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││┌──────────────────────────────────────────────────────────────────────────────────────────┐  │
-│                                                              │││                                                                                          │  │
-│                                                              │││                                                                                          │  │
-│                                                              │││ ┌──────────────────────────────────────────────────────────────────────────────────────┐ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │ README.md:5 - +Run `viewer FILE`, then press `j` and `k` to move.                    │ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │  Mention the arrow keys too.                                                         │ │  │
-│                                                              │││ │                                                                                      │ │  │
-│                                                              │││ │                                                                                      │ │  │
-└──────────────────────────────────────────────────────────────┘││ │ ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                                                     │ │▇▇│
-┌─ [2] Pull Requests ──────────────────────────────────────────┐││ │      Remove                                                                          │ │  │
-│ #  Status  Author         Title                              │││ │ ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                                                     │ │  │
-│ 5  open    parity-friend  Add a cursor to the viewer         │││ │                                                                                      │ │  │
-│ 4  closed  parity-bot     Drop the legacy renderer           │││ └──────────────────────────────────────────────────────────────────────────────────────┘ │  │
-│ 3  closed  parity-bot     Release 0.2.0                      │││                                                                                          │  │
-│ 2  open    parity-friend  Try a faster parser                │││                                                                                          │  │
-│                                                              ││└──────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                              ││                                                                                              │
-│                                                              ││                                                                                              │
-│                                                              ││Review Status:                                                                              ▄▄│
+│                                                              ││1 pending comment will be sent with the review                                                │
+│                                                              ││                                                                                            ▆▆│
+│                                                              ││Review Status:                                                                                │
 │                                                              ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  │
 │                                                              ││▊  Commented                                                                            ▲  ▎  │
 │                                                              ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  │

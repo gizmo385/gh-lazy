@@ -7,7 +7,7 @@
   with `is:issue milestone:"<title>" repo:<owner>/<name>` and runs it at once, so the milestone's issues list in the
   modal's results table, open in Details with `enter`, and the query can be refined there. The binding is hidden and
   does nothing while the issue has no milestone. The Python app has no milestone support.
-- Decided by: proposed by the design agent, 2026-11-09, on #410; pending Chris's answers to D1-D3 there.
+- Decided by: Chris, 2026-11-09 (#410: D1 a, D2 a, D3 a)
 - Link: #410, #417 (the same for pull requests), #386 and #408 (the Search modal it reuses)
 - Rows: `issues.overview-milestone`, `issues.overview-milestone-search`, `keybindings.issue-milestone`
 

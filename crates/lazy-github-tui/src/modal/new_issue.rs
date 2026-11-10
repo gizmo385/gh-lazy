@@ -1,5 +1,6 @@
-//! The New issue dialog (`issue.new`): a title input and a description code editor in a scroll area, then Save and
-//! Cancel. It creates the issue itself and closes with it. Python's `NewIssueModal` around a `NewIssueContainer`.
+//! The New issue dialog (`issue.new`), on the compose sheet (decision compose-dialogs): a heading, a one-row title and
+//! the description under its `Description  Write  Preview` tabs, with the footer's keys for Save and Close. It
+//! creates the issue itself and closes with it. Python's `NewIssueModal` around a `NewIssueContainer`.
 
 use crossterm::event::{KeyEvent, MouseEvent};
 use lazy_github_core::github::NewIssue;
@@ -7,34 +8,20 @@ use lazy_github_core::models::{Issue, Repository};
 use ratatui::Frame;
 use ratatui::layout::Rect;
 
-use super::issue_form::{EditorHeight, IssueForm};
-use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind, dialog_bindings};
+use super::issue_form::IssueForm;
+use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind};
 use crate::action::Action;
-use crate::component::{ChainLink, Component, Cx, RenderCx};
-use crate::components::button::Pressed;
+use crate::component::{BindingState, ChainLink, Component, Cx, RenderCx};
+use crate::components::compose::{COMPOSE_BINDINGS, ComposeAction};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
 
-/// The dialog's screen bindings: the container's `modal.submit`, then the modal's `modal.close`.
-pub(crate) const NEW_ISSUE_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
-
-/// `NewIssueContainer { width: 100 }`, border included.
-const WIDTH: u16 = 100;
-
-/// `height: 80%` of the screen above the footer, rounded down as Textual does.
-const HEIGHT_PERCENT: u16 = 80;
-
-/// `#new_issue_body { height: 75% }` of the scroll area.
-const EDITOR_PERCENT: u16 = 75;
-
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum NewIssueAction {
-    /// `modal.submit` or Save: check the title and create the issue.
-    Submit,
-    /// `modal.close` or Cancel: close with nothing, cancelling a request in flight.
-    Close,
+    /// One of the sheet's shared keys.
+    Compose(ComposeAction),
 }
 
 /// The New issue dialog for one repo. Its output is the created issue, or `None` when it was closed.
@@ -50,18 +37,13 @@ pub struct NewIssueDialog {
 }
 
 impl NewIssueDialog {
-    /// An empty dialog for `repo`, its description holding `prefilled` (the M4 bug-report flow passes a template),
-    /// with the scroll area focused.
+    /// An empty dialog for `repo`, its description holding `prefilled` (the bug-report flow passes a template), with
+    /// the title focused.
     pub fn new(repo: Repository, prefilled: Option<&str>) -> Self {
+        let heading = format!("New issue · {}", repo.full_name);
         Self {
+            form: IssueForm::new(ModalKind::NewIssue, heading, "", prefilled.unwrap_or_default()),
             repo,
-            form: IssueForm::new(
-                ModalKind::NewIssue,
-                Self::pressed,
-                "",
-                prefilled.unwrap_or_default(),
-                EditorHeight::Percent(EDITOR_PERCENT),
-            ),
             pending: None,
             output: None,
         }
@@ -82,15 +64,8 @@ impl NewIssueDialog {
         self.pending.is_some()
     }
 
-    fn action(action: NewIssueAction) -> Action {
-        Action::Dialog(DialogAction::NewIssue(action))
-    }
-
-    fn pressed(button: Pressed) -> Action {
-        Self::action(match button {
-            Pressed::Submit => NewIssueAction::Submit,
-            Pressed::Cancel => NewIssueAction::Close,
-        })
+    fn action(action: ComposeAction) -> Action {
+        Action::Dialog(DialogAction::NewIssue(NewIssueAction::Compose(action)))
     }
 
     /// Python's `create_issue`: an empty title is refused (a blank one isn't), an empty description is allowed (Py
@@ -103,6 +78,7 @@ impl NewIssueDialog {
         let title = self.form.title();
         if title.is_empty() {
             cx.notify(Toast::error("Must have a non-empty issue title!"));
+            self.form.refuse_title();
             return;
         }
         cx.notify(Toast::info("Creating new issue..."));
@@ -110,6 +86,7 @@ impl NewIssueDialog {
             title: title.to_owned(),
             body: self.form.body(),
         };
+        self.form.set_saving(true);
         self.pending = Some(cx.request(GithubRequest::CreateIssue {
             repo: Box::new(self.repo.clone()),
             issue,
@@ -128,15 +105,15 @@ impl Component for NewIssueDialog {
     type Action = NewIssueAction;
 
     fn bindings(&self) -> &'static [BindingId] {
-        NEW_ISSUE_BINDINGS
+        COMPOSE_BINDINGS
     }
 
     fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
-        match id {
-            BindingId::ModalSubmit => Some(Self::action(NewIssueAction::Submit)),
-            BindingId::ModalClose => Some(Self::action(NewIssueAction::Close)),
-            _ => None,
-        }
+        self.form.compose_action(id).map(Self::action)
+    }
+
+    fn binding_state(&self, id: BindingId, _cx: &Cx<'_>) -> BindingState {
+        self.form.binding_state(id)
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
@@ -147,21 +124,21 @@ impl Component for NewIssueDialog {
         self.form.handle_key(key, cx)
     }
 
-    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, cx: &Cx<'_>) -> Option<Action> {
-        Some(self.form.handle_mouse(event, cx))
+    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, _cx: &Cx<'_>) -> Option<Action> {
+        Some(self.form.handle_mouse(event))
     }
 
     fn update(&mut self, action: NewIssueAction, cx: &mut Cx<'_>) {
+        let NewIssueAction::Compose(action) = action;
         match action {
-            NewIssueAction::Submit => self.submit(cx),
-            NewIssueAction::Close => self.close(cx),
+            ComposeAction::Submit => self.submit(cx),
+            ComposeAction::Close => self.close(cx),
+            other => self.form.update(other),
         }
     }
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
-        let theme = cx.theme;
-        let under = self.background(theme.roles()).over(theme.background());
-        self.form.render(frame, area, cx, under);
+        self.form.render(frame, area, cx);
     }
 }
 
@@ -184,7 +161,11 @@ impl Dialog for NewIssueDialog {
     }
 
     fn size(&self, available: Rect) -> (u16, u16) {
-        (WIDTH, available.height * HEIGHT_PERCENT / 100)
+        self.form.size(available)
+    }
+
+    fn frame(&self, area: Rect) -> Rect {
+        self.form.frame(area)
     }
 
     fn take_output(&mut self) -> Option<Option<Box<Issue>>> {
@@ -195,8 +176,8 @@ impl Dialog for NewIssueDialog {
         self.form.field_chain()
     }
 
-    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
-        self.form.on_field_binding(field, id, cx)
+    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        self.form.on_field_binding(field, id)
     }
 
     fn captures_mouse(&self) -> bool {
@@ -219,6 +200,7 @@ impl Dialog for NewIssueDialog {
             return Some(response);
         };
         self.pending = None;
+        self.form.set_saving(false);
         match result {
             Ok(issue) => {
                 // Raised before the dialog closes, as Python's is.

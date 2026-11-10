@@ -1,5 +1,5 @@
-//! The Edit issue dialog: its prefilled fields, focus, the footer, the Status select, saving, the answer, closing and
-//! its drawing, opened with `E` on the Issues table against the `issue-write` and `issue-details` fixtures.
+//! The Edit issue dialog on the compose sheet: its prefilled fields, focus, the footer, the Status select, saving,
+//! the answer, closing, its size and its drawing, opened with `E` on the Issues table against the `issue-write` and `issue-details` fixtures.
 
 use std::path::Path;
 use std::time::Duration;
@@ -145,6 +145,34 @@ fn click(app: &mut TestApp, column: u16, row: u16) {
     }));
 }
 
+/// The dialog on top, as the app holds it.
+fn dialog(app: &TestApp) -> &EditIssueDialog {
+    app.app()
+        .top_dialog::<EditIssueDialog>()
+        .expect("the Edit issue dialog is on top")
+}
+
+/// The sheet's frame as last drawn, border included.
+fn frame_of(app: &TestApp) -> Rect {
+    let interior = app.app().top_dialog_interior().expect("a dialog was drawn");
+    Rect::new(interior.x - 1, interior.y - 1, interior.width + 2, interior.height + 2)
+}
+
+/// The cell where `needle` starts on `screen`, by chars (the frame's blocks are wider in bytes).
+fn cell_of(screen: &str, needle: &str) -> (u16, u16) {
+    screen
+        .lines()
+        .enumerate()
+        .find_map(|(row, line)| {
+            let at = line.find(needle)?;
+            let column = line[..at].chars().count();
+            Some((u16::try_from(column).unwrap(), u16::try_from(row).unwrap()))
+        })
+        .unwrap_or_else(|| panic!("{needle:?} isn't on the screen:\n{screen}"))
+}
+
+const FIELD_FOOTER: [&str; 5] = ["^s Save", "shift+⏎ Save", "^t Preview", "^o Expand", "esc Leave"];
+
 // The fields.
 
 #[test]
@@ -160,51 +188,52 @@ fn the_fields_hold_the_issue() {
 }
 
 #[test]
-fn focus_walks_the_scroll_area_the_fields_and_the_buttons() {
+fn it_opens_on_the_title_and_tab_cycles_title_status_and_description() {
     let mut dialog = EditIssueDialog::new(Box::new(issue(12)));
-    assert_eq!(dialog.form.focused(), Some(IssueField::Scroll));
+    assert_eq!(dialog.form.focused(), Some(IssueField::Title));
     let mut seen = Vec::new();
-    for _ in 0..6 {
+    for _ in 0..3 {
         dialog.move_focus(FocusMove::Next);
         seen.push(dialog.form.focused().unwrap());
     }
-    assert_eq!(
-        seen,
-        [
-            IssueField::Title,
-            IssueField::Status,
-            IssueField::Description,
-            IssueField::Save,
-            IssueField::Cancel,
-            IssueField::Scroll,
-        ]
-    );
+    assert_eq!(seen, [IssueField::Status, IssueField::Description, IssueField::Title]);
+    dialog.move_focus(FocusMove::Previous);
+    assert_eq!(dialog.form.focused(), Some(IssueField::Description));
 }
 
 #[test]
 fn the_footer_follows_the_focus_and_the_open_list() {
     let mut app = opened();
-    let q = ["q Close", "shift+⏎ Submit"];
-    let esc = ["esc Close", "shift+⏎ Submit"];
-    assert_eq!(footer(&mut app), q);
+    assert_eq!(footer(&mut app), FIELD_FOOTER);
     app.press(&["tab"]);
-    assert_eq!(footer(&mut app), esc);
-    app.press(&["tab"]);
-    assert_eq!(footer(&mut app), q, "the closed select types nothing");
+    // The closed select types nothing, so `q` leaves it as `escape` does.
+    let mut status = FIELD_FOOTER.map(str::to_owned);
+    status[4] = "q Leave".to_owned();
+    assert_eq!(footer(&mut app), status);
     app.press(&["enter"]);
-    assert_eq!(footer(&mut app), ["esc Dismiss menu", "shift+⏎ Submit"]);
+    assert_eq!(footer(&mut app)[0], "esc Dismiss menu");
     // `q` searches the list instead of closing the dialog.
     app.press(&["q"]);
     assert!(is_open(&app));
+}
+
+#[test]
+fn escape_closes_an_open_list_before_it_leaves_the_field() {
+    let mut app = opened();
+    app.press(&["tab", "enter"]);
+    assert_eq!(footer(&mut app)[0], "esc Dismiss menu");
     app.press(&["escape"]);
     assert!(is_open(&app), "escape only closes the list");
-    assert_eq!(footer(&mut app), q);
+    assert_eq!(dialog(&app).form.focused(), Some(IssueField::Status));
+    app.press(&["escape"]);
+    assert_eq!(dialog(&app).form.focused(), None);
+    app.press(&["escape"]);
+    assert!(!is_open(&app));
 }
 
 #[test]
 fn the_title_selects_its_text_so_typing_replaces_it() {
     let mut app = opened();
-    app.press(&["tab"]);
     type_text(&mut app, "New");
     app.press(&["shift+enter"]);
     assert_eq!(updates(&app)[0].2.title, "New");
@@ -215,8 +244,8 @@ fn the_title_selects_its_text_so_typing_replaces_it() {
 #[test]
 fn picking_closed_in_the_list_sends_it() {
     let mut app = opened();
-    app.press(&["tab", "tab", "enter", "down", "enter"]);
-    assert!(app.screen(160, 48).contains("▊  Closed "));
+    app.press(&["tab", "enter", "down", "enter"]);
+    assert!(app.screen(160, 48).contains(" Closed ▼ "));
     app.press(&["shift+enter"]);
     let (_, number, update) = updates(&app).remove(0);
     assert_eq!(number, 12);
@@ -228,8 +257,8 @@ fn picking_closed_in_the_list_sends_it() {
 #[test]
 fn the_blank_row_leaves_the_state_out() {
     let mut app = opened();
-    app.press(&["tab", "tab", "enter", "home", "enter"]);
-    assert!(app.screen(160, 48).contains("▊  Select "));
+    app.press(&["tab", "enter", "home", "enter"]);
+    assert!(app.screen(160, 48).contains(" Select ▼ "));
     app.press(&["shift+enter"]);
     assert_eq!(updates(&app)[0].2.state, None);
 }
@@ -237,12 +266,8 @@ fn the_blank_row_leaves_the_state_out() {
 #[test]
 fn tab_closes_the_list_and_moves_on() {
     let mut app = opened();
-    app.press(&["tab", "tab", "enter", "down", "tab"]);
-    assert_eq!(
-        footer(&mut app),
-        ["esc Close", "shift+⏎ Submit"],
-        "the description has focus"
-    );
+    app.press(&["tab", "enter", "down", "tab"]);
+    assert_eq!(dialog(&app).form.focused(), Some(IssueField::Description));
     app.press(&["shift+enter"]);
     assert_eq!(updates(&app)[0].2.state, Some(IssueState::Open));
 }
@@ -251,15 +276,16 @@ fn tab_closes_the_list_and_moves_on() {
 fn clicks_open_the_list_and_pick_a_row() {
     let mut app = opened();
     let screen = app.screen(160, 48);
-    // The Status box's text row, and the list's rows below it: the blank, Open, Closed.
-    let row = screen.lines().position(|line| line.contains("▊  Open ")).unwrap();
-    let row = u16::try_from(row).unwrap();
-    click(&mut app, 60, row);
-    assert_eq!(footer(&mut app), ["esc Dismiss menu", "shift+⏎ Submit"]);
+    // The Status box's row, and the list's rows below it: the blank, Open, Closed.
+    let (column, row) = cell_of(&screen, " Open ▼ ");
+    let column = column + 2;
+    click(&mut app, column, row);
+    assert_eq!(footer(&mut app)[0], "esc Dismiss menu");
     // The app draws after every event, which places the list.
     app.screen(160, 48);
-    click(&mut app, 60, row + 5);
-    assert_eq!(footer(&mut app), ["q Close", "shift+⏎ Submit"]);
+    click(&mut app, column, row + 4);
+    assert_eq!(dialog(&app).form.focused(), Some(IssueField::Status));
+    assert_eq!(footer(&mut app)[0], "^s Save");
     app.press(&["shift+enter"]);
     assert_eq!(updates(&app)[0].2.state, Some(IssueState::Closed));
 }
@@ -267,18 +293,21 @@ fn clicks_open_the_list_and_pick_a_row() {
 // Saving.
 
 #[test]
-fn save_reads_saving_and_is_disabled_while_in_flight() {
-    for keys in [&["tab", "tab", "tab", "tab", "enter"][..], &["shift+enter"]] {
+fn saving_disables_the_submit_keys_and_says_so_in_the_heading() {
+    for key in ["ctrl+s", "shift+enter"] {
         let mut app = opened();
-        app.press(keys);
-        assert_eq!(updates(&app).len(), 1, "{keys:?}");
-        assert_eq!(toasts(&app), [(None, "Updating issue #12...".to_owned())], "{keys:?}");
+        app.press(&[key]);
+        assert_eq!(updates(&app).len(), 1, "{key}");
+        assert_eq!(toasts(&app), [(None, "Updating issue #12...".to_owned())], "{key}");
         let toast = app.app().toasts().iter().next().unwrap().clone();
         assert_eq!(toast.timeout, Duration::from_secs(1));
-        assert!(app.screen(160, 48).contains("Saving..."), "{keys:?}");
-        // A second submit, by key or by the disabled button, sends nothing.
-        app.press(&["shift+enter"]);
-        assert_eq!(updates(&app).len(), 1, "{keys:?}");
+        assert!(app.screen(160, 48).contains("Saving… █"), "{key}");
+        let active = app.app_mut().active_bindings();
+        let items = crate::components::footer::footer_items(&active);
+        assert!(!items[0].enabled && !items[1].enabled, "{key}");
+        // A second submit, by either key, sends nothing.
+        app.press(&["ctrl+s", "shift+enter"]);
+        assert_eq!(updates(&app).len(), 1, "{key}");
     }
 }
 
@@ -298,9 +327,8 @@ fn success_closes_with_the_issue() {
 }
 
 #[test]
-fn a_failure_toasts_restores_save_and_keeps_the_edits() {
+fn a_failure_toasts_restores_the_submit_keys_and_keeps_the_edits() {
     let mut app = opened_with(gh(None));
-    app.press(&["tab"]);
     type_text(&mut app, "Edited");
     app.press(&["shift+enter"]);
     let out = crate::test_util::logs(|| settle(&mut app));
@@ -314,18 +342,18 @@ fn a_failure_toasts_restores_save_and_keeps_the_edits() {
         )
     );
     let screen = app.screen(160, 48);
-    assert!(!screen.contains("Saving..."), "{screen}");
-    assert!(screen.contains("▊  Edited "), "{screen}");
+    assert!(!screen.contains("Saving…"), "{screen}");
+    assert!(screen.contains(" Edited "), "{screen}");
     app.press(&["shift+enter"]);
     assert_eq!(updates(&app).len(), 2);
 }
 
 #[test]
-fn save_comes_back_after_a_failure() {
+fn saving_ends_after_a_failure() {
     let mut dialog = EditIssueDialog::new(Box::new(issue(12)));
     let mut app = opened();
-    app.with_cx(|cx| dialog.update(EditIssueAction::Submit, cx));
-    assert_eq!(dialog.form.save_state(), ("Saving...", true));
+    app.with_cx(|cx| dialog.update(EditIssueAction::Compose(ComposeAction::Submit), cx));
+    assert!(dialog.form.is_saving());
     let id = dialog.pending.unwrap();
     app.with_cx(|cx| {
         let other = dialog.on_response(id, GithubResponse::CreateIssue(Ok(Box::new(updated()))), cx);
@@ -333,7 +361,7 @@ fn save_comes_back_after_a_failure() {
         let handed_back = dialog.on_response(id, GithubResponse::UpdateIssue(Err(GhError::NotInstalled)), cx);
         assert!(handed_back.is_none());
     });
-    assert_eq!(dialog.form.save_state(), ("Save", false));
+    assert!(!dialog.form.is_saving());
     assert!(!dialog.is_pending());
     assert!(dialog.take_output().is_none());
 }
@@ -341,12 +369,12 @@ fn save_comes_back_after_a_failure() {
 // Closing.
 
 #[test]
-fn cancel_escape_and_q_close_without_a_request() {
+fn escape_or_q_on_the_sheet_close_without_a_request() {
     for keys in [
-        &["tab", "tab", "tab", "tab", "tab", "enter"][..],
-        &["escape"],
-        &["q"],
-        &["tab", "escape"],
+        &["escape", "escape"][..],
+        &["escape", "q"],
+        &["tab", "q", "q"],
+        &["tab", "tab", "escape", "escape"],
     ] {
         let mut app = opened();
         app.press(keys);
@@ -359,10 +387,24 @@ fn cancel_escape_and_q_close_without_a_request() {
 #[test]
 fn closing_in_flight_cancels_the_request() {
     let mut app = opened();
-    app.press(&["shift+enter", "escape"]);
+    app.press(&["shift+enter", "escape", "escape"]);
     assert!(!is_open(&app));
     let (id, ..) = updates(&app)[0].clone();
     assert!(app.effects().contains(&Effect::Cancel(id)));
+}
+
+// Size.
+
+#[test]
+fn a_six_line_body_opens_a_fourteen_row_sheet() {
+    let mut six = issue(12);
+    six.body = Some("## Steps\n\n1. One\n2. Two\n\nThat's all.".into());
+    let mut app = opened();
+    app.with_cx(|cx| cx.open_dialog(EditIssueDialog::new(Box::new(six)), |_| Action::Consumed));
+    app.render(160, 48);
+    assert_eq!(frame_of(&app), Rect::new(30, 16, 100, 14));
+    let screen = app.screen(160, 48);
+    assert!(screen.contains(" 6  That's all."), "every line is in view:\n{screen}");
 }
 
 // Drawing.
@@ -376,6 +418,13 @@ fn edit_issue_dialog_opened() {
 #[test]
 fn edit_issue_dialog_status_open() {
     let mut app = opened();
-    app.press(&["tab", "tab", "enter"]);
+    app.press(&["tab", "enter"]);
+    insta::assert_snapshot!(app.screen(160, 48));
+}
+
+#[test]
+fn edit_issue_saving() {
+    let mut app = opened();
+    app.press(&["ctrl+s"]);
     insta::assert_snapshot!(app.screen(160, 48));
 }

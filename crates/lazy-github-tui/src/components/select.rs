@@ -432,6 +432,73 @@ impl<T> Select<T> {
         buf.set_string(arrow_x, y, arrow, styles.muted);
     }
 
+    /// The longest label the box shows: the prompt's or an option's, in cells.
+    fn widest_label(&self) -> u16 {
+        let widest = self
+            .options
+            .iter()
+            .map(|(label, _)| label.as_ref())
+            .chain([self.prompt.as_ref()])
+            .map(|label| Span::raw(label).width())
+            .max()
+            .unwrap_or(0);
+        u16::try_from(widest).unwrap_or(u16::MAX)
+    }
+
+    /// What the box shows: the chosen option's label, or the prompt.
+    fn shown_label(&self) -> &str {
+        self.value
+            .map_or(self.prompt.as_ref(), |index| self.options[index].0.as_ref())
+    }
+
+    /// The width of a [one-row box](Self::render_row): a cell of padding, the label shown, a space, the arrow and a
+    /// cell of padding.
+    pub fn row_width(&self) -> u16 {
+        u16::try_from(Span::raw(self.shown_label()).width())
+            .unwrap_or(u16::MAX)
+            .saturating_add(4)
+    }
+
+    /// The width of the open list under a one-row box: its longest label inside the list's border and paddings,
+    /// and at least the box's width.
+    pub fn row_overlay_width(&self) -> u16 {
+        self.widest_label().saturating_add(6).max(self.row_width())
+    }
+
+    /// Draws the box as one row on the input's background, without its border, into `area`'s first row: a compose
+    /// sheet's field (decision compose-dialogs). The chosen option's label or the prompt muted, then the arrow, `▲`
+    /// while open. `focused` is the box's own focus, as for [`Self::render_box`].
+    pub fn render_row(&self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
+        let row = Rect {
+            height: area.height.min(1),
+            width: area.width.min(self.row_width()),
+            ..area
+        };
+        if row.is_empty() {
+            return;
+        }
+        let styles = BoxStyles::new(theme, under, focused && !self.disabled);
+        buf.set_style(row, styles.text);
+        for position in row.positions() {
+            buf[position].set_symbol(" ");
+        }
+        let style = if self.value.is_some() {
+            styles.text
+        } else {
+            styles.muted
+        };
+        let room = usize::from(row.width.saturating_sub(4));
+        let (end, _) = buf.set_stringn(row.x + 1, row.y, self.shown_label(), room, style);
+        let arrow_x = end + 1;
+        if arrow_x < row.right() {
+            let arrow = if self.is_open() { "▲" } else { "▼" };
+            buf.set_string(arrow_x, row.y, arrow, styles.muted);
+        }
+        if self.disabled {
+            disabled::fade(buf, row.intersection(buf.area), theme, under);
+        }
+    }
+
     /// Draws the open list right below `below` (the box's cells on screen), as wide as it, moved up as far as needed
     /// to stay inside `clip` (the screen), and clipped to it. `under` is what's under the list's edges. Nothing while
     /// closed.

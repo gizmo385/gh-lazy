@@ -116,14 +116,14 @@ fn i_opens_the_dialog_from_the_left_column_only() {
     let mut app = app();
     app.press(&["I"]);
     assert_eq!(app.app().modals(), [ModalKind::NewIssue]);
-    app.press(&["escape", "5", "I"]);
+    app.press(&["escape", "escape", "5", "I"]);
     assert!(app.app().modals().is_empty(), "the details pane has no issue.new");
 }
 
 #[test]
 fn the_created_issue_is_added_in_its_place_and_opened() {
     let mut app = app();
-    app.press(&["I", "tab"]);
+    app.press(&["I"]);
     for key in ["P", "space", "t"] {
         app.press(&[key]);
     }

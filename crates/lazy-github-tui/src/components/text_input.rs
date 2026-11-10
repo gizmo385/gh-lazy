@@ -110,8 +110,18 @@ pub struct TextInput {
     /// The first known value that starts with the text, looked up at the text's last change (Textual's
     /// `_suggestion`). It's kept even when it's the text itself, but only drawn while longer.
     suggestion: Option<String>,
-    /// Drawn as the text row alone, on the parent's background ([`Self::borderless`]).
-    borderless: bool,
+    shape: Shape,
+}
+
+/// How an input is drawn.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Shape {
+    /// In Textual's `tall` border, three rows high.
+    Tall,
+    /// The text row alone, on the parent's background ([`TextInput::borderless`]).
+    Borderless,
+    /// One row on the input's background, with a cell of padding each side ([`TextInput::one_row`]).
+    Row,
 }
 
 impl TextInput {
@@ -129,7 +139,7 @@ impl TextInput {
             filter: None,
             suggestions: None,
             suggestion: None,
-            borderless: false,
+            shape: Shape::Tall,
         }
     }
 
@@ -138,7 +148,16 @@ impl TextInput {
     /// right padding around it. [`Self::render`] and [`Self::press`] then take the text row itself as `area`.
     #[must_use]
     pub fn borderless(mut self) -> Self {
-        self.borderless = true;
+        self.shape = Shape::Borderless;
+        self
+    }
+
+    /// Drawn as one row on the input's background, its text inside a cell of padding each side: a compose sheet's
+    /// field (decision compose-dialogs). Invalid, its placeholder is in the error color. [`Self::render`] and
+    /// [`Self::press`] take the row itself as `area`.
+    #[must_use]
+    pub fn one_row(mut self) -> Self {
+        self.shape = Shape::Row;
         self
     }
 
@@ -486,11 +505,12 @@ impl TextInput {
     /// The char under `column` in an input drawn in `area`, scrolled as last drawn (Textual's
     /// `_cell_offset_to_index`). Columns left of the text are 0, and columns right of it are the end.
     fn index_at(&self, area: Rect, column: u16) -> usize {
-        let text_x = if self.borderless {
-            usize::from(area.x)
-        } else {
-            usize::from(area.x) + 1 + usize::from(PADDING)
-        };
+        let text_x = usize::from(area.x)
+            + match self.shape {
+                Shape::Tall => 1 + usize::from(PADDING),
+                Shape::Borderless => 0,
+                Shape::Row => 1,
+            };
         // Left of the text, which starts `scroll` cells before the text area, the offset would be negative.
         let Some(offset) = (usize::from(column) + self.scroll.unwrap_or(0)).checked_sub(text_x) else {
             return 0;
@@ -582,27 +602,44 @@ impl TextInput {
     }
 
     fn draw(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
-        let styles = Styles::new(theme, under, focused, self.invalid, self.borderless);
-        let text = if self.borderless {
-            Rect { height: 1, ..area }
-        } else {
-            let border = TallBorder {
-                left: styles.left,
-                inner: styles.inner,
-                right: styles.right,
-                fill: styles.text,
-            };
-            border.draw(buf, area);
-
-            // The text row, between the border and the padding.
-            if area.height < 2 || area.width <= 2 * (PADDING + 1) {
-                return;
+        let transparent = self.shape == Shape::Borderless;
+        let mut styles = Styles::new(theme, under, focused, self.invalid, transparent);
+        let text = match self.shape {
+            Shape::Row => {
+                let row = Rect { height: 1, ..area };
+                buf.set_style(row, styles.text);
+                for position in row.positions() {
+                    buf[position].set_symbol(" ");
+                }
+                if self.invalid {
+                    styles.placeholder = styles.invalid_placeholder;
+                }
+                Rect {
+                    x: row.x + 1,
+                    width: row.width.saturating_sub(2),
+                    ..row
+                }
             }
-            Rect {
-                x: area.x + 1 + PADDING,
-                y: area.y + 1,
-                width: area.width - 2 * (PADDING + 1),
-                height: 1,
+            Shape::Borderless => Rect { height: 1, ..area },
+            Shape::Tall => {
+                let border = TallBorder {
+                    left: styles.left,
+                    inner: styles.inner,
+                    right: styles.right,
+                    fill: styles.text,
+                };
+                border.draw(buf, area);
+
+                // The text row, between the border and the padding.
+                if area.height < 2 || area.width <= 2 * (PADDING + 1) {
+                    return;
+                }
+                Rect {
+                    x: area.x + 1 + PADDING,
+                    y: area.y + 1,
+                    width: area.width - 2 * (PADDING + 1),
+                    height: 1,
+                }
             }
         };
         let width = usize::from(text.width);
@@ -706,6 +743,8 @@ struct Styles {
     /// The text and the padding: `$foreground` on `$surface`, tinted `$foreground 5%` while focused.
     text: Style,
     placeholder: Style,
+    /// A one-row input's placeholder while invalid: in the error color.
+    invalid_placeholder: Style,
     /// `input--suggestion`: `$text-disabled`, or `dim` on the ANSI themes.
     suggestion: Style,
     cursor: Style,
@@ -756,6 +795,7 @@ impl Styles {
             return Self {
                 text,
                 placeholder: input.placeholder_style.apply(text),
+                invalid_placeholder: text.fg(theme.color(input.invalid, under)),
                 suggestion: input.placeholder_style.apply(text),
                 cursor: cursor(Paint::Ansi(AnsiColor::Default)),
                 selection: selection(Paint::Ansi(AnsiColor::Default)),
@@ -786,6 +826,7 @@ impl Styles {
         Self {
             text,
             placeholder,
+            invalid_placeholder: placeholder.fg(theme.color(roles.text.error, bg)),
             suggestion: placeholder,
             cursor: cursor(bg),
             selection: selection(bg),

@@ -271,7 +271,7 @@ fn edit_shows_only_with_the_body_focused_and_opens_the_dialog() {
     );
     app.press(&["E"]);
     assert_eq!(app.app().modals(), [crate::modal::ModalKind::EditIssue]);
-    app.press(&["escape"]);
+    app.press(&["escape", "escape"]);
     assert!(app.app().modals().is_empty());
     // `tab` again leaves the body: there are no stops inside the Overview.
     app.press(&["tab"]);
@@ -827,7 +827,7 @@ fn keys_work_before_a_large_body_lands() {
     // `E` edits the raw body, which is there already.
     app.press(&["E"]);
     assert_eq!(app.app().modals(), [crate::modal::ModalKind::EditIssue]);
-    app.press(&["escape"]);
+    app.press(&["escape", "escape"]);
     // The Comments tab shows its comments.
     app.press(&["5", "right"]);
     assert_eq!(tabs(&app).1, 1);

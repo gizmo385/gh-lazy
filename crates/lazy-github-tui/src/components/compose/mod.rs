@@ -11,6 +11,7 @@
 //! carries a [`ComposeAction`] for the keys the sheet shares.
 
 mod body;
+mod fields;
 mod layout;
 mod quote;
 
@@ -18,6 +19,7 @@ use crate::keymap::BindingId;
 use crate::modal::dialog_bindings;
 
 pub use body::{BodyMode, BodyMouse, ComposeBody};
+pub use fields::{LabelState, field_area, label_column, render_heading, render_label};
 pub use layout::{ComposeLayout, ComposeParts, SheetGeometry, SheetPlacement, sheet_geometry};
 pub use quote::Quote;
 

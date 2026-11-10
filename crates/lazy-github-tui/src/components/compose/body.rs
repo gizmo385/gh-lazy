@@ -91,6 +91,14 @@ impl ComposeBody {
         }
     }
 
+    /// The same body holding `text` (a prefilled template, or the description being edited), the cursor at its
+    /// start.
+    #[must_use]
+    pub fn with_text(mut self, text: &str) -> Self {
+        self.editor.set_text(text);
+        self
+    }
+
     /// The text as typed.
     pub fn text(&self) -> String {
         self.editor.text()

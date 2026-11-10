@@ -135,7 +135,7 @@ fn the_command_asks_for_the_repo_and_for_gh_only_when_unknown() {
 
     answer_gh(&mut app);
     answer_repo(&mut app, 0);
-    app.press(&["escape"]);
+    app.press(&["escape", "escape"]);
     assert!(app.app().modals().is_empty());
 
     // gh's version is known now: only the repo is asked for.
@@ -180,7 +180,7 @@ fn a_failed_gh_answer_is_unknown() {
 }
 
 #[tokio::test]
-async fn the_dialog_has_the_template_an_empty_title_and_the_scroll_area_focused() {
+async fn the_dialog_has_the_template_an_empty_title_and_the_title_focused() {
     let mut app = TestApp::with_github(Config::default(), gh());
     run_bug_report(&mut app);
     app.settle().await;
@@ -196,12 +196,17 @@ async fn the_dialog_has_the_template_an_empty_title_and_the_scroll_area_focused(
         .iter()
         .map(|item| format!("{} {}", item.key, item.description))
         .collect();
-    assert_eq!(footer, ["shift+⏎ Submit", "q Close"]);
+    assert_eq!(
+        footer,
+        ["^s Save", "shift+⏎ Save", "^t Preview", "^o Expand", "esc Leave"]
+    );
     let screen = app.screen(160, 48);
-    assert!(screen.contains("Current repo: gizmo385/gh-lazy"), "{screen}");
+    // The sheet, as tall as it may be with the template, covers the header's end; its heading names the repo.
+    assert!(screen.contains("Current repo: gizmo385/gh-la"), "{screen}");
+    assert!(screen.contains("New issue · gizmo385/gh-lazy"), "{screen}");
 
     // Cancel keeps the repo selected.
-    app.press(&["escape"]);
+    app.press(&["escape", "escape"]);
     assert!(app.app().modals().is_empty());
     assert_eq!(current(&app), Some(LAZY_GITHUB_REPO));
 }
@@ -296,7 +301,7 @@ fn a_created_issue_goes_to_the_issues_table_and_opens() {
     let mut app = TestApp::with_github(Config::default(), gh().with_created_issue(Ok(created)));
     run_bug_report(&mut app);
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
-    app.press(&["tab", "B"]);
+    app.press(&["B"]);
     app.press(&["shift+enter"]);
     futures_util::FutureExt::now_or_never(app.settle()).expect("the fake answers at once");
     assert!(app.app().modals().is_empty());

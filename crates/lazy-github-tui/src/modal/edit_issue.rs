@@ -1,6 +1,7 @@
-//! The Edit issue dialog (`issue.edit`): the issue's title, a Status select and its description in a scroll area,
-//! then Save and Cancel. It saves the issue itself and closes with the updated one. Python's `EditIssueModal` around
-//! an `EditIssueContainer`.
+//! The Edit issue dialog (`issue.edit`), on the compose sheet (decision compose-dialogs): a heading, the issue's
+//! title and a Status select as one-row fields, and its description under the `Description  Write  Preview` tabs,
+//! with the footer's keys for Save and Close. It saves the issue itself and closes with the updated one. Python's
+//! `EditIssueModal` around an `EditIssueContainer`.
 
 use crossterm::event::{KeyEvent, MouseEvent};
 use lazy_github_core::github::IssueUpdate;
@@ -8,23 +9,14 @@ use lazy_github_core::models::Issue;
 use ratatui::Frame;
 use ratatui::layout::Rect;
 
-use super::issue_form::{EditorHeight, IssueForm};
-use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind, dialog_bindings};
+use super::issue_form::IssueForm;
+use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind};
 use crate::action::Action;
-use crate::component::{ChainLink, Component, Cx, RenderCx};
-use crate::components::button::Pressed;
+use crate::component::{BindingState, ChainLink, Component, Cx, RenderCx};
+use crate::components::compose::{COMPOSE_BINDINGS, ComposeAction};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::toast::Toast;
-
-/// The dialog's screen bindings, in Python's order: the modal's `modal.close`, then `modal.submit`.
-pub(crate) const EDIT_ISSUE_BINDINGS: &[BindingId] = dialog_bindings![ModalClose, ModalSubmit];
-
-/// `EditIssueModal > EditIssueContainer { width: 100; height: 30 }`, border included.
-const SIZE: (u16, u16) = (100, 30);
-
-/// `#updated_issue_body { height: 15 }`.
-const EDITOR_ROWS: u16 = 15;
 
 /// How long "Updating issue #N..." shows: Python's `timeout=1`.
 const UPDATING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
@@ -32,10 +24,8 @@ const UPDATING_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(1);
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum EditIssueAction {
-    /// `modal.submit` or Save: save the issue.
-    Submit,
-    /// `modal.close` or Cancel: close with nothing, cancelling a request in flight.
-    Close,
+    /// One of the sheet's shared keys.
+    Compose(ComposeAction),
 }
 
 /// The Edit issue dialog for one issue. Its output is the updated issue, or `None` when it was closed.
@@ -52,14 +42,14 @@ pub struct EditIssueDialog {
 
 impl EditIssueDialog {
     /// A dialog for `issue`, its title, state and body filled in (an issue without a body gives an empty editor),
-    /// with the scroll area focused.
+    /// with the title focused.
     pub fn new(issue: Box<Issue>) -> Self {
+        let heading = format!("Edit issue #{} · {}", issue.number, issue.repo.full_name);
         let form = IssueForm::new(
             ModalKind::EditIssue,
-            Self::pressed,
+            heading,
             &issue.title,
             issue.body.as_deref().unwrap_or_default(),
-            EditorHeight::Rows(EDITOR_ROWS),
         )
         .with_status(issue.state);
         Self {
@@ -75,19 +65,12 @@ impl EditIssueDialog {
         self.pending.is_some()
     }
 
-    fn action(action: EditIssueAction) -> Action {
-        Action::Dialog(DialogAction::EditIssue(action))
+    fn action(action: ComposeAction) -> Action {
+        Action::Dialog(DialogAction::EditIssue(EditIssueAction::Compose(action)))
     }
 
-    fn pressed(button: Pressed) -> Action {
-        Self::action(match button {
-            Pressed::Submit => EditIssueAction::Submit,
-            Pressed::Cancel => EditIssueAction::Close,
-        })
-    }
-
-    /// Python's `submit_updated_issue`, with no checks: the toast, Save as "Saving..." and disabled (Py bug B69's
-    /// recommendation), and the request. A second submit waits for the first.
+    /// Python's `submit_updated_issue`, with no checks: the toast, `Saving…` in the heading with the submit keys
+    /// disabled (Py bug B69's recommendation), and the request. A second submit waits for the first.
     fn submit(&mut self, cx: &mut Cx<'_>) {
         if self.pending.is_some() {
             tracing::debug!("Ignoring an Edit issue submit: one is in flight");
@@ -120,15 +103,15 @@ impl Component for EditIssueDialog {
     type Action = EditIssueAction;
 
     fn bindings(&self) -> &'static [BindingId] {
-        EDIT_ISSUE_BINDINGS
+        COMPOSE_BINDINGS
     }
 
     fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
-        match id {
-            BindingId::ModalSubmit => Some(Self::action(EditIssueAction::Submit)),
-            BindingId::ModalClose => Some(Self::action(EditIssueAction::Close)),
-            _ => None,
-        }
+        self.form.compose_action(id).map(Self::action)
+    }
+
+    fn binding_state(&self, id: BindingId, _cx: &Cx<'_>) -> BindingState {
+        self.form.binding_state(id)
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
@@ -139,21 +122,21 @@ impl Component for EditIssueDialog {
         self.form.handle_key(key, cx)
     }
 
-    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, cx: &Cx<'_>) -> Option<Action> {
-        Some(self.form.handle_mouse(event, cx))
+    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, _cx: &Cx<'_>) -> Option<Action> {
+        Some(self.form.handle_mouse(event))
     }
 
     fn update(&mut self, action: EditIssueAction, cx: &mut Cx<'_>) {
+        let EditIssueAction::Compose(action) = action;
         match action {
-            EditIssueAction::Submit => self.submit(cx),
-            EditIssueAction::Close => self.close(cx),
+            ComposeAction::Submit => self.submit(cx),
+            ComposeAction::Close => self.close(cx),
+            other => self.form.update(other),
         }
     }
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
-        let theme = cx.theme;
-        let under = self.background(theme.roles()).over(theme.background());
-        self.form.render(frame, area, cx, under);
+        self.form.render(frame, area, cx);
     }
 }
 
@@ -175,8 +158,12 @@ impl Dialog for EditIssueDialog {
         self.form.move_focus(direction);
     }
 
-    fn size(&self, _available: Rect) -> (u16, u16) {
-        SIZE
+    fn size(&self, available: Rect) -> (u16, u16) {
+        self.form.size(available)
+    }
+
+    fn frame(&self, area: Rect) -> Rect {
+        self.form.frame(area)
     }
 
     fn take_output(&mut self) -> Option<Option<Box<Issue>>> {
@@ -187,8 +174,8 @@ impl Dialog for EditIssueDialog {
         self.form.field_chain()
     }
 
-    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
-        self.form.on_field_binding(field, id, cx)
+    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        self.form.on_field_binding(field, id)
     }
 
     fn captures_mouse(&self) -> bool {
@@ -211,16 +198,17 @@ impl Dialog for EditIssueDialog {
             return Some(response);
         };
         self.pending = None;
+        self.form.set_saving(false);
         let number = self.issue.number;
         match result {
             Ok(issue) => {
                 cx.notify(Toast::info(format!("Successfully updated issue #{number}")));
                 self.output = Some(Some(issue));
             }
-            // Python has no handling and crashes (Py bug B70): Save comes back and the dialog keeps the edits.
+            // Python has no handling and crashes (Py bug B70): the submit keys come back and the dialog keeps the
+            // edits.
             Err(error) => {
                 tracing::error!("Error updating issue #{number}: {error}");
-                self.form.set_saving(false);
                 cx.notify(Toast::error(format!("Could not update issue #{number}")).with_title("Error updating issue"));
             }
         }

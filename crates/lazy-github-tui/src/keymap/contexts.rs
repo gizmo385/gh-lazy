@@ -26,9 +26,8 @@ use crate::components::tabs::TABS_BINDINGS;
 use crate::components::tree::TREE_BINDINGS;
 use crate::modal::{
     ADD_COMMENT_BINDINGS, ADD_REACTION_BINDINGS, CONFIRM_BINDINGS, CONTAINER_BINDINGS, DEBUG_BINDINGS,
-    EDIT_ISSUE_BINDINGS, KEY_LIST_BINDINGS, LOOKUP_BINDINGS, NEW_ISSUE_BINDINGS, NOTIFICATIONS_BINDINGS,
-    PASTE_LINK_BINDINGS, PR_BINDINGS, PROFILE_BINDINGS, SEARCH_BINDINGS, SETTINGS_BINDINGS, TRIGGER_BINDINGS,
-    UNREAD_BINDINGS,
+    KEY_LIST_BINDINGS, LOOKUP_BINDINGS, NOTIFICATIONS_BINDINGS, PASTE_LINK_BINDINGS, PR_BINDINGS, PROFILE_BINDINGS,
+    SEARCH_BINDINGS, SETTINGS_BINDINGS, TRIGGER_BINDINGS, UNREAD_BINDINGS,
 };
 use crate::screens::main::{
     CONVERSATION_BINDINGS, ISSUE_COMMENTS_BINDINGS, ISSUE_OVERVIEW_BINDINGS, JOBS_BINDINGS, LOG_BINDINGS,
@@ -168,12 +167,17 @@ pub const KEY_CONTEXTS: &[KeyContext] = &[
     dialog!("Confirm dialog", BUTTON_BINDINGS, CONFIRM_BINDINGS),
     dialog!("Lookup dialog", SWITCH_BINDINGS, LOOKUP_BINDINGS),
     dialog!("Lookup dialog", BUTTON_BINDINGS, LOOKUP_BINDINGS),
-    dialog!("New issue dialog", INFO_BINDINGS, NEW_ISSUE_BINDINGS),
-    dialog!("New issue dialog", SELECT_BINDINGS, NEW_ISSUE_BINDINGS),
-    dialog!("New issue dialog", BUTTON_BINDINGS, NEW_ISSUE_BINDINGS),
-    dialog!("Edit issue dialog", INFO_BINDINGS, EDIT_ISSUE_BINDINGS),
-    dialog!("Edit issue dialog", SELECT_BINDINGS, EDIT_ISSUE_BINDINGS),
-    dialog!("Edit issue dialog", BUTTON_BINDINGS, EDIT_ISSUE_BINDINGS),
+    // Compose sheets with a field left (`escape`), and Edit issue's closed Status select. The title and the body
+    // type, so they aren't contexts.
+    KeyContext {
+        name: "New issue dialog",
+        links: &[COMPOSE_BINDINGS],
+    },
+    KeyContext {
+        name: "Edit issue dialog",
+        links: &[COMPOSE_BINDINGS],
+    },
+    dialog!("Edit issue dialog", SELECT_BINDINGS, COMPOSE_BINDINGS),
     dialog!("Pull request dialog", INFO_BINDINGS, PR_BINDINGS),
     dialog!("Pull request dialog", SWITCH_BINDINGS, PR_BINDINGS),
     dialog!("Pull request dialog", SELECTION_LIST_BINDINGS, PR_BINDINGS),

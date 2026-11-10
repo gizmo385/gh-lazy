@@ -284,6 +284,10 @@ impl Owner {
                 Owner::Screen(ScreenKind::Modal(ModalKind::NewComment)),
                 BindingId::ComposeSubmit | BindingId::ModalSubmit,
             ) => Some("Post"),
+            (
+                Owner::Screen(ScreenKind::Modal(ModalKind::NewIssue | ModalKind::EditIssue)),
+                BindingId::ComposeSubmit | BindingId::ModalSubmit,
+            ) => Some("Save"),
             _ => None,
         }
     }

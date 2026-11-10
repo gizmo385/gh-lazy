@@ -364,7 +364,6 @@ fn a_new_issue() {
         || {
             let mut app = selected();
             app.dispatch(Action::Main(MainAction::NewIssue));
-            app.press(&["tab"]);
             type_text(&mut app, "Title");
             app
         },

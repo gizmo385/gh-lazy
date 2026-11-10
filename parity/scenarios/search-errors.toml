@@ -18,6 +18,11 @@ keys = ["enter"]
 [[step]]
 wait = { text = "Current repo: parity-bot/pr-details", timeout_ms = 15000 }
 
+# The Issues table's page (no issues, only pull requests) settles its pane before the modal opens over it: the panes'
+# heights depend on it, so a capture taken while it was still loading drew the panes behind the modal differently.
+[[step]]
+wait = { text = "[3] Issues (empty)", timeout_ms = 15000 }
+
 [[step]]
 keys = ["2"]
 

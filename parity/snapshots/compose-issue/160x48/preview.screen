@@ -46,9 +46,9 @@ cursor 0 0 hidden
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 └──────────────────────────────────────────────────────────────┘│                                                                                              │
-┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                 ▌                                                            │
-│ Time  Result  Job Name  Run Name  Run #                      ││                                 ▌ Must have a non-empty issue title!                         │
-└──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
  ^s Save  shift+⏎ Save  ^t Write  ^o Expand  esc Leave
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -95,10 +95,10 @@ u..............................................................uc...............
 u..............................................................uc..............................................................................................c
 u..............................................................uc..............................................................................................c
 uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuc..............................................................................................c
-cccccccccccccccccBBBBBBBccccccccccccccccccccccccccccccccccccccccc.................................CDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.c
-cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc.................................CDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD.c
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDcc
-EEEEFFFFFEEEEEEEEEFFFFFEEEEFFFFFFEEEEFFFFFFFEEEEEFFFFFFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+cccccccccccccccccBBBBBBBccccccccccccccccccccccccccccccccccccccccc..............................................................................................c
+cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc..............................................................................................c
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+CCCCDDDDDCCCCCCCCCDDDDDCCCCDDDDDDCCCCDDDDDDDCCCCCDDDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 --- legend
 . fg=#646464 bg=#121212
 a fg=#0a263a bg=#121212
@@ -129,8 +129,6 @@ y fg=#0a1e2c bg=#1a1a1a inverse
 z fg=#0a1e2c bg=#0a0a0a
 A fg=#646464 bg=#0a0a0a
 B fg=#2a3c50 bg=#121212
-C fg=#b93c5b bg=#343f49
-D fg=#e0e0e0 bg=#343f49
-E fg=#ffa62b bg=#242f38 bold
-F fg=#e0e0e0 bg=#242f38
-G bg=#242f38
+C fg=#ffa62b bg=#242f38 bold
+D fg=#e0e0e0 bg=#242f38
+E bg=#242f38

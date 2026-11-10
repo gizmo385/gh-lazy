@@ -28,9 +28,9 @@ cursor 0 0 hidden
 │                                      ││                                                          │
 │                                      ││                                                          │
 └──────────────────────────────────────┘│                                                          │
-┌─ [4] Workflows (empty) ──────────────┐│        ▌                                                 │
-│                               ▋      ││        ▌ Must have a non-empty issue title!              │
-└──────────────────────────────────────┘└────────▌                                                ─┘
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
  ^s Save  shift+⏎ Save  ^t Preview  ^o Expand  esc Leave
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
@@ -59,10 +59,10 @@ A......................................Ac.......................................
 A......................................Ac..........................................................c
 A......................................Ac..........................................................c
 AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAc..........................................................c
-cccccccccccccccccIIIIIIIccccccccccccccccc........JKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-cfffffffffffffffffffffffffffffffnlllloocc........JKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK.c
-cccccccccccccccccccccccccccccccccccccccccccccccccJKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKcc
-LLLLMMMMMLLLLLLLLLMMMMMLLLLMMMMMMMMLLLLMMMMMMMLLLLLMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+cccccccccccccccccIIIIIIIccccccccccccccccc..........................................................c
+cfffffffffffffffffffffffffffffffnlllloocc..........................................................c
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+JJJJKKKKKJJJJJJJJJKKKKKJJJJKKKKKKKKJJJJKKKKKKKJJJJJKKKKKKLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 --- legend
 . fg=#646464 bg=#121212
 a fg=#0a263a bg=#121212
@@ -100,8 +100,6 @@ F fg=#63696e bg=#0b3a5f bold
 G fg=#646464 bg=#1a1a1a
 H fg=#0a1e2c bg=#1a1a1a inverse
 I fg=#2a3c50 bg=#121212
-J fg=#b93c5b bg=#343f49
-K fg=#e0e0e0 bg=#343f49
-L fg=#ffa62b bg=#242f38 bold
-M fg=#e0e0e0 bg=#242f38
-N bg=#242f38
+J fg=#ffa62b bg=#242f38 bold
+K fg=#e0e0e0 bg=#242f38
+L bg=#242f38

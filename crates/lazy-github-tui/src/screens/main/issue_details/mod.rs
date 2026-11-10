@@ -12,7 +12,7 @@ use ratatui::layout::{Position, Rect};
 use tokio::time::Instant;
 
 use crate::action::Action;
-use crate::component::{ChainLink, Cx, Owner};
+use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
 use crate::components::info::Scroll;
 use crate::components::markdown::Markdown;
@@ -27,8 +27,9 @@ pub(crate) use comments::ISSUE_COMMENTS_BINDINGS;
 pub(super) use comments::IssueComments;
 pub(super) use overview::IssueOverview;
 
-/// `IssueOverviewTabPane.BINDINGS`: edit (#181), in the footer while the Overview's content has focus.
-pub const ISSUE_OVERVIEW_BINDINGS: &[BindingId] = &[BindingId::IssueEdit];
+/// `IssueOverviewTabPane.BINDINGS`: edit (#181), then the Rust-only jump to the milestone's issues (#410), in the
+/// footer while the Overview's content has focus.
+pub const ISSUE_OVERVIEW_BINDINGS: &[BindingId] = &[BindingId::IssueEdit, BindingId::IssueMilestone];
 
 /// The two tabs, in strip order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -178,6 +179,16 @@ impl DetailsBody for IssueDetails {
         match IssueTab::at(tab) {
             IssueTab::Overview => vec![ChainLink::new(Owner::IssueOverview, ISSUE_OVERVIEW_BINDINGS)],
             IssueTab::Comments => self.comments.chain(),
+        }
+    }
+
+    /// The milestone jump is hidden, and claims no key, while the issue has no milestone.
+    fn binding_state(&self, tab: usize, owner: Owner, id: BindingId) -> BindingState {
+        match (IssueTab::at(tab), owner, id) {
+            (IssueTab::Overview, Owner::IssueOverview, BindingId::IssueMilestone) if self.issue.milestone.is_none() => {
+                BindingState::Hidden
+            }
+            _ => BindingState::Enabled,
         }
     }
 

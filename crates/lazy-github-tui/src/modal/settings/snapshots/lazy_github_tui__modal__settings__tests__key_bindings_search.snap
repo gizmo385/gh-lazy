@@ -29,7 +29,7 @@ expression: "app.screen(160, 48)"
 │                             █    New Issue                  I                 issue.new                                        █                             │
 │                             █    Edit Issue                 E                 issue.edit                                       █                             │
 │                             █    Lookup Issue               O                 issue.lookup                                     █                             │
-│                             █                                                                                                  █ting in any activate         │
+│                             █    Milestone                  m                 issue.milestone                                  █ting in any activate         │
 └─────────────────────────────█                                                                                                  █itself. This means that you  │
 ┌─ [3] Issues ────────────────█                                                                                                  █                             │
 │ #  Status  Author  Title    █                                                                                                  █                             │

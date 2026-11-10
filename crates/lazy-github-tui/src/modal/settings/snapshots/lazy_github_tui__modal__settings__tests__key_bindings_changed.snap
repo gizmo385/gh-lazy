@@ -21,7 +21,7 @@ expression: "app.screen(160, 48)"
 │                             █ General                                                                                          █                             │
 │                             █    Quit                       q                 app.quit                                         █                             │
 │                             █    Command Palette            ^p                app.command_palette                              █                             │
-└─────────────────────────────█ *  Maximize                   f2                app.maximize_widget                              █                             │
+└─────────────────────────────█ *  Maximize                   f2                app.maximize_widget                           ▁▁ █                             │
 ┌─ [2] Pull Requests ─────────█ *  Keybindings                ?, !              app.open_help                                    █PR diff, and participating   │
 │ #  Status  Author  Title    █    Notifications              ^n                notifications.open                               █reate a new PR for the       │
 │                             █    Paste link                 ^v                link.paste                                       █                             │

@@ -74,7 +74,7 @@ pub const BINDING_GROUPS: &[BindingGroup] = {
         },
         BindingGroup {
             title: "Issues",
-            ids: &[B::IssueNew, B::IssueEdit, B::IssueLookup],
+            ids: &[B::IssueNew, B::IssueEdit, B::IssueLookup, B::IssueMilestone],
         },
         BindingGroup {
             title: "Search",
@@ -152,8 +152,9 @@ mod tests {
             assert_eq!(count, expected, "{} is in {count} groups", id.def().name);
         }
         // Python's 59, the nine Rust-only diff ids (decisions diff-file-navigation and diff-inline-comments), `main.refresh` (decision
-        // cache-ttl-defaults-and-refresh), and `search.open` and `search.save_query` (decision search-issues-and-prs).
-        assert_eq!(grouped.len(), 71);
+        // cache-ttl-defaults-and-refresh), `search.open` and `search.save_query` (decision search-issues-and-prs), and
+        // `issue.milestone` (decision issue-milestone).
+        assert_eq!(grouped.len(), 72);
         assert!(grouped.iter().all(|id| !id.def().name.starts_with("textual.")));
     }
 }

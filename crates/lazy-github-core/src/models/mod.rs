@@ -23,7 +23,7 @@ pub use checks::{
     overall_state,
 };
 pub use comment::{CommentRef, IssueComment};
-pub use issue::{Issue, IssueListItem, IssueState, PartialPullRequest};
+pub use issue::{Issue, IssueListItem, IssueState, Milestone, PartialPullRequest};
 pub use notification::{Notification, NotificationSubject, SubjectNumber};
 pub use pull_request::{FullPullRequest, GitRef};
 pub use reaction::{Reaction, ReactionKind, Reactions};

@@ -128,6 +128,7 @@ pub(super) fn item(repo: &Repository, number: u64, kind: Kind) -> IssueListItem 
         comments_url: String::new(),
         html_url: String::new(),
         repo: repo.clone(),
+        milestone: None,
     };
     match kind {
         Kind::Issue | Kind::ClosedIssue => IssueListItem::Issue(issue),

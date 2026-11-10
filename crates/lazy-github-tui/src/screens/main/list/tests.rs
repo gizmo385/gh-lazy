@@ -135,6 +135,7 @@ fn issue(number: u64) -> IssueListItem {
         comments_url: String::new(),
         html_url: String::new(),
         repo: repo("octo", "lists", false),
+        milestone: None,
     })
 }
 

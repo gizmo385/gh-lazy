@@ -132,6 +132,9 @@ registry! {
     IssueEdit("issue.edit", "E", "edit_issue", "Edit Issue").tooltip("Edit the selected issue");
     IssueLookup("issue.lookup", "O", "lookup_issue", "Lookup Issue")
         .tooltip("Lookup an issue in the current repository");
+    // Rust-only (decision issue-milestone): the Issue Overview's jump to its milestone's issues in the Search modal.
+    IssueMilestone("issue.milestone", "m", "search_milestone", "Milestone")
+        .tooltip("Search the issues in this issue's milestone");
     PullRequestNew("pull_request.new", "P", "open_pull_request", "New PR")
         .tooltip("Open a new pull request in the current repository");
     // Fires only on a real ctrl+m (kitty keyboard protocol), never on Enter (Py bug B30).

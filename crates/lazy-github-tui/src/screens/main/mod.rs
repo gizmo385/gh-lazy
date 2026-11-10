@@ -407,6 +407,9 @@ pub enum MainAction {
     /// The palette's "Search: <query>": the Search modal over the last session with `search.saved_queries[index]` as
     /// its text, searched at once (#395).
     RunSavedSearch(usize),
+    /// `issue.milestone` on the Issue Overview: the Search modal over the last session with the issues of the shown
+    /// issue's milestone as its text, searched at once (#410). Nothing without a milestone.
+    SearchMilestone,
     /// The Search modal closed: its session is kept for the next open, and a hit chosen there opens in its repo
     /// ([`MainAction::OpenInRepo`]).
     SearchClosed(Box<SearchOutcome>),
@@ -1430,6 +1433,10 @@ impl MainScreen {
 
     /// What a binding matched at one of [`Self::binding_chain`]'s links means right now. `None` lets the key fall
     /// through to the next link.
+    #[allow(
+        clippy::too_many_lines,
+        reason = "a flat table with one arm per link, each handing off to its owner"
+    )]
     pub fn on_link_binding(&mut self, owner: Owner, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
         match owner {
             Owner::MainView => focus_key_target(id).map(Action::Focus),
@@ -1467,6 +1474,7 @@ impl MainScreen {
             Owner::IssueOverview if id == BindingId::IssueEdit => {
                 Some(Action::Main(MainAction::EditIssue(EditOrigin::Overview)))
             }
+            Owner::IssueOverview if id == BindingId::IssueMilestone => Some(Action::Main(MainAction::SearchMilestone)),
             Owner::PrOverview
             | Owner::IssueOverview
             | Owner::IssueComments
@@ -1541,7 +1549,7 @@ impl MainScreen {
     pub fn link_binding_state(&self, owner: Owner, id: BindingId, cx: &Cx<'_>) -> BindingState {
         match owner {
             Owner::Screen(ScreenKind::Main) => self.binding_state(id, cx),
-            Owner::DiffViewer | Owner::DiffBody => self.details.binding_state(owner, id),
+            Owner::DiffViewer | Owner::DiffBody | Owner::IssueOverview => self.details.binding_state(owner, id),
             _ => BindingState::Enabled,
         }
     }
@@ -1809,6 +1817,7 @@ impl Component for MainScreen {
             MainAction::OpenInRepo(request) => self.open_in_repo(*request, cx),
             MainAction::OpenSearch(origin) => self.open_search_modal(origin, cx),
             MainAction::RunSavedSearch(index) => self.run_saved_search(index, cx),
+            MainAction::SearchMilestone => self.search_milestone(cx),
             MainAction::SearchClosed(outcome) => self.search_closed(*outcome, cx),
             MainAction::OpenRepoItem { repo, item, origin } => self.open_repo_item(repo, item, origin, cx),
             MainAction::OpenPasteLink(text) => {
@@ -1940,9 +1949,27 @@ impl MainScreen {
             tracing::debug!(index, "No saved search query at this index");
             return;
         };
+        self.run_search(&query, cx);
+    }
+
+    /// `MainAction::SearchMilestone`: the shown issue's milestone, searched in the issue's own repo. Nothing when no
+    /// issue is shown or it has no milestone (the binding is hidden then).
+    fn search_milestone(&mut self, cx: &mut Cx<'_>) {
+        let Some(issue) = self.details.issue().map(issue_details::IssueDetails::issue) else {
+            return;
+        };
+        let Some(milestone) = &issue.milestone else {
+            return;
+        };
+        let query = milestone.search_query(&issue.repo.full_name);
+        self.run_search(&query, cx);
+    }
+
+    /// The modal over the last session (or a new one), its text replaced by `query` and searched at once.
+    fn run_search(&mut self, query: &str, cx: &mut Cx<'_>) {
         let session = self.search.take().unwrap_or_else(|| SearchSession::new(cx.options()));
         let mut dialog = SearchDialog::new(session, SearchOrigin::Palette, cx);
-        dialog.run_query(&query, cx);
+        dialog.run_query(query, cx);
         Self::show_search(dialog, cx);
     }
 

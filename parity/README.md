@@ -439,6 +439,11 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   2 s, a 500 on 9 (it crashes Python: Py bug B60). `GET .../issues/<n>` for 3 (not on the listed page), 8 (a pull
   request) and 12, and a 404 for 404. Listed before `base`, for the `issue-details` and `issue-lookup` scenarios.
   Hand-written.
+- `issue-milestone/`: issue-details' `GET /repos/parity-bot/issue-fixture/issues` page 1 with `milestone` set on
+  issues 12 and 9 (`v0.7`, number 2: open, due 2026-03-01, 2 open and 1 closed) and 10 (`v0.6`, number 1: closed, no
+  due date, 4 closed), `null` on 11 and pull request 8; and `GET /search/issues` page 1 for
+  `q=is:issue milestone:"v0.7" repo:parity-bot/issue-fixture`: issues 12, 9 and 3 (closed). Listed before
+  `issue-details` and `base`, for the Rust-only `issue-milestone` scenario (#410). Hand-written.
 - `links/`: what following GitHub links resolves, for the not-yet-built link scenarios (`link-hints`, `link-click`,
   `paste-link`). `GET /repos/<owner>/<repo>` for `parity-bot/issue-fixture` and `parity-bot/pr-details` (copied from
   their repo lists) and a 404 for `parity-bot/missing`; issue 7 of issue-fixture (the `#7` in issue 12's body) with no

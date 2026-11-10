@@ -926,3 +926,189 @@ mod gh_failures {
         );
     }
 }
+
+// The milestone line and `issue.milestone` (#410), against the `issue-milestone` fixtures: issue 12 in the open
+// milestone v0.7, issue 10 in the closed v0.6, issue 11 in none.
+
+mod milestone {
+    use lazy_github_core::github::{GithubCall, SearchHit, SearchPage};
+
+    use super::*;
+    use crate::component::BindingState;
+    use crate::modal::{ModalKind, SearchDialog, SearchOrigin};
+
+    const QUERY: &str = r#"is:issue milestone:"v0.7" repo:parity-bot/issue-fixture"#;
+
+    fn milestone_body(path: &str) -> Value {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/issue-milestone")
+            .join(path);
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        let fixture: Value = serde_json::from_str(&text).unwrap();
+        fixture["response"]["body"].clone()
+    }
+
+    fn milestone_page() -> Vec<IssueListItem> {
+        let page = milestone_body("repos/parity-bot/issue-fixture/issues/GET.page-1_per_page-30_state-all.json");
+        let repo = fixture_repo();
+        page.as_array()
+            .unwrap()
+            .iter()
+            .map(|item| IssueListItem::from_api_item(item.clone(), &repo).unwrap())
+            .collect()
+    }
+
+    fn search_page() -> SearchPage {
+        let body = milestone_body(
+            "search/issues/GET.advanced_search-true_page-1_per_page-50_q-is-issue-milestone--v0.7--repo-parity--c879.json",
+        );
+        SearchPage {
+            total_count: body["total_count"].as_u64().unwrap(),
+            incomplete_results: body["incomplete_results"].as_bool().unwrap(),
+            items: body["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|item| SearchHit::from_api_item(item.clone()).unwrap())
+                .collect(),
+        }
+    }
+
+    /// The app with the milestoned issues listed, the issue `moves` rows below 12 selected.
+    fn selected(moves: usize) -> TestApp {
+        let gh = gh()
+            .with_list_page("parity-bot/issue-fixture", 1, milestone_page())
+            .with_search_page(Ok(search_page()));
+        let mut app = TestApp::with_github(Config::default(), gh);
+        app.press(&["enter"]);
+        settle(&mut app);
+        app.press(&["3"]);
+        for _ in 0..moves {
+            app.press(&["j"]);
+        }
+        app.press(&["enter"]);
+        settle(&mut app);
+        app
+    }
+
+    fn searches(app: &TestApp) -> Vec<String> {
+        app.gh()
+            .calls()
+            .into_iter()
+            .filter_map(|call| match call {
+                GithubCall::SearchIssues(query) => Some(query.q().unwrap()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn dialog(app: &TestApp) -> &SearchDialog {
+        app.app()
+            .top_dialog::<SearchDialog>()
+            .expect("the Search modal is open")
+    }
+
+    #[test]
+    fn the_binding_is_hidden_without_a_milestone() {
+        let mut app = selected(0);
+        assert_eq!(
+            app.app_mut()
+                .binding_state(Owner::IssueOverview, BindingId::IssueMilestone),
+            BindingState::Enabled
+        );
+        // Issue 11 has none.
+        let mut app = selected(1);
+        assert_eq!(shown_issue(&app), Some(11));
+        assert_eq!(
+            app.app_mut()
+                .binding_state(Owner::IssueOverview, BindingId::IssueMilestone),
+            BindingState::Hidden
+        );
+    }
+
+    #[test]
+    fn the_footer_shows_m_with_the_content_focused() {
+        let mut app = selected(0);
+        assert!(!footer(&mut app).contains("m Milestone"));
+        app.press(&["tab"]);
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        let line = footer(&mut app);
+        assert!(
+            line.starts_with(" E Edit Issue  m Milestone  ^v Paste link  f Follow link"),
+            "{line}"
+        );
+        // Not on the Comments tab.
+        app.press(&["5", "right", "tab"]);
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        assert!(!footer(&mut app).contains("m Milestone"));
+    }
+
+    #[test]
+    fn m_searches_the_milestone_and_focus_comes_back() {
+        let mut app = selected(0);
+        app.press(&["tab", "m"]);
+        assert_eq!(app.app().modals(), [ModalKind::Search]);
+        assert!(app.effects().iter().any(|effect| matches!(
+            effect,
+            Effect::Github { request: GithubRequest::SearchIssues(query), .. } if query.text == QUERY
+        )));
+        settle(&mut app);
+        app.render(160, 48);
+        let dialog = dialog(&app);
+        assert_eq!(dialog.text(), QUERY);
+        assert!(dialog.scope_disabled());
+        assert_eq!(dialog.status_line(), "3 results · Scope from the query");
+        assert!(dialog.table_focused());
+        assert_eq!(searches(&app), [QUERY]);
+        app.press(&["escape"]);
+        assert!(app.app().modals().is_empty());
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        assert_eq!(shown_issue(&app), Some(12));
+    }
+
+    #[test]
+    fn m_replaces_the_last_session_text() {
+        let mut app = selected(0);
+        app.dispatch(Action::Main(MainAction::OpenSearch(SearchOrigin::Issues)));
+        app.send(Event::Paste("label:bug".into()));
+        assert!(dialog(&app).text().ends_with("label:bug"), "{}", dialog(&app).text());
+        // Escape leaves the query box, then q closes.
+        app.press(&["escape", "q"]);
+        assert!(app.app().modals().is_empty());
+        app.press(&["5", "tab", "m"]);
+        assert_eq!(dialog(&app).text(), QUERY);
+    }
+
+    #[test]
+    fn m_without_a_milestone_does_nothing() {
+        let mut app = selected(1);
+        app.press(&["tab"]);
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        let before = app.effects().len();
+        app.press(&["m"]);
+        assert!(app.app().modals().is_empty());
+        assert_eq!(app.effects().len(), before);
+        assert!(searches(&app).is_empty());
+    }
+
+    #[test]
+    fn issue_overview_milestone_content_focused() {
+        let mut app = selected(0);
+        app.press(&["tab"]);
+        insta::assert_snapshot!(app.screen(160, 48));
+    }
+
+    #[test]
+    fn issue_overview_milestone_100x30() {
+        let mut app = selected(0);
+        insta::assert_snapshot!(app.screen(100, 30));
+    }
+
+    #[test]
+    fn issue_overview_closed_milestone() {
+        let mut app = selected(2);
+        assert_eq!(shown_issue(&app), Some(10));
+        let screen = app.screen(160, 48);
+        assert!(screen.contains("│Milestone: v0.6 • closed • 4 of 4 closed"), "{screen}");
+    }
+}

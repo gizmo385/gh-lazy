@@ -2701,6 +2701,7 @@ mod tests {
             comments_url: String::new(),
             html_url: String::new(),
             repo: repo(name),
+            milestone: None,
         };
         let comment = IssueComment {
             id: 70,

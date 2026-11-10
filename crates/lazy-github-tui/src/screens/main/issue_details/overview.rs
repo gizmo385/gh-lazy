@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use lazy_github_core::models::{Issue, IssueState};
+use lazy_github_core::models::{Issue, IssueState, Milestone};
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::style::Modifier;
+use ratatui::style::{Modifier, Style};
 
 use crate::component::Cx;
 use crate::components::command_log::Wheel;
@@ -153,11 +153,44 @@ fn overview(issue: &Issue, markdown: Option<&Markdown>, width: u16, theme: &Them
         TextRun::link(issue.user.login.as_str(), link, issue.user.html_url.as_str()),
     ];
     push_label(&mut out, &header, width);
+    if let Some(milestone) = &issue.milestone {
+        push_label(&mut out, &milestone_line(milestone, text, link, theme), width);
+    }
     push_rule(&mut out, width, theme);
     if let Some(markdown) = markdown {
         append(&mut out, markdown.layout(width, theme));
     }
     out
+}
+
+/// `Milestone: <title> • <state> • due <date> • <closed> of <total> closed`, the due date and counts left out when
+/// GitHub has none.
+fn milestone_line(milestone: &Milestone, text: Style, link: Style, theme: &Theme) -> Vec<TextRun> {
+    const SEPARATOR: &str = " • ";
+    let state = match milestone.state {
+        IssueState::Open => mark(theme, theme.roles().marks.positive),
+        IssueState::Closed => mark(theme, theme.roles().marks.merged),
+    };
+    let mut runs = vec![
+        TextRun::new("Milestone: ", text),
+        TextRun::link(milestone.title.as_str(), link, milestone.html_url.as_str()),
+        TextRun::new(SEPARATOR, text),
+        TextRun::new(milestone.state.as_str(), state),
+    ];
+    if let Some(due_on) = milestone.due_on {
+        // `Timestamp::strftime` formats in UTC, the day GitHub stores.
+        runs.push(TextRun::new(SEPARATOR, text));
+        runs.push(TextRun::new(format!("due {}", due_on.strftime("%Y-%m-%d")), text));
+    }
+    let total = milestone.open_issues + milestone.closed_issues;
+    if total > 0 {
+        runs.push(TextRun::new(SEPARATOR, text));
+        runs.push(TextRun::new(
+            format!("{} of {total} closed", milestone.closed_issues),
+            text,
+        ));
+    }
+    runs
 }
 
 #[cfg(test)]
@@ -285,8 +318,15 @@ mod tests {
     #[test]
     fn taller_than_agrees_with_the_layout() {
         let theme = Theme::default();
-        let issue = Arc::new(fixture_issue(12));
-        let parsed = source(&issue).map(|source| source.parse());
+        // Without a milestone, and with one (a header line more).
+        for issue in [fixture_issue(12), with_milestone(fixture_issue(12), v07())] {
+            let issue = Arc::new(issue);
+            taller_than_agrees(&issue, &theme);
+        }
+    }
+
+    fn taller_than_agrees(issue: &Arc<Issue>, theme: &Theme) {
+        let parsed = source(issue).map(|source| source.parse());
         assert!(parsed.is_some());
         // Parsed, and still parsing (the header alone).
         for markdown in [
@@ -294,20 +334,20 @@ mod tests {
             Some(OverviewMarkdown::Parsing(RequestId::new(1))),
         ] {
             let mut body = Body {
-                issue: Arc::clone(&issue),
+                issue: Arc::clone(issue),
                 markdown,
                 layouts: LayoutCache::default(),
             };
             for width in [0, 1, 5, 40, 158] {
-                let height = body.layout(width, &theme).lines.len();
+                let height = body.layout(width, theme).lines.len();
                 let mut rows = vec![0, height, height + 1];
                 rows.extend(height.checked_sub(1));
                 for rows in rows {
                     // From the cache, then without it.
-                    body.layout(width, &theme);
-                    assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                    body.layout(width, theme);
+                    assert_eq!(body.taller_than(width, rows, theme), height > rows, "{width} {rows}");
                     body.layouts.clear();
-                    assert_eq!(body.taller_than(width, rows, &theme), height > rows, "{width} {rows}");
+                    assert_eq!(body.taller_than(width, rows, theme), height > rows, "{width} {rows}");
                 }
             }
         }
@@ -320,5 +360,117 @@ mod tests {
             ["Open Crash when the config file is empty", "(#12) by parity-friend", ""]
         );
         assert!(render(fixture_issue(12), 0).lines.is_empty());
+    }
+
+    fn v07() -> Milestone {
+        Milestone {
+            number: 2,
+            title: "v0.7".into(),
+            state: IssueState::Open,
+            due_on: Some("2026-03-01T08:00:00Z".parse().unwrap()),
+            open_issues: 2,
+            closed_issues: 1,
+            html_url: "https://github.com/parity-bot/issue-fixture/milestone/2".into(),
+        }
+    }
+
+    fn with_milestone(mut issue: Issue, milestone: Milestone) -> Issue {
+        issue.milestone = Some(milestone);
+        issue
+    }
+
+    #[test]
+    fn an_open_milestone_with_a_due_date() {
+        let theme = Theme::default();
+        let rendered = render(with_milestone(fixture_issue(12), v07()), 94);
+        assert_eq!(
+            text(&rendered)[..4],
+            [
+                "Open Crash when the config file is empty (#12) by parity-friend",
+                "Milestone: v0.7 • open • due 2026-03-01 • 1 of 3 closed",
+                "",
+                &"─".repeat(94),
+            ]
+        );
+        let line = &rendered.lines[1].spans;
+        let span = |content: &str| line.iter().find(|span| span.content == content).unwrap();
+        assert!(span("v0.7").style.add_modifier.contains(Modifier::UNDERLINED));
+        assert_eq!(
+            span("open").style.fg,
+            Some(theme.color(theme.roles().marks.positive, theme.background()))
+        );
+        assert!(!span("Milestone: ").style.add_modifier.contains(Modifier::UNDERLINED));
+        let links: Vec<(usize, &str)> = rendered
+            .links
+            .iter()
+            .filter(|link| link.row == 1)
+            .map(|link| (link.row, &*link.target))
+            .collect();
+        assert_eq!(links, [(1, "https://github.com/parity-bot/issue-fixture/milestone/2")]);
+    }
+
+    #[test]
+    fn a_closed_milestone_without_a_due_date() {
+        let theme = Theme::default();
+        let milestone = Milestone {
+            number: 1,
+            title: "v0.6".into(),
+            state: IssueState::Closed,
+            due_on: None,
+            open_issues: 0,
+            closed_issues: 4,
+            html_url: "https://github.com/parity-bot/issue-fixture/milestone/1".into(),
+        };
+        let rendered = render(with_milestone(fixture_issue(11), milestone), 94);
+        assert_eq!(
+            text(&rendered),
+            [
+                "Closed Closed without a body (#11) by parity-bot",
+                "Milestone: v0.6 • closed • 4 of 4 closed",
+                "",
+                &"─".repeat(94),
+                "",
+            ]
+        );
+        let state = rendered.lines[1]
+            .spans
+            .iter()
+            .find(|span| span.content == "closed")
+            .unwrap();
+        assert_eq!(
+            state.style.fg,
+            Some(theme.color(theme.roles().marks.merged, theme.background()))
+        );
+    }
+
+    #[test]
+    fn empty_counts_are_left_out() {
+        let mut milestone = v07();
+        milestone.open_issues = 0;
+        milestone.closed_issues = 0;
+        milestone.due_on = None;
+        let rendered = render(with_milestone(fixture_issue(12), milestone), 94);
+        assert_eq!(text(&rendered)[1], "Milestone: v0.7 • open");
+    }
+
+    #[test]
+    fn no_milestone_draws_as_before() {
+        let issue = fixture_issue(12);
+        assert_eq!(issue.milestone, None);
+        assert!(!text(&render(issue, 94)).iter().any(|line| line.contains("Milestone")));
+    }
+
+    #[test]
+    fn the_milestone_line_wraps_at_the_width() {
+        assert_eq!(
+            text(&render(with_milestone(fixture_issue(12), v07()), 40))[..5],
+            [
+                "Open Crash when the config file is empty",
+                "(#12) by parity-friend",
+                "Milestone: v0.7 • open • due 2026-03-01",
+                "• 1 of 3 closed",
+                "",
+            ]
+        );
     }
 }

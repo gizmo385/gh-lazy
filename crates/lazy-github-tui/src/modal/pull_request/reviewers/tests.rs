@@ -267,14 +267,14 @@ fn an_unknown_user_toasts_with_the_login_in_yellow_and_keeps_the_text() {
 fn a_found_user_is_listed_checked_and_the_input_cleared() {
     let mut h = Harness::new(&[]);
     assert_eq!(h.field.focus_stops(), [ReviewersFocus::Input]);
-    let empty = h.field.height();
+    assert_eq!((h.field.height(false, 40), h.field.height(true, 40)), (1, 1));
     h.add(&["parity-friend"]);
     assert_eq!(h.field.reviewers(), ["parity-friend"]);
     assert!(h.field.list.is_selected(0));
     assert_eq!(h.field.input_value(), "");
     assert_eq!(h.field.focus_stops(), [ReviewersFocus::Input, ReviewersFocus::List]);
-    // The list's label and the list: one row and a bordered row.
-    assert_eq!(h.field.height(), empty + 1 + 3);
+    // Expanded, a row of items under the input; collapsed, still one row.
+    assert_eq!((h.field.height(false, 40), h.field.height(true, 40)), (1, 2));
 }
 
 #[test]
@@ -360,7 +360,7 @@ fn removing_the_last_reviewer_hides_the_list() {
         }
     );
     assert_eq!(h.field.focus_stops(), [ReviewersFocus::Input]);
-    assert_eq!(h.field.height(), 4);
+    assert_eq!(h.field.height(true, 40), 1);
 }
 
 #[test]
@@ -413,34 +413,91 @@ fn press_at(column: u16, row: u16) -> MouseEvent {
 fn a_click_on_a_reviewer_removes_it_and_one_on_the_input_focuses_it() {
     let mut h = Harness::new(&[]);
     h.add(&["alice", "bob"]);
-    let area = Rect::new(0, 0, 40, h.field.height());
-    let theme = Theme::default();
-    let mut buf = Buffer::empty(area);
-    h.field.render(&mut buf, area, &theme, theme.background(), None);
-    // Rows: label, input (1-3), list label (4), list border (5), alice (6), bob (7).
+    let _ = draw_at(&mut h.field, 40, Some(ReviewersFocus::Input));
+    // Rows: the label and the input (0), the items (1): `alice ✕` from column 11, `bob ✕` from 21.
     assert_eq!(
-        h.field.handle_mouse(&press_at(8, 7), area),
+        h.field.handle_mouse(&press_at(22, 1)),
         ReviewersOutcome::Removed {
             login: "bob".into(),
             emptied: false
         }
     );
+    // Between the items, and on the label, nothing.
+    assert_eq!(h.field.handle_mouse(&press_at(18, 1)), ReviewersOutcome::Ignored);
+    assert_eq!(h.field.handle_mouse(&press_at(2, 0)), ReviewersOutcome::Ignored);
     assert_eq!(
-        h.field.handle_mouse(&press_at(8, 2), area),
+        h.field.handle_mouse(&press_at(14, 0)),
         ReviewersOutcome::Focus(ReviewersFocus::Input)
     );
     assert!(h.field.is_selecting());
-    assert_eq!(h.field.handle_mouse(&press_at(8, 0), area), ReviewersOutcome::Ignored);
+}
+
+#[test]
+fn a_click_on_the_collapsed_summary_focuses_the_input() {
+    let mut h = Harness::new(&[]);
+    h.add(&["alice"]);
+    let _ = draw_at(&mut h.field, 40, None);
+    assert_eq!(
+        h.field.handle_mouse(&press_at(2, 0)),
+        ReviewersOutcome::Focus(ReviewersFocus::Input)
+    );
+    assert_eq!(h.field.reviewers(), ["alice"]);
+}
+
+#[test]
+fn the_summary_names_the_reviewers_or_none() {
+    let mut h = Harness::new(&[]);
+    assert_eq!(h.field.summary(), "none");
+    h.add(&["alice"]);
+    assert_eq!(h.field.summary(), "alice");
+    h.add(&["bob", "carol"]);
+    assert_eq!(h.field.summary(), "alice, bob, carol");
+    assert_eq!(
+        draw_at(&mut h.field, 50, None).lines().next().unwrap().trim_end(),
+        "Reviewers  alice, bob, carol  (tab to edit)"
+    );
+}
+
+#[test]
+fn the_items_wrap_before_one_that_doesnt_fit() {
+    let mut h = Harness::new(&[]);
+    h.add(&["parity-reviewer", "parity-friend", "octocat"]);
+    // 29 columns of items: `parity-reviewer ✕` (17) and the gap leave 9, too few for `parity-friend ✕`.
+    assert_eq!(h.field.height(true, 29), 3);
+    assert_eq!(h.field.rows(ReviewersFocus::List, 29), 1..3);
+    let screen = draw_at(&mut h.field, 40, Some(ReviewersFocus::List));
+    let rows: Vec<&str> = screen.lines().map(str::trim_end).collect();
+    assert_eq!(
+        rows,
+        [
+            "Reviewers   Reviewer to add",
+            "           parity-reviewer ✕",
+            "           parity-friend ✕   octocat ✕",
+        ]
+    );
 }
 
 // Drawing.
 
-fn draw(field: &mut ReviewersField, focus: Option<ReviewersFocus>) -> String {
+/// The field drawn `width` columns wide with `focus`, as text.
+fn draw_at(field: &mut ReviewersField, width: u16, focus: Option<ReviewersFocus>) -> String {
     let theme = Theme::default();
-    let area = Rect::new(0, 0, 50, field.height());
+    let area = Rect::new(0, 0, width, field.height(focus.is_some(), width - 11));
     let mut buf = Buffer::empty(area);
     let under = theme.roles().surface.dialog.over(theme.background());
-    field.render(&mut buf, area, &theme, under, focus);
+    field.render(&mut buf, area, 11, &theme, under, focus);
+    (0..area.height)
+        .map(|y| (0..width).map(|x| buf[(x, y)].symbol()).collect::<String>())
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn draw(field: &mut ReviewersField, focus: Option<ReviewersFocus>) -> String {
+    let theme = Theme::default();
+    let area = Rect::new(0, 0, 50, field.height(focus.is_some(), 39));
+    let mut buf = Buffer::empty(area);
+    let under = theme.roles().surface.dialog.over(theme.background());
+    field.render(&mut buf, area, 11, &theme, under, focus);
     buffer_to_styled_string(&buf)
 }
 

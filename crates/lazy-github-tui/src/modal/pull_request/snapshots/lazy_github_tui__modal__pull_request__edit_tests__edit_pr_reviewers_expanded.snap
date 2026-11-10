@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/modal/pull_request/edit_tests.rs
+expression: "app.screen(160, 48)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] parity-bot/pr-details Details ──────────────────────────────────────────────────────────┐
+│ ★  Owner       Name        Private                           ││ Repo Overview                                                                                │
+│ ☆  parity-bot  pr-details  ✘                                 ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                                                              ││parity-bot/pr-details • Public                                                                │
+│                                                              ││Owned by parity-bot                                                                           │
+│                                                              ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││Pull requests with checks, reviews, reactions, comments and diffs, for the PR details tabs.   │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+│                                                              ││                                                                                              │
+│                                                              ││  No README found.                                                                            │
+│                             █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+│                             █ Editing PR 5 · parity-bot/pr-details                                                             █                             │
+│                             █                                                                                                  █                             │
+│                             █ Base        main                           ← Compare  cursor                           Draft [ ] █                             │
+│                             █ Title       Add a cursor to the viewer                                                           █                             │
+│                             █                                                                                                  █                             │
+└─────────────────────────────█ Description  Write   Preview  ────────────────────────────────────────────────────────────────── █                             │
+┌─ [2] Pull Requests ─────────█  1  Adds a cursor to the viewer, as discussed in #3.                                             █                             │
+│ #  Status  Author         Ti█  2                                                                                               █                             │
+│ 5  open    parity-friend  Ad█  3  - `j` and `k` move it                                                                        █                             │
+│ 4  closed  parity-bot     Dr█  4  - the current line is marked with `>`                                                        █                             │
+│ 3  closed  parity-bot     Re█  5                                                                                               █                             │
+│ 2  open    parity-friend  Tr█  6  Thanks @parity-bot for the first review!                                                     █                             │
+│                             █  7                                                                                               █                             │
+│                             █                                                                                                  █                             │
+│                             █ Reviewers   Reviewer to add                                                                      █                             │
+│                             █            parity-reviewer ✕                                                                     █                             │
+│                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues (empty) ─────────────────────────────────────────┐│                                                                                              │
+│ #  Status  Author  Title                                     ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^s Update  shift+⏎ Update  ^t Preview  ^o Expand  q Leave

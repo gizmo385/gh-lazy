@@ -92,7 +92,7 @@ impl PullRequestDialog {
             self.draft.value(),
             self.base.value(),
             self.compare.value(),
-            &self.description.text(),
+            &self.body.text(),
         );
         self.submit = Some(Submit::Creating(cx.request(GithubRequest::CreatePullRequest {
             repo: Box::new(self.repo.clone()),
@@ -119,7 +119,7 @@ impl PullRequestDialog {
         }
         cx.notify(Toast::info("Updating PR..."));
         let title = self.title.value().to_owned();
-        let body = self.description.text();
+        let body = self.body.text();
         let unchanged = pr.pr.issue.title == title && pr.pr.issue.body.as_deref() == Some(body.as_str());
         let mut edited = pr;
         edited.pr.issue.title.clone_from(&title);

@@ -1,17 +1,19 @@
-//! Create PR and Edit PR: one dialog with a heading, the Base / Compare / Draft row, a title, a code editor for the
-//! description, the Reviewers field and Create (Update) / Cancel, all in a scroll area. Python's
-//! `CreateOrEditPullRequestModal` around a `CreateOrEditPullRequestContainer`. Edit PR prefills everything from the
-//! pull request and disables the branch row.
+//! Create PR and Edit PR, on the compose sheet (decision compose-dialogs): a heading naming the repo, the upstream
+//! warning when it applies, the one-row Base / Compare / Draft row, the Title, the description under its
+//! `Description  Write  Preview` tabs, and the Reviewers section, which is one row until it has focus. Python's
+//! `CreateOrEditPullRequestModal` around a `CreateOrEditPullRequestContainer`, whose fixed 30-row editor, tall inputs,
+//! rules and button row the sheet replaces. Edit PR prefills everything from the pull request and disables the branch
+//! row.
 //!
-//! The whole interior scrolls (the container is the `VerticalScroll`, with `padding: 1`), so the buttons are below
-//! the fold until focus or the wheel brings them up. The dialog has no footer of its own.
+//! The sheet is as tall as its parts and grows with the description up to the screen less the footer and a margin
+//! row; only then does the description scroll. The dialog shows its own footer: submit (`ctrl+s`, `shift+enter`),
+//! Preview, Expand, and `escape`, which leaves a field, then closes from the sheet.
 
 mod draft;
 mod layout;
 mod reviewers;
 mod submit;
 
-use std::borrow::Cow;
 use std::ops::Range;
 
 use crossterm::event::{KeyEvent, MouseButton, MouseEvent, MouseEventKind};
@@ -20,21 +22,24 @@ use lazy_github_core::models::{Branch, FullPullRequest, Repository};
 use ratatui::Frame;
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Margin, Position, Rect};
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 
 use self::draft::DraftFile;
-use self::layout::{BranchColumns, FormRows, Part};
+use self::layout::{BranchColumns, SheetRows};
 use self::submit::{BranchFollowUp, Submit};
 use super::form::FormScroll;
-use super::{Dialog, DialogAction, FieldKind, FocusMove, FocusRing, ModalKind, dialog_bindings, mark};
+use super::{Dialog, DialogAction, FieldKind, FocusMove, ModalKind, mark};
 use crate::action::Action;
-use crate::component::{ChainLink, Component, Cx, RenderCx};
-use crate::components::button::{ButtonMouse, ButtonRow, Pressed};
-use crate::components::command_log::{WHEEL_ROWS, Wheel};
-use crate::components::info::Scroll;
+use crate::component::{BindingState, ChainLink, Component, Cx, RenderCx};
+use crate::components::command_log::Wheel;
+use crate::components::compose::{
+    BodyMode, BodyMouse, COMPOSE_BINDINGS, ComposeAction, ComposeBody, ComposeLayout, ComposeParts, LabelState,
+    SheetGeometry, SheetPlacement, field_area, render_heading, render_label, sheet_geometry,
+};
+use crate::components::disabled;
 use crate::components::switch::Switch;
-use crate::components::text_editor::{EditorOutcome, EditorVariant, TextEditor};
+use crate::components::text_editor::{EditorOutcome, EditorVariant};
 use crate::components::text_input::{InputOutcome, TextInput};
 use crate::effect::{Effect, GitRequest, GitResponse, GithubRequest, GithubResponse, RequestId, TimerId};
 use crate::gh_health::report_unhandled;
@@ -43,34 +48,27 @@ use crate::theme::{Paint, Theme};
 
 pub use reviewers::{ReviewersField, ReviewersFocus, ReviewersOutcome, removing_toast};
 
-/// `CreateOrEditPullRequestContainer { width: 100 }`, border included.
-const WIDTH: u16 = 100;
+/// The dialog's screen bindings: the compose sheet's.
+pub(crate) const PR_BINDINGS: &[BindingId] = COMPOSE_BINDINGS;
 
-/// `height: 80%` of the screen less the margins, rounded down as Textual does.
-const HEIGHT_PERCENT: u16 = 80;
-
-/// The container's `margin: 1`.
-const MARGIN: u16 = 1;
-
-/// The container's `padding: 1`, inside which the content scrolls and the scrollbar sits.
-const PADDING: u16 = 1;
+/// The sheet's widest.
+const MAX_WIDTH: u16 = 100;
+/// A description's body is at least this tall.
+const BODY_MIN_ROWS: u16 = 5;
 
 const CREATE_HEADING: &str = "New Pull Request";
 const BASE_PLACEHOLDER: &str = "Choose a base ref";
 const COMPARE_PLACEHOLDER: &str = "Choose a head ref";
+const TITLE_PLACEHOLDER: &str = "Title";
+const DESCRIPTION_PLACEHOLDER: &str = "Describe the change (markdown)";
 const WARNING: &str = "Warning:";
 const NO_UPSTREAM: &str = " Current local branch has no configured upstream";
-
-/// The dialog's screen bindings: the container's `modal.submit`, then the modal's `modal.close`.
-pub(crate) const PR_BINDINGS: &[BindingId] = dialog_bindings![ModalSubmit, ModalClose];
 
 /// The dialog's own actions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PullRequestAction {
-    /// `modal.submit`, Create or Update: check the fields and create or update the pull request.
-    Submit,
-    /// `modal.close` or Cancel: close with nothing.
-    Close,
+    /// One of the sheet's shared keys. Its submit checks the fields and creates or updates the pull request.
+    Compose(ComposeAction),
     /// `enter` in the Reviewers input: look the login up.
     AddReviewer,
     /// Title, Base, Compare or the description changed: Python's `Input.Changed` / `TextArea.Changed` handlers,
@@ -117,30 +115,24 @@ pub struct PullRequestForm {
     pub reviewers: Vec<String>,
 }
 
-/// The dialog's focusable fields, in screen order.
+/// Where the dialog's focus is: one of its fields, in screen order, or the sheet itself after `escape` left one.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PrField {
-    /// The scroll area itself, which Textual's `VerticalScroll` makes focusable.
-    Scroll,
+    Sheet,
     Base,
     Compare,
     Draft,
     Title,
     Description,
     Reviewers(ReviewersFocus),
-    /// Create (Update in Edit PR).
-    Submit,
-    Cancel,
 }
 
-impl PrField {
-    fn button(self) -> Option<Pressed> {
-        match self {
-            PrField::Submit => Some(Pressed::Submit),
-            PrField::Cancel => Some(Pressed::Cancel),
-            _ => None,
-        }
-    }
+/// Where the branch row and the title were last drawn, in the interior's content coordinates, for presses.
+#[derive(Debug, Clone, Copy, Default)]
+struct Drawn {
+    branches: Option<BranchColumns>,
+    title_row: Rect,
+    title: Rect,
 }
 
 /// The Create PR or Edit PR dialog for one repo. Its output is the created or updated pull request, or `None` when
@@ -149,15 +141,23 @@ impl PrField {
 pub struct PullRequestDialog {
     repo: Repository,
     mode: Mode,
-    ring: FocusRing<PrField>,
+    focus: PrField,
     base: TextInput,
     compare: TextInput,
     draft: Switch,
     title: TextInput,
-    description: TextEditor,
+    body: ComposeBody,
     reviewers: ReviewersField,
-    buttons: ButtonRow,
+    /// `compose.expand`: the sheet fills the screen above the footer.
+    expanded: bool,
+    placement: SheetPlacement,
+    /// The interior, which scrolls (without a bar) only on a screen too short for even the parts' minimum.
     scroll: FormScroll,
+    /// Bring the focused part into view at the next draw, after a focus change or an edit.
+    reveal: bool,
+    /// The theme of the last draw, which [`Dialog::frame`] measures the description in.
+    theme: Option<Theme>,
+    drawn: Drawn,
     /// Whether the current-directory branch has no upstream: the warning row shows.
     upstream_warning: bool,
     /// The branches request, until it answers.
@@ -183,12 +183,10 @@ impl PullRequestDialog {
     /// and whether the current-directory branch, if git named one, has an upstream. It also reads the repo's saved
     /// draft, which fills the form in over `prefill` when it loads.
     pub fn create(repo: Repository, prefill: CreatePrefill, cx: &mut Cx<'_>) -> Self {
-        let mut base = TextInput::new(BASE_PLACEHOLDER);
+        let mut base = TextInput::new(BASE_PLACEHOLDER).one_row();
         base.set_value(prefill.base);
-        let mut compare = TextInput::new(COMPARE_PLACEHOLDER);
+        let mut compare = TextInput::new(COMPARE_PLACEHOLDER).one_row();
         compare.set_value(prefill.compare.unwrap_or_default());
-        let mut reviewers = ReviewersField::new(&cx.config().pull_requests.additional_suggested_pr_reviewers);
-        reviewers.load(&repo, cx);
         let branches_request = Some(cx.request(GithubRequest::ListBranchesUncached {
             repo: Box::new(repo.clone()),
         }));
@@ -197,29 +195,18 @@ impl PullRequestDialog {
             .map(str::to_owned)
             .map(|branch| cx.git(GitRequest::HasUpstream { branch }));
         let draft_file = Some(DraftFile::open(&repo.full_name, cx));
-        let mut dialog = Self {
+        let mut dialog = Self::new(
             repo,
-            mode: Mode::Create,
-            ring: FocusRing::new([]),
+            Mode::Create,
             base,
             compare,
-            draft: Switch::new(false),
-            title: TextInput::new("Title"),
-            description: TextEditor::new(EditorVariant::Code, &prefill.description),
-            reviewers,
-            buttons: ButtonRow::new("Create"),
-            scroll: FormScroll::default(),
-            upstream_warning: false,
-            branches_request,
-            upstream_request,
-            requested_request: None,
-            submit: None,
-            follow_up: BranchFollowUp::default(),
-            draft_file,
-            output: None,
-        };
-        dialog.sync_ring();
-        dialog.focus(PrField::Title);
+            Switch::new(false),
+            &prefill.description,
+            cx,
+        );
+        dialog.branches_request = branches_request;
+        dialog.upstream_request = upstream_request;
+        dialog.draft_file = draft_file;
         dialog
     }
 
@@ -228,47 +215,70 @@ impl PullRequestDialog {
     /// already requested, who are listed when they arrive.
     pub fn edit(pr: Box<FullPullRequest>, cx: &mut Cx<'_>) -> Self {
         let repo = pr.pr.issue.repo.clone();
-        let mut base = TextInput::new(BASE_PLACEHOLDER);
+        let mut base = TextInput::new(BASE_PLACEHOLDER).one_row();
         base.set_value(pr.base.name.clone());
-        base.set_disabled(true);
-        let mut compare = TextInput::new(COMPARE_PLACEHOLDER);
+        let mut compare = TextInput::new(COMPARE_PLACEHOLDER).one_row();
         compare.set_value(pr.head.name.clone());
-        compare.set_disabled(true);
-        let mut draft = Switch::new(pr.pr.draft);
-        draft.set_disabled(true);
-        let mut title = TextInput::new("Title");
-        title.set_value(pr.pr.issue.title.clone());
-        let description = TextEditor::new(EditorVariant::Code, pr.pr.issue.body.as_deref().unwrap_or_default());
-        let mut reviewers = ReviewersField::new(&cx.config().pull_requests.additional_suggested_pr_reviewers);
-        reviewers.load(&repo, cx);
+        let draft = Switch::new(pr.pr.draft);
         let requested_request = Some(cx.request(GithubRequest::RequestedReviewers {
             repo: Box::new(repo.clone()),
             number: pr.number(),
         }));
-        let mut dialog = Self {
+        let (title, body) = (pr.pr.issue.title.clone(), pr.pr.issue.body.clone());
+        let mut dialog = Self::new(
             repo,
-            mode: Mode::Edit(pr),
-            ring: FocusRing::new([]),
+            Mode::Edit(pr),
             base,
             compare,
             draft,
-            title,
-            description,
+            body.as_deref().unwrap_or_default(),
+            cx,
+        );
+        dialog.title.set_value(title);
+        dialog.requested_request = requested_request;
+        // The prefilled title is selected, as focusing it selects it.
+        dialog.title.select_all();
+        dialog
+    }
+
+    /// The parts both modes share, the description holding `description`, with the title focused and the
+    /// collaborators asked for.
+    fn new(
+        repo: Repository,
+        mode: Mode,
+        base: TextInput,
+        compare: TextInput,
+        draft: Switch,
+        description: &str,
+        cx: &mut Cx<'_>,
+    ) -> Self {
+        let mut reviewers = ReviewersField::new(&cx.config().pull_requests.additional_suggested_pr_reviewers);
+        reviewers.load(&repo, cx);
+        Self {
+            repo,
+            mode,
+            focus: PrField::Title,
+            base,
+            compare,
+            draft,
+            title: TextInput::new(TITLE_PLACEHOLDER).one_row(),
+            body: ComposeBody::new(EditorVariant::Code, DESCRIPTION_PLACEHOLDER, BODY_MIN_ROWS).with_text(description),
             reviewers,
-            buttons: ButtonRow::new("Update"),
-            scroll: FormScroll::default(),
+            expanded: false,
+            placement: SheetPlacement::default(),
+            scroll: FormScroll::without_scrollbar(),
+            reveal: true,
+            theme: None,
+            drawn: Drawn::default(),
             upstream_warning: false,
             branches_request: None,
             upstream_request: None,
-            requested_request,
+            requested_request: None,
             submit: None,
             follow_up: BranchFollowUp::default(),
             draft_file: None,
             output: None,
-        };
-        dialog.sync_ring();
-        dialog.focus(PrField::Title);
-        dialog
+        }
     }
 
     /// The repo the pull request is for.
@@ -280,7 +290,7 @@ impl PullRequestDialog {
     pub fn form(&self) -> PullRequestForm {
         PullRequestForm {
             title: self.title.value().to_owned(),
-            description: self.description.text(),
+            description: self.body.text(),
             base_ref: self.base.value().to_owned(),
             head_ref: self.compare.value().to_owned(),
             is_draft: self.draft.value(),
@@ -291,14 +301,14 @@ impl PullRequestDialog {
     /// Fills the form in from `form` (a restored draft, #186), over the prefills. Reviewers already listed stay.
     pub fn restore(&mut self, form: PullRequestForm) {
         self.title.set_value(form.title);
-        self.description.set_text(&form.description);
+        self.body.set_text(&form.description);
         self.base.set_value(form.base_ref);
         self.compare.set_value(form.head_ref);
         if self.draft.value() != form.is_draft {
             self.draft.toggle();
         }
         self.reviewers.add_existing(form.reviewers);
-        self.sync_ring();
+        self.reveal = true;
     }
 
     /// Whether the upstream warning shows.
@@ -310,24 +320,26 @@ impl PullRequestDialog {
         Action::Dialog(DialogAction::PullRequest(action))
     }
 
-    fn pressed(button: Pressed) -> Action {
-        Self::action(match button {
-            Pressed::Submit => PullRequestAction::Submit,
-            Pressed::Cancel => PullRequestAction::Close,
-        })
+    /// The heading: what's being written, and in which repo.
+    fn heading(&self) -> String {
+        match &self.mode {
+            Mode::Create => format!("{CREATE_HEADING} · {}", self.repo.full_name),
+            Mode::Edit(pr) => format!("Editing PR {} · {}", pr.number(), self.repo.full_name),
+        }
     }
 
-    fn heading(&self) -> Cow<'static, str> {
-        match &self.mode {
-            Mode::Create => Cow::Borrowed(CREATE_HEADING),
-            Mode::Edit(pr) => Cow::Owned(format!("Editing PR {}", pr.number())),
+    /// What submitting does, which names the submit keys and, in flight, ends the heading.
+    fn verb(&self) -> (&'static str, &'static str) {
+        match self.mode {
+            Mode::Create => ("Create", "Creating…"),
+            Mode::Edit(_) => ("Update", "Updating…"),
         }
     }
 
     /// The fields in screen order: the branch row's only while it's enabled (Create PR), and the Reviewers field's
     /// list while anyone is listed.
     fn order(&self) -> Vec<PrField> {
-        let mut order = vec![PrField::Scroll];
+        let mut order = Vec::with_capacity(7);
         if matches!(self.mode, Mode::Create) {
             order.extend([PrField::Base, PrField::Compare, PrField::Draft]);
         }
@@ -338,36 +350,59 @@ impl PullRequestDialog {
                 .iter()
                 .map(|&focus| PrField::Reviewers(focus)),
         );
-        order.extend([PrField::Submit, PrField::Cancel]);
         order
     }
 
-    fn sync_ring(&mut self) {
-        let order = self.order();
-        self.ring.set_order(order);
+    /// The Reviewers part with focus, while it has it: the section is expanded then.
+    fn reviewers_focus(&self) -> Option<ReviewersFocus> {
+        match self.focus {
+            PrField::Reviewers(focus) => Some(focus),
+            _ => None,
+        }
     }
 
-    /// The form as it is now.
-    fn rows(&self) -> FormRows {
-        FormRows::new(self.upstream_warning, self.reviewers.height())
+    /// The sheet's background, which its text and markdown sit on.
+    fn under(theme: &Theme) -> Paint {
+        theme.roles().surface.dialog.over(theme.background())
     }
 
-    /// The rows `field` takes, and with its margins, for Textual's scroll when it gains focus.
-    fn field_rows(&self, field: PrField, rows: &FormRows) -> Option<(Range<u16>, Range<u16>)> {
-        let with_bottom = |range: Range<u16>, below: u16| (range.clone(), range.start..range.end + below);
-        match field {
-            PrField::Scroll => None,
-            PrField::Base | PrField::Compare | PrField::Draft => rows.rows(Part::Branches).map(|r| with_bottom(r, 0)),
-            // `#pr_title` and `#pr_description` have `margin-bottom: 1`.
-            PrField::Title => rows.rows(Part::Title).map(|r| with_bottom(r, 1)),
-            PrField::Description => rows.rows(Part::Description).map(|r| with_bottom(r, 1)),
+    /// The sheet's limits on `screen` and its parts' rows, measured in `theme`.
+    fn sheet(&self, screen: Rect, theme: &Theme) -> (SheetGeometry, SheetRows) {
+        let geometry = sheet_geometry(screen, MAX_WIDTH, self.expanded);
+        let width = geometry.content_width;
+        let parts = ComposeParts {
+            quote: u16::from(self.upstream_warning),
+            fields: 2,
+            body_needed: self.body.rows_needed(width, theme, Self::under(theme)),
+            body_min: self.body.min_rows(),
+            sections: self
+                .reviewers
+                .height(self.reviewers_focus().is_some(), reviewer_items_width(width)),
+        };
+        let layout = ComposeLayout::new(&parts, geometry.room(), self.expanded);
+        (geometry, SheetRows { layout })
+    }
+
+    /// The frame's outer size on `screen`: as tall as the parts, up to the most the screen allows.
+    fn sheet_size(&self, screen: Rect) -> (u16, u16) {
+        let theme = self.theme.unwrap_or_default();
+        let (geometry, rows) = self.sheet(screen, &theme);
+        (geometry.width, rows.layout.height.min(geometry.room()) + 2)
+    }
+
+    /// The rows the focused part takes, in a sheet laid out as `rows` with its parts `width` columns wide.
+    fn focused_rows(&self, rows: &SheetRows, width: u16) -> Option<Range<u16>> {
+        let row = |y: u16| y..y + 1;
+        match self.focus {
+            PrField::Sheet => None,
+            PrField::Base | PrField::Compare | PrField::Draft => Some(row(rows.branches())),
+            PrField::Title => Some(row(rows.title())),
+            PrField::Description => Some(rows.layout.tabs..rows.layout.body.end),
             PrField::Reviewers(focus) => {
-                let top = rows.rows(Part::Reviewers)?.start;
-                let inner = self.reviewers.rows(focus);
-                Some(with_bottom(top + inner.start..top + inner.end, 0))
+                let top = rows.reviewers().start;
+                let inner = self.reviewers.rows(focus, reviewer_items_width(width));
+                Some(top + inner.start..top + inner.end)
             }
-            // A button's `margin: 1` fills its row's block.
-            PrField::Submit | PrField::Cancel => rows.rows(Part::Buttons).map(|r| (r.start + 1..r.end - 1, r)),
         }
     }
 
@@ -381,7 +416,7 @@ impl PullRequestDialog {
         }
     }
 
-    /// Textual's `Length(minimum=1)` on `field`'s input: the red border follows the latest check.
+    /// Textual's `Length(minimum=1)` on `field`'s input: the label's error color follows the latest check.
     fn validate(&mut self, field: PrField) -> bool {
         self.input_mut(field).is_none_or(|input| {
             let valid = !input.value().is_empty();
@@ -390,20 +425,18 @@ impl PullRequestDialog {
         })
     }
 
-    /// Moves focus with `f`. An input that loses focus is checked (Textual validates on blur); a field that gains it
-    /// is scrolled into view, an input selects its text (`select_on_focus`) and the editor starts a new undo batch.
-    fn refocus(&mut self, f: impl FnOnce(&mut FocusRing<PrField>)) {
-        self.sync_ring();
-        let before = self.ring.focused();
-        f(&mut self.ring);
-        let Some(field) = self.ring.focused().filter(|&field| Some(field) != before) else {
+    /// Moves focus to `field`. An input that loses focus is checked (Textual validates on blur); a field that gains it
+    /// is brought into view, an input selects its text (`select_on_focus`) and the editor starts a new undo batch.
+    fn focus_field(&mut self, field: PrField) {
+        self.reveal = true;
+        let before = self.focus;
+        if field == before {
             return;
-        };
-        if let Some(before) = before {
-            self.validate(before);
         }
+        self.validate(before);
+        self.focus = field;
         match field {
-            PrField::Description => self.description.focus_gained(),
+            PrField::Description => self.body.focus_gained(),
             PrField::Reviewers(focus) => self.reviewers.focus_gained(focus),
             other => {
                 if let Some(input) = self.input_mut(other) {
@@ -411,15 +444,6 @@ impl PullRequestDialog {
                 }
             }
         }
-        if let Some((rows, with_margin)) = self.field_rows(field, &self.rows()) {
-            self.scroll.center(rows, with_margin);
-        }
-    }
-
-    fn focus(&mut self, field: PrField) {
-        self.refocus(|ring| {
-            ring.focus(field);
-        });
     }
 
     /// Edits `field`'s input with `edit`, checking it when the text changed (Textual's `Input.Changed`) or was
@@ -449,22 +473,21 @@ impl PullRequestDialog {
             ReviewersOutcome::Submitted => Some(Self::action(PullRequestAction::AddReviewer)),
             ReviewersOutcome::Copied(text) => Some(Action::Copy(text)),
             ReviewersOutcome::Focus(focus) => {
-                self.focus(PrField::Reviewers(focus));
+                self.focus_field(PrField::Reviewers(focus));
                 Some(Action::Consumed)
             }
             ReviewersOutcome::Removed { login, emptied } => {
-                self.sync_ring();
                 if emptied {
-                    self.focus(PrField::Reviewers(ReviewersFocus::Input));
+                    self.focus_field(PrField::Reviewers(ReviewersFocus::Input));
                 } else if clicked {
-                    self.focus(PrField::Reviewers(ReviewersFocus::List));
+                    self.focus_field(PrField::Reviewers(ReviewersFocus::List));
                 }
                 Some(Action::Notify(removing_toast(&login)))
             }
         }
     }
 
-    /// The one way the dialog closes without a pull request: `modal.close` or Cancel. Requests in flight are
+    /// The one way the dialog closes without a pull request: `modal.close` from the sheet. Requests in flight are
     /// cancelled. Create PR saves its draft first.
     fn close(&mut self, cx: &mut Cx<'_>) {
         self.save_draft(cx);
@@ -494,102 +517,198 @@ impl PullRequestDialog {
         }
     }
 
-    /// A wheel notch at `(column, row)`: the editor scrolls if it's under the pointer and can, else the form does.
-    fn wheel(&mut self, wheel: Wheel, column: u16, row: u16) {
-        let rows = match wheel {
-            Wheel::Up => -WHEEL_ROWS.cast_signed(),
-            Wheel::Down => WHEEL_ROWS.cast_signed(),
-            Wheel::Left | Wheel::Right => return,
-        };
-        let over_editor = self
-            .rows()
-            .rows(Part::Description)
-            .is_some_and(|editor| self.scroll.shows_at(editor, column, row));
-        if !(over_editor && self.description.scroll(rows)) {
-            self.scroll.wheel(wheel);
-        }
-    }
-
-    /// A left press in the interior: the field under it takes focus (and the press, for the text fields and the
-    /// switch), or the scroll area itself does.
+    /// A left press, in the interior's content coordinates: the field under it takes focus, and the press, for the
+    /// text fields and the switch. Edit PR's branch row is disabled, so a press there does nothing. Returns the
+    /// action a press on the Reviewers section gives (a removal's toast).
     fn press(&mut self, event: MouseEvent) -> Option<Action> {
-        let content = self.scroll.content();
-        let row = self
-            .scroll
-            .content_row(event.row)
-            .filter(|_| (content.x..content.right()).contains(&event.column));
-        let rows = self.rows();
-        let moved = self.scroll.to_content(event);
-        let at = Position::new(moved.column, moved.row);
-        match row.and_then(|row| rows.part_at(row)) {
-            // Edit PR's branch row is disabled: a press there lands on the scroll area, as Textual focuses the nearest
-            // focusable ancestor of a disabled widget.
-            Some(Part::Branches) if matches!(self.mode, Mode::Edit(_)) => self.focus(PrField::Scroll),
-            Some(Part::Branches) => {
-                let columns = BranchColumns::new(rows.area(Part::Branches, content));
-                if columns.base.contains(at) {
-                    self.focus(PrField::Base);
-                    self.base.press(columns.base, moved.column);
-                } else if columns.compare.contains(at) {
-                    self.focus(PrField::Compare);
-                    self.compare.press(columns.compare, moved.column);
-                } else if self.draft.handle_mouse(&moved, columns.draft) {
-                    self.focus(PrField::Draft);
-                } else {
-                    self.focus(PrField::Scroll);
-                }
+        let at = Position::new(event.column, event.row);
+        if let Some(columns) = self.drawn.branches.filter(|_| matches!(self.mode, Mode::Create)) {
+            if columns.base.contains(at) {
+                self.focus_field(PrField::Base);
+                self.base.press(columns.base, event.column);
+                return None;
             }
-            Some(Part::Title) => {
-                self.focus(PrField::Title);
-                self.title.press(rows.area(Part::Title, content), moved.column);
+            if columns.compare.contains(at) {
+                self.focus_field(PrField::Compare);
+                self.compare.press(columns.compare, event.column);
+                return None;
             }
-            Some(Part::Description) => {
-                self.focus(PrField::Description);
-                self.description.press(moved.column, moved.row);
+            if self.draft.handle_mouse(&event, columns.draft) {
+                self.focus_field(PrField::Draft);
+                return None;
             }
-            Some(Part::Reviewers) => {
-                let outcome = self.reviewers.handle_mouse(&moved, rows.area(Part::Reviewers, content));
-                if outcome == ReviewersOutcome::Ignored {
-                    self.focus(PrField::Scroll);
-                } else {
-                    return self.on_reviewers(outcome, true);
-                }
-            }
-            _ => self.focus(PrField::Scroll),
         }
-        Some(Action::Consumed)
+        if self.drawn.title_row.contains(at) {
+            self.focus_field(PrField::Title);
+            if self.drawn.title.contains(at) {
+                self.title.press(self.drawn.title, event.column);
+            }
+            return None;
+        }
+        match self.reviewers.handle_mouse(&event) {
+            ReviewersOutcome::Ignored => None,
+            outcome => self.on_reviewers(outcome, true),
+        }
     }
+}
+
+/// The branch row's fields, borrowed for drawing.
+struct BranchRow<'a> {
+    base: &'a mut TextInput,
+    compare: &'a mut TextInput,
+    draft: &'a Switch,
+    /// The focused field, unless the row is disabled.
+    focus: Option<PrField>,
+    /// Edit PR's: the branches can't change.
+    disabled: bool,
+}
+
+impl BranchRow<'_> {
+    /// Draws `Base <base> ← Compare <head>  Draft [ ]` into `area` over the sheet's background `under`, and returns
+    /// where each part went.
+    fn render(self, buf: &mut Buffer, area: Rect, label_column: u16, theme: &Theme, under: Paint) -> BranchColumns {
+        let columns = BranchColumns::new(area, label_column);
+        let is = |field: PrField| self.focus == Some(field);
+        let base_label = label_state(is(PrField::Base), self.base.is_invalid());
+        render_label(
+            buf,
+            columns.base_label,
+            label_column,
+            layout::BASE_LABEL,
+            base_label,
+            theme,
+            under,
+        );
+        self.base.render(buf, columns.base, theme, under, is(PrField::Base));
+        // ` ← Compare `: the arrow in the labels' plain color, then the label, which follows the field's state.
+        let compare_label = label_state(is(PrField::Compare), self.compare.is_invalid());
+        let arrow = columns.compare_label;
+        render_label(
+            buf,
+            arrow,
+            arrow.width,
+            layout::COMPARE_ARROW,
+            LabelState::Plain,
+            theme,
+            under,
+        );
+        let after = layout::text_width(layout::COMPARE_ARROW);
+        let compare = field_area(arrow, after);
+        render_label(
+            buf,
+            compare,
+            compare.width,
+            layout::COMPARE_LABEL,
+            compare_label,
+            theme,
+            under,
+        );
+        self.compare
+            .render(buf, columns.compare, theme, under, is(PrField::Compare));
+        let draft = field_area(columns.draft_label, layout::DRAFT_GAP);
+        let draft_label = label_state(is(PrField::Draft), false);
+        render_label(buf, draft, draft.width, layout::DRAFT_LABEL, draft_label, theme, under);
+        self.draft
+            .render_compact(buf, columns.draft, theme, under, is(PrField::Draft));
+        if self.disabled {
+            // Drawn as Textual draws disabled fields.
+            disabled::fade(buf, area, theme, under);
+        }
+        columns
+    }
+}
+
+/// The Title row in `row`: its label, then the input, drawn focused while `focused`. Returns the input's area.
+fn render_title(
+    buf: &mut Buffer,
+    row: Rect,
+    label_column: u16,
+    title: &mut TextInput,
+    theme: &Theme,
+    under: Paint,
+    focused: bool,
+) -> Rect {
+    let state = label_state(focused, title.is_invalid());
+    render_label(buf, row, label_column, layout::TITLE_LABEL, state, theme, under);
+    let area = field_area(row, label_column);
+    title.render(buf, area, theme, under, focused);
+    area
+}
+
+/// How a field's label is drawn: invalid wins over focused.
+fn label_state(focused: bool, invalid: bool) -> LabelState {
+    if invalid {
+        LabelState::Invalid
+    } else if focused {
+        LabelState::Focused
+    } else {
+        LabelState::Plain
+    }
+}
+
+/// The upstream warning, Python's text, in `area`'s row.
+fn render_warning(buf: &mut Buffer, area: Rect, theme: &Theme, text: Style) {
+    let line = Line::from(vec![
+        Span::styled(WARNING, Style::new().fg(mark(theme, |m| m.warning))),
+        Span::styled(NO_UPSTREAM, text),
+    ]);
+    buf.set_line(area.x, area.y, &line, area.width);
+}
+
+/// The width of the Reviewers items in a sheet whose parts are `width` columns wide: right of the label column.
+fn reviewer_items_width(width: u16) -> u16 {
+    width.saturating_sub(layout::label_column())
 }
 
 impl Component for PullRequestDialog {
     type Action = PullRequestAction;
 
     fn bindings(&self) -> &'static [BindingId] {
-        PR_BINDINGS
+        COMPOSE_BINDINGS
     }
 
     fn on_binding(&mut self, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
+        let action = match id {
+            BindingId::ComposeSubmit | BindingId::ModalSubmit => ComposeAction::Submit,
+            BindingId::ComposeTogglePreview => ComposeAction::TogglePreview,
+            BindingId::ComposeExpand => ComposeAction::ToggleExpand,
+            BindingId::ModalClose if self.focus == PrField::Sheet => ComposeAction::Close,
+            BindingId::ModalClose => ComposeAction::Leave,
+            _ => return None,
+        };
+        Some(Self::action(PullRequestAction::Compose(action)))
+    }
+
+    fn binding_state(&self, id: BindingId, _cx: &Cx<'_>) -> BindingState {
+        let (verb, _) = self.verb();
         match id {
-            BindingId::ModalSubmit => Some(Self::action(PullRequestAction::Submit)),
-            BindingId::ModalClose => Some(Self::action(PullRequestAction::Close)),
-            _ => None,
+            BindingId::ComposeSubmit | BindingId::ModalSubmit if self.submit.is_some() => {
+                BindingState::DisabledAs(verb)
+            }
+            BindingId::ComposeSubmit | BindingId::ModalSubmit => BindingState::Relabeled(verb),
+            BindingId::ComposeTogglePreview if self.body.mode() == BodyMode::Preview => {
+                BindingState::Relabeled("Write")
+            }
+            BindingId::ComposeExpand if self.expanded => BindingState::Relabeled("Collapse"),
+            BindingId::ModalClose if self.focus != PrField::Sheet => BindingState::Relabeled("Leave"),
+            _ => BindingState::Enabled,
         }
     }
 
     fn consumes_key(&self, key: &KeyChord, keymap: &Keymap) -> bool {
-        match self.ring.focused() {
-            Some(PrField::Base) => self.base.consumes_key(key, keymap),
-            Some(PrField::Compare) => self.compare.consumes_key(key, keymap),
-            Some(PrField::Title) => self.title.consumes_key(key, keymap),
-            Some(PrField::Description) => self.description.consumes_key(key, keymap),
-            Some(PrField::Reviewers(focus)) => self.reviewers.consumes_key(focus, key, keymap),
-            _ => false,
+        match self.focus {
+            PrField::Base => self.base.consumes_key(key, keymap),
+            PrField::Compare => self.compare.consumes_key(key, keymap),
+            PrField::Title => self.title.consumes_key(key, keymap),
+            PrField::Description => self.body.consumes_key(key, keymap),
+            PrField::Reviewers(focus) => self.reviewers.consumes_key(focus, key, keymap),
+            PrField::Sheet | PrField::Draft => false,
         }
     }
 
     fn handle_key(&mut self, key: KeyEvent, cx: &Cx<'_>) -> Option<Action> {
         let chord = KeyChord::from_event(&key)?;
-        let field = self.ring.focused()?;
+        let field = self.focus;
         match field {
             PrField::Base | PrField::Compare | PrField::Title => {
                 let (outcome, changed) =
@@ -597,68 +716,77 @@ impl Component for PullRequestDialog {
                 match outcome {
                     InputOutcome::Copied(text) => Some(Action::Copy(text)),
                     InputOutcome::Ignored => None,
-                    // `enter` only checks the input; submitting is `modal.submit` or Create.
+                    // `enter` only checks the input; submitting is the sheet's submit keys.
                     InputOutcome::Changed | InputOutcome::Submitted if changed => {
                         Some(Self::action(PullRequestAction::Edited))
                     }
                     InputOutcome::Changed | InputOutcome::Submitted => Some(Action::Consumed),
                 }
             }
-            PrField::Description => match self
-                .description
-                .handle_key(&chord, cx.keymap(), cx.clipboard(), cx.now())
-            {
-                EditorOutcome::Copied { text, .. } => Some(Action::Copy(text)),
-                EditorOutcome::Changed => Some(Self::action(PullRequestAction::Edited)),
+            PrField::Description => match self.body.handle_key(&chord, cx.keymap(), cx.clipboard(), cx.now()) {
+                EditorOutcome::Copied { text, changed } => {
+                    self.reveal |= changed;
+                    Some(Action::Copy(text))
+                }
+                EditorOutcome::Changed => {
+                    self.reveal = true;
+                    Some(Self::action(PullRequestAction::Edited))
+                }
                 EditorOutcome::Moved | EditorOutcome::Ignored => Some(Action::Consumed),
             },
             PrField::Reviewers(focus) => {
                 let outcome = self.reviewers.handle_key(focus, &chord, cx.keymap(), cx.clipboard());
                 self.on_reviewers(outcome, false)
             }
-            PrField::Scroll | PrField::Draft | PrField::Submit | PrField::Cancel => None,
+            PrField::Sheet | PrField::Draft => None,
         }
     }
 
-    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, cx: &Cx<'_>) -> Option<Action> {
-        // A drag that started in a text field, wherever the pointer is now.
+    fn handle_mouse(&mut self, event: MouseEvent, _area: Rect, _cx: &Cx<'_>) -> Option<Action> {
+        // The parts are drawn offscreen and copied with the interior's scroll: their coordinates are the content's.
         let moved = self.scroll.to_content(event);
+        // A drag that started in a text field, wherever the pointer is now.
         if self.base.captured_mouse(moved)
             || self.compare.captured_mouse(moved)
             || self.title.captured_mouse(moved)
-            || self.description.captured_mouse(moved)
             || self.reviewers.captured_mouse(moved)
         {
             return Some(Action::Consumed);
         }
-        if self.scroll.content_row(event.row).is_some()
-            && let Some((button, outcome)) = self.buttons.handle_mouse(&moved, cx.now())
-        {
-            return Some(match outcome {
-                ButtonMouse::Focus => {
-                    self.focus(match button {
-                        Pressed::Submit => PrField::Submit,
-                        Pressed::Cancel => PrField::Cancel,
-                    });
-                    Action::Consumed
-                }
-                ButtonMouse::Pressed => Self::pressed(button),
-                ButtonMouse::Missed => Action::Consumed,
-            });
+        match self.body.handle_mouse(moved) {
+            BodyMouse::Focused => {
+                self.focus_field(PrField::Description);
+                return Some(Action::Consumed);
+            }
+            BodyMouse::Handled => return Some(Action::Consumed),
+            BodyMouse::Missed => {}
         }
         if let Some(wheel) = Wheel::from_mouse(&event) {
-            self.wheel(wheel, event.column, event.row);
-        } else if event.kind == MouseEventKind::Down(MouseButton::Left) {
-            return self.press(event);
+            self.scroll.wheel(wheel);
+        } else if event.kind == MouseEventKind::Down(MouseButton::Left) && self.scroll.content_row(event.row).is_some()
+        {
+            return self.press(moved).or(Some(Action::Consumed));
         }
         Some(Action::Consumed)
     }
 
     fn update(&mut self, action: PullRequestAction, cx: &mut Cx<'_>) {
         match action {
-            PullRequestAction::Submit => self.submit(cx),
+            PullRequestAction::Compose(ComposeAction::Submit) => self.submit(cx),
+            PullRequestAction::Compose(ComposeAction::Close) => self.close(cx),
+            PullRequestAction::Compose(ComposeAction::Leave) => {
+                self.validate(self.focus);
+                self.focus = PrField::Sheet;
+            }
+            PullRequestAction::Compose(ComposeAction::TogglePreview) => {
+                self.body.toggle_mode();
+                self.focus_field(PrField::Description);
+            }
+            PullRequestAction::Compose(ComposeAction::ToggleExpand) => {
+                self.expanded = !self.expanded;
+                self.reveal = true;
+            }
             PullRequestAction::PushAnswer(yes) => self.on_push_answer(yes, cx),
-            PullRequestAction::Close => self.close(cx),
             PullRequestAction::AddReviewer => self.reviewers.submit(cx),
             PullRequestAction::Edited => self.schedule_draft_save(cx),
         }
@@ -666,162 +794,109 @@ impl Component for PullRequestDialog {
 
     fn render(&mut self, frame: &mut Frame<'_>, area: Rect, cx: &RenderCx<'_>) {
         let theme = cx.theme;
-        let under = self.background(theme.roles()).over(theme.background());
-        let fill = Style::new()
-            .fg(theme.color(theme.roles().text.plain, under))
-            .bg(theme.paint(under));
-        let inner = area.inner(Margin::new(PADDING, PADDING));
-        let rows = self.rows();
+        self.theme = Some(*theme);
+        let screen = frame.area();
+        // The frame around the interior, whose border is a cell wide.
+        self.placement
+            .record(screen, area.outer(Margin::new(1, 1)), self.expanded);
+        let (geometry, rows) = self.sheet(screen, theme);
+        if std::mem::take(&mut self.reveal)
+            && let Some(focused) = self.focused_rows(&rows, geometry.content_width)
+        {
+            self.scroll.center_at_draw(focused.clone(), focused);
+        }
+        let roles = theme.roles();
+        let under = Self::under(theme);
+        let text = Style::new().fg(theme.color(roles.text.plain, under));
+        let dim = Style::new().fg(theme.color(roles.text.muted, under));
         let heading = self.heading();
+        let (_, in_flight) = self.verb();
+        let tail = self.submit.is_some().then_some(in_flight);
         let warning = self.upstream_warning;
-        let focused = self.ring.focused();
+        let editing = matches!(self.mode, Mode::Edit(_));
+        let focus = self.focus;
+        let reviewers_focus = self.reviewers_focus();
+        let label_column = layout::label_column();
+        let on_title = focus == PrField::Title;
+        let on_body = focus == PrField::Description;
+        let description = label_state(on_body, false);
         let Self {
             scroll,
             base,
             compare,
             draft,
             title,
-            description,
+            body,
             reviewers,
-            buttons,
+            drawn,
             ..
         } = self;
-        let mut form = Form {
-            base,
-            compare,
-            draft,
-            title,
-            description,
-            reviewers,
-            buttons,
-        };
-        scroll.render(frame.buffer_mut(), inner, theme, fill, rows.height(), |buf, content| {
-            draw_static(buf, content, &rows, theme, under, &heading, warning);
-            form.render(buf, content, &rows, theme, under, focused);
-        });
-    }
-}
-
-/// The fields, borrowed for drawing into the scroll area's content.
-struct Form<'a> {
-    base: &'a mut TextInput,
-    compare: &'a mut TextInput,
-    draft: &'a Switch,
-    title: &'a mut TextInput,
-    description: &'a mut TextEditor,
-    reviewers: &'a mut ReviewersField,
-    buttons: &'a mut ButtonRow,
-}
-
-impl Form<'_> {
-    fn render(
-        &mut self,
-        buf: &mut Buffer,
-        content: Rect,
-        rows: &FormRows,
-        theme: &Theme,
-        under: Paint,
-        focused: Option<PrField>,
-    ) {
-        let is = |field: PrField| focused == Some(field);
-        let columns = BranchColumns::new(rows.area(Part::Branches, content));
-        self.base.render(buf, columns.base, theme, under, is(PrField::Base));
-        self.compare
-            .render(buf, columns.compare, theme, under, is(PrField::Compare));
-        self.draft.render(buf, columns.draft, theme, under, is(PrField::Draft));
-        self.title
-            .render(buf, rows.area(Part::Title, content), theme, under, is(PrField::Title));
-        self.description.render(
-            buf,
-            rows.area(Part::Description, content),
+        // The links drawn, in rows from the interior's top and columns from its left edge.
+        let mut links = Vec::new();
+        scroll.render(
+            frame.buffer_mut(),
+            area,
             theme,
-            under,
-            is(PrField::Description),
+            text.bg(theme.paint(under)),
+            rows.layout.height,
+            |buf, content| {
+                let row = |y: u16, height: u16| Rect {
+                    x: content.x + 1,
+                    y: content.y + y,
+                    width: content.width.saturating_sub(2),
+                    height,
+                };
+                render_heading(buf, row(rows.layout.heading, 1), &heading, tail, text, dim);
+                if let Some(y) = rows.warning().filter(|_| warning) {
+                    render_warning(buf, row(y, 1), theme, text);
+                }
+
+                let branches = BranchRow {
+                    base,
+                    compare,
+                    draft,
+                    focus: (!editing).then_some(focus),
+                    disabled: editing,
+                };
+                let columns = branches.render(buf, row(rows.branches(), 1), label_column, theme, under);
+
+                let title_row = row(rows.title(), 1);
+                let title_box = render_title(buf, title_row, label_column, title, theme, under, on_title);
+                *drawn = Drawn {
+                    branches: Some(columns),
+                    title_row,
+                    title: title_box,
+                };
+
+                let (tabs_row, column) = (row(rows.layout.tabs, 1), layout::TABS_COLUMN);
+                render_label(
+                    buf,
+                    tabs_row,
+                    column,
+                    layout::DESCRIPTION_LABEL,
+                    description,
+                    theme,
+                    under,
+                );
+                let tabs = field_area(tabs_row, column);
+                let rect = row(rows.layout.body.start, rows.layout.body_rows());
+                let spans = body.render(buf, tabs, rect, theme, under, on_body);
+                let shift = rect.x - content.x;
+                links.extend(spans.into_iter().map(|mut span| {
+                    span.row += usize::from(rect.y);
+                    span.columns = span.columns.start + shift..span.columns.end + shift;
+                    span
+                }));
+
+                let section = rows.reviewers();
+                let section = row(section.start, section.end - section.start);
+                reviewers.render(buf, section, label_column, theme, under, reviewers_focus);
+            },
         );
-        let reviewers_focus = match focused {
-            Some(PrField::Reviewers(focus)) => Some(focus),
-            _ => None,
-        };
-        self.reviewers
-            .render(buf, rows.area(Part::Reviewers, content), theme, under, reviewers_focus);
-        self.buttons.render(
-            buf,
-            rows.area(Part::Buttons, content),
-            theme,
-            focused.and_then(PrField::button),
-        );
-    }
-}
-
-/// Draws the heading, the warning, the labels and the rules into `content`.
-fn draw_static(
-    buf: &mut Buffer,
-    content: Rect,
-    rows: &FormRows,
-    theme: &Theme,
-    under: Paint,
-    heading: &str,
-    warning: bool,
-) {
-    let r = theme.roles();
-    let text = Style::new().fg(theme.color(r.text.plain, under));
-    let bold = text.add_modifier(Modifier::BOLD);
-
-    // `MarkdownH1`: centered inside the `Markdown` widget's padding, in `$markdown-h1-color` and its text style.
-    let block = rows.area(Part::Heading, content);
-    let h1_role = r.markdown.h1;
-    let h1 = h1_role.style.apply(Style::new().fg(theme.color(h1_role.fg, under)));
-    let width = usize::from(content.width.saturating_sub(2 * layout::HEADING_PADDING));
-    buf.set_stringn(
-        content.x + layout::HEADING_PADDING,
-        block.y + layout::HEADING_ROW,
-        format!("{heading:^width$}"),
-        width,
-        h1,
-    );
-
-    if warning {
-        // `[yellow]Warning:[/yellow] ...`, centered across the content (`content-align: center middle`).
-        let area = rows.area(Part::Warning, content);
-        let line = Line::from(vec![
-            Span::styled(WARNING, Style::new().fg(mark(theme, |m| m.warning))),
-            Span::styled(NO_UPSTREAM, text),
-        ]);
-        let width = u16::try_from(line.width()).unwrap_or(u16::MAX);
-        let x = content.x + content.width.saturating_sub(width) / 2;
-        buf.set_line(x, area.y, &line, content.width);
-    }
-
-    // The branch row's labels sit on its middle row (`padding-top: 1`).
-    let columns = BranchColumns::new(rows.area(Part::Branches, content));
-    let middle = columns.base_label.y + 1;
-    buf.set_stringn(columns.base_label.x, middle, layout::BASE_LABEL, 4, bold);
-    buf.set_line(
-        columns.compare_label.x,
-        middle,
-        &Line::from(vec![
-            Span::styled(layout::COMPARE_ARROW, text),
-            Span::styled(layout::COMPARE_LABEL, bold),
-        ]),
-        columns.compare_label.width,
-    );
-    buf.set_stringn(
-        columns.draft_label.x,
-        middle,
-        layout::DRAFT_LABEL,
-        usize::from(columns.draft_label.width),
-        text,
-    );
-
-    let width = usize::from(content.width);
-    for (part, label) in [(Part::TitleLabel, "Title"), (Part::DescriptionLabel, "Description")] {
-        buf.set_stringn(content.x, rows.area(part, content).y, label, width, bold);
-    }
-    // `Rule { color: $secondary }`, with its `margin: 1 0`.
-    let rule = Style::new().fg(theme.color(r.border.rule, under));
-    for part in [Part::FirstRule, Part::SecondRule] {
-        let y = rows.area(part, content).y + 1;
-        buf.set_stringn(content.x, y, "─".repeat(width), width, rule);
+        // Textual's `Markdown` keeps `open_links` in a dialog, so a click on the preview's links opens them.
+        if let Some(sink) = cx.links {
+            self.scroll.record_links(sink, &links);
+        }
     }
 }
 
@@ -839,33 +914,31 @@ impl Dialog for PullRequestDialog {
         }
     }
 
+    /// `tab` and `shift+tab` cycle the fields, skipping Edit PR's disabled branch row; from the sheet they go to the
+    /// first field and the last.
     fn move_focus(&mut self, direction: FocusMove) {
-        self.refocus(|ring| ring.step(direction));
+        let order = self.order();
+        let (Some(&first), Some(&last)) = (order.first(), order.last()) else {
+            return;
+        };
+        let next = match (order.iter().position(|&field| field == self.focus), direction) {
+            (Some(index), FocusMove::Next) => order[(index + 1) % order.len()],
+            (Some(index), FocusMove::Previous) => order[(index + order.len() - 1) % order.len()],
+            (None, FocusMove::Next) => first,
+            (None, FocusMove::Previous) => last,
+        };
+        self.focus_field(next);
     }
 
-    /// `height: 80%` of the whole screen less the margins: the modal screen has no footer, so it's as tall as the
-    /// terminal, while the main screen's footer shows through on the bottom row.
     fn size(&self, available: Rect) -> (u16, u16) {
-        (
-            WIDTH,
-            available.height.saturating_sub(2 * MARGIN) * HEIGHT_PERCENT / 100,
-        )
+        self.sheet_size(Rect {
+            height: available.height + 1,
+            ..available
+        })
     }
 
-    /// Centered with its margins on the whole screen, as Textual's `align: center middle` places it on a modal screen
-    /// without a footer. A frame wider than the screen starts `MARGIN` in and runs past the right edge.
     fn frame(&self, area: Rect) -> Rect {
-        let (width, height) = self.size(area);
-        Rect {
-            x: area.x + area.width.saturating_sub(width + 2 * MARGIN) / 2 + MARGIN,
-            y: area.y + area.height.saturating_sub(height + 2 * MARGIN) / 2 + MARGIN,
-            width,
-            height,
-        }
-    }
-
-    fn shows_footer(&self) -> bool {
-        false
+        self.placement.place(area, self.sheet_size(area), self.expanded)
     }
 
     fn take_output(&mut self) -> Option<Option<Box<FullPullRequest>>> {
@@ -873,34 +946,20 @@ impl Dialog for PullRequestDialog {
     }
 
     fn field_chain(&self) -> Vec<ChainLink> {
-        let field = match self.ring.focused() {
-            Some(PrField::Scroll) => FieldKind::Scroll,
-            Some(PrField::Base | PrField::Compare | PrField::Title) => FieldKind::TextInput,
-            Some(PrField::Draft) => FieldKind::Switch,
-            Some(PrField::Description) => FieldKind::TextEditor,
-            Some(PrField::Reviewers(focus)) => ReviewersField::field_kind(focus),
-            Some(PrField::Submit | PrField::Cancel) => FieldKind::Button,
-            None => return Vec::new(),
+        let field = match self.focus {
+            PrField::Sheet => return Vec::new(),
+            PrField::Base | PrField::Compare | PrField::Title => FieldKind::TextInput,
+            PrField::Draft => FieldKind::Switch,
+            // The preview keeps the editor's link: the keys it would type do nothing there instead of reaching the
+            // sheet's bindings.
+            PrField::Description => FieldKind::TextEditor,
+            PrField::Reviewers(focus) => ReviewersField::field_kind(focus),
         };
         vec![field.link(self.kind())]
     }
 
-    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, cx: &Cx<'_>) -> Option<Action> {
+    fn on_field_binding(&mut self, field: FieldKind, id: BindingId, _cx: &Cx<'_>) -> Option<Action> {
         match (field, id) {
-            (FieldKind::Button, BindingId::TextualButtonPress) => {
-                let button = self.ring.focused().and_then(PrField::button)?;
-                // A press inside the debounce still takes the key.
-                Some(
-                    self.buttons
-                        .press(button, cx.now())
-                        .map_or(Action::Consumed, Self::pressed),
-                )
-            }
-            (FieldKind::Scroll, id) => {
-                let scroll = Scroll::from_binding(id)?;
-                self.scroll.scroll(scroll);
-                Some(Action::Consumed)
-            }
             (FieldKind::Switch, BindingId::TextualSwitchToggle) => {
                 self.draft.toggle();
                 Some(Action::Consumed)
@@ -919,12 +978,12 @@ impl Dialog for PullRequestDialog {
         self.base.is_selecting()
             || self.compare.is_selecting()
             || self.title.is_selecting()
-            || self.description.is_selecting()
+            || self.body.is_selecting()
             || self.reviewers.is_selecting()
     }
 
     fn handle_paste(&mut self, text: &str, cx: &Cx<'_>) -> Option<Action> {
-        let field = self.ring.focused()?;
+        let field = self.focus;
         match field {
             PrField::Base | PrField::Compare | PrField::Title => {
                 let (_, changed) = self.edit_input(field, |input| {
@@ -937,8 +996,11 @@ impl Dialog for PullRequestDialog {
                     Action::Consumed
                 })
             }
-            PrField::Description => Some(match self.description.handle_paste(text, cx.now()) {
-                EditorOutcome::Changed => Self::action(PullRequestAction::Edited),
+            PrField::Description => Some(match self.body.handle_paste(text, cx.now()) {
+                EditorOutcome::Changed => {
+                    self.reveal = true;
+                    Self::action(PullRequestAction::Edited)
+                }
                 _ => Action::Consumed,
             }),
             PrField::Reviewers(ReviewersFocus::Input) => {
@@ -962,7 +1024,6 @@ impl Dialog for PullRequestDialog {
                     Ok(logins) => {
                         tracing::debug!("Found existing reviewers: {logins:?}");
                         self.reviewers.add_existing(logins);
-                        self.sync_ring();
                     }
                     // Python's `list_requested_reviewers` logs (its message) and lists nobody.
                     Err(error) => {
@@ -974,10 +1035,7 @@ impl Dialog for PullRequestDialog {
             }
             other => {
                 let other = self.on_submit_response(id, other, cx)?;
-                let unclaimed = self.reviewers.on_response(id, other, cx);
-                // A found reviewer shows the list, which joins the focus order.
-                self.sync_ring();
-                unclaimed
+                self.reviewers.on_response(id, other, cx)
             }
         }
     }

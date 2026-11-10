@@ -1,0 +1,52 @@
+---
+source: crates/lazy-github-tui/src/modal/pull_request/tests.rs
+expression: "app.screen(160, 48)"
+---
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-d█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+└─────────────────────────────█ New Pull Request · parity-bot/pr-details                                                         █─────────────────────────────┘
+┌─ [1] Repositories ──────────█                                                                                                  █─────────────────────────────┐
+│ ★  Owner       Name        P█ Base        main                           ← Compare  Choose a head ref                Draft [ ] █                             │
+│ ☆  parity-bot  pr-details  ✘█ Title       Title                                                                                █━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│                             █                                                                                                  █                             │
+│                             █ Description  Write   Preview  ────────────────────────────────────────────────────────────────── █                             │
+│                             █  17  Line 17 of a long description                                                               █                             │
+│                             █  18  Line 18 of a long description                                                               █                             │
+│                             █  19  Line 19 of a long description                                                               █, for the PR details tabs.   │
+│                             █  20  Line 20 of a long description                                                               █                             │
+│                             █  21  Line 21 of a long description                                                               █─────────────────────────────│
+│                             █  22  Line 22 of a long description                                                               █                             │
+│                             █  23  Line 23 of a long description                                                               █                             │
+│                             █  24  Line 24 of a long description                                                               █                             │
+│                             █  25  Line 25 of a long description                                                               █                             │
+│                             █  26  Line 26 of a long description                                                               █                             │
+│                             █  27  Line 27 of a long description                                                           ▁▁  █                             │
+│                             █  28  Line 28 of a long description                                                               █                             │
+│                             █  29  Line 29 of a long description                                                               █                             │
+└─────────────────────────────█  30  Line 30 of a long description                                                               █                             │
+┌─ [2] Pull Requests ─────────█  31  Line 31 of a long description                                                               █                             │
+│ #  Status  Author         Ti█  32  Line 32 of a long description                                                               █                             │
+│ 5  open    parity-friend  Ad█  33  Line 33 of a long description                                                               █                             │
+│ 4  closed  parity-bot     Dr█  34  Line 34 of a long description                                                               █                             │
+│ 3  closed  parity-bot     Re█  35  Line 35 of a long description                                                               █                             │
+│ 2  open    parity-friend  Tr█  36  Line 36 of a long description                                                               █                             │
+│                             █  37  Line 37 of a long description                                                               █                             │
+│                             █  38  Line 38 of a long description                                                               █                             │
+│                             █  39  Line 39 of a long description                                                               █                             │
+│                             █  40  Line 40 of a long description                                                               █                             │
+│                             █  41  Line 41 of a long description                                                               █                             │
+│                             █  42  Line 42 of a long description                                                               █                             │
+│                             █  43  Line 43 of a long description                                                               █                             │
+│                             █  44  Line 44 of a long description                                                               █                             │
+│                             █  45  Line 45 of a long description                                                               █                             │
+│                             █  46  Line 46 of a long description                                                               █                             │
+│                             █  47  Line 47 of a long description                                                               █                             │
+│                             █  48  Line 48 of a long description                                                               █                             │
+└─────────────────────────────█  49  Line 49 of a long description                                                               █                             │
+┌─ [3] Issues (empty) ────────█  50  Line 50 of a long description                                                               █                             │
+│ #  Status  Author  Title    █  51                                                                                              █                             │
+└─────────────────────────────█                                                                                                  █                             │
+┌─ [4] Workflows (empty) ─────█ Reviewers  none  (tab to edit)                                                                   █                             │
+│ Time  Result  Job Name  Run █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^s Create  shift+⏎ Create  ^t Preview  ^o Expand  esc Leave

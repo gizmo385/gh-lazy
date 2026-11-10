@@ -90,6 +90,9 @@ pub enum BindingState {
     /// Shown and active under this label instead of its usual one, for a key whose effect flips with the state (the
     /// diff body's `z`: "Fold Files", or "Unfold Files" once every file is folded).
     Relabeled(&'static str),
+    /// Shown greyed out under this label instead of its usual one: a relabeled key that can't be used for now (a
+    /// compose dialog's submit keys, named after its verb, while its request is in flight).
+    DisabledAs(&'static str),
 }
 
 /// One link in the binding chain: a component and the bindings it declares. Chains are innermost first.

@@ -141,7 +141,7 @@ pub(super) fn walk(dialog: &mut PullRequestDialog, direction: FocusMove, steps: 
     (0..steps)
         .map(|_| {
             dialog.move_focus(direction);
-            dialog.ring.focused().unwrap()
+            dialog.focus
         })
         .collect()
 }
@@ -164,7 +164,7 @@ fn p_opens_from_the_pull_requests_and_issues_sections_but_not_the_details() {
     let mut app = selected(TestApp::with_github(Config::default(), gh()));
     app.press(&["3", "P"]);
     assert!(is_open(&app), "from the Issues section");
-    app.press(&["escape", "5", "P"]);
+    app.press(&["escape", "escape", "5", "P"]);
     assert!(app.app().modals().is_empty(), "the details pane doesn't bind it");
     assert!(toasts(&app).is_empty());
 }
@@ -187,15 +187,16 @@ fn the_title_has_focus_and_the_base_is_the_default_branch() {
         base: "main".into(),
         ..CreatePrefill::default()
     });
-    assert_eq!(dialog.ring.focused(), Some(PrField::Title));
+    assert_eq!(Some(dialog.focus), Some(PrField::Title));
     assert_eq!(dialog.form().base_ref, "main");
     assert_eq!(dialog.form().head_ref, "");
     let mut app = opened();
     type_text(&mut app, "Hello");
     let view = dialog_view(&mut app);
-    assert!(view.screen.contains("▊  Hello"), "{}", view.screen);
-    assert!(view.row(14).contains("▊  main "), "{}", view.row(14));
-    assert!(view.row(14).contains("Choose a head ref"), "{}", view.row(14));
+    assert!(view.screen.contains("Title       Hello"), "{}", view.screen);
+    let branches = view.screen.lines().find(|row| row.contains("Base")).unwrap_or_default();
+    assert!(branches.contains("Base        main "), "{branches}");
+    assert!(branches.contains("← Compare  Choose a head ref"), "{branches}");
 }
 
 #[test]
@@ -224,7 +225,7 @@ fn compare_is_the_current_branch_only_in_a_clone_of_the_selected_repo() {
         Some("new-feature"),
     );
     let mut app = opened_in(app);
-    assert!(dialog_view(&mut app).screen.contains("▊  new-feature "));
+    assert!(dialog_view(&mut app).screen.contains(" new-feature "));
     let app = local(
         TestApp::with_github(Config::default(), gh()),
         Some("parity-bot/dotfiles"),
@@ -275,14 +276,14 @@ fn both_branch_inputs_suggest_the_branches() {
     app.press(&["shift+tab", "shift+tab"]);
     type_text(&mut app, "new");
     assert!(
-        dialog_view(&mut app).row(14).contains("▊  new-feature "),
+        dialog_view(&mut app).screen.contains("← Compare  new-feature "),
         "Compare suggests"
     );
     app.press(&["shift+tab"]);
     // Base's text is selected on focus; typing replaces it.
     type_text(&mut app, "next");
     assert!(
-        dialog_view(&mut app).row(14).contains("▊  next-release "),
+        dialog_view(&mut app).screen.contains("Base        next-release "),
         "Base suggests"
     );
 }
@@ -324,18 +325,23 @@ fn tab_walks_the_fields_and_wraps() {
     use PrField::*;
     let mut dialog = direct(CreatePrefill::default());
     assert_eq!(
-        walk(&mut dialog, FocusMove::Next, 9),
+        walk(&mut dialog, FocusMove::Next, 6),
         [
             Description,
             Reviewers(ReviewersFocus::Input),
-            Submit,
-            Cancel,
-            Scroll,
             Base,
             Compare,
             Draft,
             Title,
         ]
+    );
+    // From the sheet, tab goes to the first field and shift+tab to the last.
+    dialog.focus = Sheet;
+    assert_eq!(walk(&mut dialog, FocusMove::Next, 1), [Base]);
+    dialog.focus = Sheet;
+    assert_eq!(
+        walk(&mut dialog, FocusMove::Previous, 1),
+        [Reviewers(ReviewersFocus::Input)]
     );
 }
 
@@ -358,7 +364,7 @@ fn the_reviewers_list_joins_the_order_while_anyone_is_listed() {
         [
             PrField::Reviewers(ReviewersFocus::Input),
             PrField::Reviewers(ReviewersFocus::List),
-            PrField::Submit
+            PrField::Base
         ]
     );
 }
@@ -370,36 +376,43 @@ fn q_types_in_the_inputs_and_the_editor() {
     app.press(&["tab", "q"]);
     app.press(&["tab", "q"]);
     assert!(is_open(&app));
-    let view = dialog_view(&mut app);
-    assert!(view.screen.contains("▊  q "), "{}", view.screen);
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert_eq!(
+        (dialog.form().title.as_str(), dialog.form().description.as_str()),
+        ("q", "q")
+    );
+    assert_eq!(dialog.reviewers.input_value(), "q");
 }
 
 #[test]
-fn q_closes_from_the_switch_and_the_buttons() {
+fn escape_leaves_a_field_and_escape_or_q_on_the_sheet_closes() {
+    for (keys, field) in [
+        (&["escape"][..], "the title"),
+        (&["tab", "escape"], "the editor"),
+        (&["shift+tab", "q"], "Draft"),
+        (&["tab", "tab", "escape"], "the reviewers input"),
+    ] {
+        let mut app = opened();
+        app.press(keys);
+        assert!(is_open(&app), "{field} is left");
+        let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+        assert_eq!(dialog.focus, PrField::Sheet, "{field}");
+        let footer = app.screen(160, 48);
+        assert!(footer.trim_end().ends_with("^o Expand  q Close"), "{footer}");
+        app.press(&["q"]);
+        assert!(!is_open(&app), "q closes after leaving {field}");
+    }
     let mut app = opened();
-    app.press(&["shift+tab", "q"]);
-    assert!(!is_open(&app), "from Draft");
-    let mut app = opened();
-    app.press(&["tab", "tab", "tab", "q"]);
-    assert!(!is_open(&app), "from Create");
+    app.press(&["escape", "escape"]);
+    assert!(!is_open(&app), "escape closes from the sheet");
 }
 
 #[test]
-fn escape_closes_from_the_inputs_and_the_editor() {
-    let mut app = opened();
-    app.press(&["escape"]);
-    assert!(!is_open(&app), "from the title");
-    let mut app = opened();
-    app.press(&["tab", "escape"]);
-    assert!(!is_open(&app), "from the editor");
-}
-
-#[test]
-fn cancel_closes_with_nothing_and_cancels_the_requests() {
+fn closing_from_the_sheet_cancels_the_requests() {
     let mut app = selected(TestApp::with_github(Config::default(), gh()));
     app.press(&["P"]);
     // Nothing answered yet.
-    app.press(&["tab", "tab", "tab", "tab", "enter"]);
+    app.press(&["escape", "escape"]);
     assert!(!is_open(&app));
     let cancels = app
         .effects()
@@ -414,12 +427,106 @@ fn cancel_closes_with_nothing_and_cancels_the_requests() {
 fn enter_and_space_toggle_draft() {
     let mut app = TestApp::new(Config::default());
     let mut dialog = app.with_cx(|cx| PullRequestDialog::create(fixture_repo(), CreatePrefill::default(), cx));
-    dialog.focus(PrField::Draft);
+    dialog.focus_field(PrField::Draft);
     assert_eq!(dialog.field_chain(), [FieldKind::Switch.link(ModalKind::PullRequest)]);
     app.with_cx(|cx| {
         let _ = dialog.on_field_binding(FieldKind::Switch, BindingId::TextualSwitchToggle, cx);
     });
     assert!(dialog.form().is_draft);
+    // In the app: `enter` turns it on, `space` off, and it draws `[x]` while on.
+    let mut app = opened();
+    app.press(&["shift+tab", "enter"]);
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert!(dialog.form().is_draft);
+    assert!(app.screen(160, 48).contains("  Draft [x]"));
+    app.press(&["space"]);
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert!(!dialog.form().is_draft);
+    assert!(app.screen(160, 48).contains("  Draft [ ]"));
+}
+
+#[test]
+fn ctrl_s_and_shift_enter_submit_from_any_field() {
+    for (keys, submit) in [
+        (&[][..], "ctrl+s"),
+        (&["tab", "tab"][..], "ctrl+s"),
+        (&["shift+tab"][..], "shift+enter"),
+    ] {
+        let gh = creating_gh(Ok(created()));
+        let mut app = filled_in(
+            TestApp::with_github(Config::default(), gh),
+            "Parity PR",
+            "new-feature",
+            "",
+        );
+        app.press(&["escape", "tab"]);
+        app.press(keys);
+        app.press(&[submit]);
+        settle(&mut app);
+        assert_eq!(creates(&app).len(), 1, "{keys:?} {submit}");
+    }
+}
+
+#[test]
+fn the_reviewers_section_expands_while_focused_and_collapses_after() {
+    let gh = gh().with_profile(
+        "parity-friend",
+        Ok(serde_json::from_value(fixture_body("pr-edit", "users/parity-friend/GET.json")).unwrap()),
+    );
+    let mut app = opened_in(TestApp::with_github(Config::default(), gh));
+    let height = |app: &mut TestApp| {
+        let _ = app.render(160, 48);
+        let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+        dialog.frame(Rect::new(0, 0, 160, 48)).height
+    };
+    assert_eq!(height(&mut app), 15, "the empty sheet");
+    app.press(&["tab", "tab"]);
+    assert_eq!(height(&mut app), 15, "expanded with nobody listed: the input alone");
+    type_text(&mut app, "parity-friend");
+    app.press(&["enter"]);
+    settle(&mut app);
+    assert_eq!(height(&mut app), 16, "the input, then a row of items");
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Reviewers   Reviewer to add"), "{screen}");
+    assert!(screen.contains("           parity-friend ✕"), "{screen}");
+    app.press(&["tab"]);
+    assert_eq!(height(&mut app), 16, "the list keeps it expanded");
+    app.press(&["tab"]);
+    assert_eq!(height(&mut app), 15, "collapsed again");
+    assert!(app.screen(160, 48).contains("Reviewers  parity-friend  (tab to edit)"));
+}
+
+#[test]
+fn ctrl_t_previews_the_description_and_ctrl_o_expands_the_sheet() {
+    let mut app = opened();
+    app.press(&["tab"]);
+    type_text(&mut app, "Some ");
+    app.send(crate::event::Event::Paste("**bold** text".into()));
+    app.press(&["escape", "ctrl+t"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Some bold text"), "the rendering: {screen}");
+    assert!(
+        screen.trim_end().ends_with("^t Write  ^o Expand  esc Leave"),
+        "{screen}"
+    );
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert_eq!(dialog.focus, PrField::Description, "the preview takes focus");
+    app.press(&["ctrl+t", "ctrl+o"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Some **bold** text"), "{screen}");
+    assert!(
+        screen.trim_end().ends_with("^t Preview  ^o Collapse  esc Leave"),
+        "{screen}"
+    );
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert_eq!(
+        dialog.frame(Rect::new(0, 0, 160, 48)),
+        Rect::new(0, 0, 160, 47),
+        "the whole screen"
+    );
+    app.press(&["ctrl+o"]);
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    assert_eq!(dialog.frame(Rect::new(0, 0, 160, 48)).width, 100, "back to the sheet");
 }
 
 #[test]
@@ -433,7 +540,7 @@ fn an_input_emptied_and_left_is_marked_invalid() {
     assert!(dialog.title.is_invalid());
     assert!(!dialog.base.is_invalid());
     // Base emptied: marked as it changes.
-    dialog.focus(PrField::Base);
+    dialog.focus_field(PrField::Base);
     let (_, changed) = dialog.edit_input(PrField::Base, |input| {
         input.handle_paste("");
         input.set_value("");
@@ -442,7 +549,7 @@ fn an_input_emptied_and_left_is_marked_invalid() {
     assert!(changed);
     assert!(dialog.base.is_invalid());
     // Typing into the title clears its mark.
-    dialog.focus(PrField::Title);
+    dialog.focus_field(PrField::Title);
     let _ = dialog.edit_input(PrField::Title, |input| {
         input.handle_paste("x");
         InputOutcome::Changed
@@ -474,12 +581,17 @@ fn the_reviewers_input_suggests_collaborators_and_enter_adds() {
     app.press(&["right", "enter"]);
     settle(&mut app);
     let view = dialog_view(&mut app);
+    // The section is expanded while it has focus: the input, then the reviewer's item.
+    assert!(view.screen.contains("Reviewers   Reviewer to add"), "{}", view.screen);
+    assert!(view.screen.contains("           parity-friend ✕"), "{}", view.screen);
+    // Leaving it collapses it to its summary.
+    app.press(&["shift+tab"]);
+    let view = dialog_view(&mut app);
     assert!(
-        view.screen.contains("Current Reviewers - Click/Select them to remove"),
+        view.screen.contains("Reviewers  parity-friend  (tab to edit)"),
         "{}",
         view.screen
     );
-    assert!(view.screen.contains("▐X▌ parity-friend"));
 }
 
 // Drawing.
@@ -519,9 +631,13 @@ fn create_pr_opened_with_warning_100x30() {
 }
 
 #[test]
-fn create_pr_scrolled_to_create() {
+fn create_pr_long_body() {
     let mut app = opened();
-    app.press(&["tab", "tab", "tab"]);
+    app.press(&["tab"]);
+    let text: String = (1..=50).fold(String::new(), |text, n| {
+        text + &format!("Line {n} of a long description\n")
+    });
+    app.send(crate::event::Event::Paste(text));
     insta::assert_snapshot!(app.screen(160, 48));
 }
 
@@ -703,7 +819,13 @@ fn a_second_submit_while_creating_is_ignored_and_closing_cancels_it() {
         .collect();
     assert_eq!(creating.len(), 1);
     assert_eq!(messages(&app), [plain("Creating PR...")]);
-    app.press(&["escape"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("New Pull Request · parity-bot/pr-details"), "{screen}");
+    assert!(screen.contains("Creating…"), "the heading says so: {screen}");
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    let state = TestApp::new(Config::default()).with_cx(|cx| dialog.binding_state(BindingId::ComposeSubmit, cx));
+    assert_eq!(state, BindingState::DisabledAs("Create"));
+    app.press(&["escape", "escape"]);
     assert!(!is_open(&app));
     assert!(app.effects().contains(&Effect::Cancel(creating[0])));
 }
@@ -789,7 +911,7 @@ fn a_refused_create_keeps_the_form_and_checks_the_branch_as_typed() {
         }]
     );
     assert_eq!(app.app().modals(), [ModalKind::PullRequest]);
-    assert!(dialog_view(&mut app).screen.contains("▊ 1  kept"));
+    assert!(dialog_view(&mut app).screen.contains("  1  kept"));
 }
 
 /// A refused create in a directory whose `origin` is `local` (if any), with git answering from `answers`.
@@ -906,8 +1028,8 @@ fn a_push_answer_after_the_dialog_closed_is_dropped() {
             ..GitAnswers::default()
         },
     );
-    // Yes, then Create PR closed before git answers.
-    app.press(&["y", "escape"]);
+    // Yes, then Create PR closed before git answers: escape leaves the field, then closes.
+    app.press(&["y", "escape", "escape"]);
     settle(&mut app);
     assert!(app.app().modals().is_empty());
     assert!(!messages(&app).iter().any(|(_, message)| message.starts_with("Pushed")));
@@ -924,8 +1046,9 @@ fn create_pr_missing_fields() {
     let mut app = opened();
     app.press(&["shift+enter"]);
     let screen = app.render(160, 48);
-    // The dialog's frame, with the invalid borders' colors.
-    let frame = Rect::new(30, 6, 100, 36);
+    // The dialog's frame, with the invalid labels' colors.
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    let frame = dialog.frame(Rect::new(0, 0, 160, 48));
     let mut dialog = ratatui::buffer::Buffer::empty(frame);
     for (x, y) in frame.positions().map(|p| (p.x, p.y)) {
         dialog[(x, y)] = screen[(x, y)].clone();
@@ -933,49 +1056,42 @@ fn create_pr_missing_fields() {
     insta::assert_snapshot!(crate::test_util::buffer_to_styled_string(&dialog));
 }
 
-/// Create PR at 48x16 with its form scrolled to the branches, which run past the screen's right edge.
+/// Create PR at 48x16 with focus on the Reviewers, which scrolls the sheet: it can't show every part at once.
 fn scrolled_at_48x16() -> TestApp {
     let mut app = opened();
     let _ = app.render(48, 16);
-    // Title, then on through the reviewers and the buttons, round to Base: the form scrolls down and back.
-    for _ in 0..6 {
-        app.press(&["tab"]);
-        let _ = app.render(48, 16);
-    }
+    app.press(&["tab", "tab"]);
+    let _ = app.render(48, 16);
     let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
-    assert!(dialog.scroll.offset() > 0, "the form is scrolled");
+    assert!(dialog.scroll.offset() > 0, "the sheet is scrolled");
     app
 }
 
 #[test]
-fn a_frame_past_the_right_edge_is_cut_the_same_on_every_row() {
-    // The 100-wide frame starts at column 1 and runs past the 48-column screen, as Python's does: no row draws a
-    // border along the screen's edge, and the form's scrollbar, at the frame's own right edge, is off screen (#334).
+fn the_sheet_fits_a_48x16_screen() {
+    // The sheet is 4 columns narrower than the screen, so every row has both borders on screen; it scrolls (without
+    // a bar) to keep the focused part in view.
     let mut app = scrolled_at_48x16();
     let screen = app.render(48, 16);
-    // The frame is rows 2 to 12.
-    for y in 2..13 {
-        assert_eq!(screen[(1, y)].symbol(), "█", "row {y} has its left border");
-        assert_ne!(screen[(47, y)].symbol(), "█", "row {y} is cut at the screen's edge");
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
+    let frame = dialog.frame(Rect::new(0, 0, 48, 16));
+    assert_eq!((frame.x, frame.width), (2, 44));
+    for y in frame.top()..frame.bottom() {
+        assert_eq!(screen[(2, y)].symbol(), "█", "row {y} has its left border");
+        assert_eq!(screen[(45, y)].symbol(), "█", "row {y} has its right border");
     }
     insta::assert_snapshot!(app.screen(48, 16));
 }
 
 #[test]
 fn a_short_terminal_opens_scrolled_to_the_focused_title() {
-    // First drawn at 48x16, the dialog scrolls to the title it focused on opening, as Textual does once the dialog
-    // is laid out: the heading and the branches are above the fold (#336).
+    // First drawn at 48x16, the sheet can't show every part at once; it opens with the title it focused in view
+    // (#336), here near its top with the heading above it.
     let mut app = selected(TestApp::with_github(Config::default(), gh()));
     app.press(&["P"]);
     settle(&mut app);
     let screen = app.screen(48, 16);
-    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Create PR is open");
-    assert!(dialog.scroll.offset() > 0, "the form is scrolled");
-    assert!(screen.contains("Title"), "the title is in view:\n{screen}");
-    assert!(
-        !screen.contains("Compare"),
-        "the branches are above the fold:\n{screen}"
-    );
+    assert!(screen.contains("Title       Title"), "the title is in view:\n{screen}");
     insta::assert_snapshot!(screen);
 }
 

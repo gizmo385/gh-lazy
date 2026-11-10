@@ -99,6 +99,17 @@ impl ComposeBody {
         self
     }
 
+    /// Replaces the text of an open body, as a restored draft does: the editor starts over at its top with no undo
+    /// history, and a preview shown is parsed again.
+    pub fn set_text(&mut self, text: &str) {
+        self.editor.set_text(text);
+        if self.mode == BodyMode::Preview {
+            self.preview = Markdown::parse(text);
+            self.preview_layout.borrow_mut().clear();
+            self.preview_offset = 0;
+        }
+    }
+
     /// The text as typed.
     pub fn text(&self) -> String {
         self.editor.text()

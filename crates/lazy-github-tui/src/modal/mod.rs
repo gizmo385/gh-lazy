@@ -359,7 +359,7 @@ pub trait Dialog: Component + Send + 'static {
         roles.border.dialog
     }
 
-    /// Whether the bottom row shows the dialog's footer. False for Create/Edit PR and the command palette.
+    /// Whether the bottom row shows the dialog's footer. False for the command palette.
     fn shows_footer(&self) -> bool {
         true
     }

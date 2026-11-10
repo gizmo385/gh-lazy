@@ -37,6 +37,9 @@ impl Switch {
     /// Rows it takes: the slider between the top and bottom border.
     pub const HEIGHT: u16 = 3;
 
+    /// Columns a [compact](Self::render_compact) switch takes: `[ ]` or `[x]`.
+    pub const COMPACT_WIDTH: u16 = 3;
+
     /// A switch that's on when `value` is.
     pub fn new(value: bool) -> Self {
         Self { value, disabled: false }
@@ -111,6 +114,46 @@ impl Switch {
                 };
                 buf[(area.x + dx, area.y + dy)].set_symbol(symbol).set_style(style);
             }
+        }
+        if self.disabled {
+            disabled::fade(buf, area, theme, under);
+        }
+    }
+}
+
+impl Switch {
+    /// Draws the switch in one row at the start of `area` as `[ ]`, or `[x]` with the mark in the on color, on the
+    /// input tint (lighter while `focused`), for a compose sheet's one-row fields (decision compose-dialogs). A press
+    /// on it goes through [`Self::handle_mouse`] with the [`Self::COMPACT_WIDTH`] x 1 area it was drawn in.
+    pub fn render_compact(&self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focused: bool) {
+        let area = Rect {
+            width: area.width.min(Self::COMPACT_WIDTH),
+            height: area.height.min(1),
+            ..area
+        }
+        .intersection(buf.area);
+        if area.is_empty() {
+            return;
+        }
+        let roles = theme.roles();
+        let surface = roles.surface.pane.over(under);
+        let bg = if focused && !self.disabled {
+            theme.tint(surface, roles.surface.focus_tint, 100.0)
+        } else {
+            surface
+        };
+        let plain = Style::new().fg(theme.color(roles.text.plain, bg)).bg(theme.paint(bg));
+        let (mark, mark_style) = if self.value {
+            (
+                "x",
+                plain.fg(theme.color(roles.switch.on, bg)).add_modifier(Modifier::BOLD),
+            )
+        } else {
+            (" ", plain)
+        };
+        let cells = [("[", plain), (mark, mark_style), ("]", plain)];
+        for (x, (symbol, style)) in (area.left()..area.right()).zip(cells) {
+            buf[(x, area.y)].set_symbol(symbol).set_style(style);
         }
         if self.disabled {
             disabled::fade(buf, area, theme, under);
@@ -358,6 +401,26 @@ mod tests {
         assert_eq!(cell(&on, 4, 1), (rgb(0xe0_e0_e0), rgb(0x00_0f_18), false));
         assert_eq!(cell(&on, 5, 1), (rgb(0x4e_bf_71), rgb(0x27_27_27), true));
         assert_eq!(cell(&on, 6, 1), (rgb(0x4e_bf_71), rgb(0x27_27_27), true));
+    }
+
+    #[test]
+    fn a_compact_switch_is_a_check_box() {
+        let theme = Theme::default();
+        let under = dialog_background(&theme);
+        let mut buf = Buffer::empty(Rect::new(0, 0, 5, 1));
+        let area = Rect::new(1, 0, 4, 1);
+        let mut switch = Switch::new(false);
+        switch.render_compact(&mut buf, area, &theme, under, false);
+        let text = |buf: &Buffer| (0..5).map(|x| buf[(x, 0)].symbol().to_owned()).collect::<String>();
+        assert_eq!(text(&buf), " [ ] ");
+        switch.toggle();
+        switch.render_compact(&mut buf, area, &theme, under, true);
+        assert_eq!(text(&buf), " [x] ");
+        // A press on it toggles it back; one past it doesn't.
+        let drawn = Rect::new(1, 0, Switch::COMPACT_WIDTH, 1);
+        assert!(switch.handle_mouse(&left_press(3, 0), drawn));
+        assert!(!switch.value());
+        assert!(!switch.handle_mouse(&left_press(4, 0), drawn));
     }
 
     #[test]

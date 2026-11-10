@@ -1,7 +1,8 @@
-//! The Reviewers field Create PR and Edit PR share: a bold "Reviewers" label, an input that completes logins, and,
-//! once anyone is listed, "Current Reviewers - Click/Select them to remove" over a list of checked logins. Enter in
-//! the input looks the login up and lists it; toggling a listed login removes it. Python's
-//! `ReviewerSelectionContainer`.
+//! The Reviewers field Create PR and Edit PR share, Python's `ReviewerSelectionContainer` as a compose sheet section
+//! (decision compose-dialogs, D5 a). While focus is elsewhere it's one row, "Reviewers", the listed logins (or
+//! `none`) and a dim "(tab to edit)". With focus it expands in place: a one-row input that completes logins, then the
+//! listed logins as `<login> ✕` items, wrapping. Enter in the input looks the login up and lists it; toggling a listed
+//! login (`enter` or `space` on the highlighted one, or a click) removes it.
 //!
 //! The field has no actions, bindings or effects of its own. The dialog that embeds it puts
 //! [`ReviewersField::focus_stops`] into its focus ring, hands it the keys, bindings, clicks and responses for those
@@ -16,21 +17,28 @@ use lazy_github_core::gh::GhError;
 use lazy_github_core::models::{FullUser, Repository};
 use ratatui::buffer::Buffer;
 use ratatui::layout::{Position, Rect};
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Style;
 use ratatui::text::{Line, Span};
 
 use crate::component::Cx;
+use crate::components::compose::{LabelState, field_area, render_label};
 use crate::components::selection_list::{ListOutcome, SelectionList};
-use crate::components::text_input::{self, InputOutcome, TextInput};
+use crate::components::text_input::{InputOutcome, TextInput};
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
 use crate::modal::{FieldKind, mark};
 use crate::theme::{Paint, Theme};
 use crate::toast::Toast;
 
-const LABEL: &str = "Reviewers";
+/// The field's label, which the dialog's label column is sized for.
+pub(super) const LABEL: &str = "Reviewers";
 const PLACEHOLDER: &str = "Reviewer to add";
-const LIST_LABEL: &str = "Current Reviewers - Click/Select them to remove";
+/// The collapsed summary with nobody listed, and its hint.
+const NONE: &str = "none";
+const HINT: &str = "(tab to edit)";
+/// What follows each listed login's item, and the columns between two items.
+const REMOVE: &str = " ✕";
+const ITEM_GAP: u16 = 3;
 
 /// The field's focusable parts, in screen order.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -83,6 +91,8 @@ pub struct ReviewersField {
     lookups: Vec<(RequestId, String)>,
     /// The collaborators request, until it answers.
     collaborators: Option<RequestId>,
+    /// Where it was last drawn.
+    drawn: Drawn,
 }
 
 impl ReviewersField {
@@ -90,11 +100,14 @@ impl ReviewersField {
     pub fn new(configured: &[String]) -> Self {
         let configured: Arc<[String]> = configured.into();
         Self {
-            input: TextInput::new(PLACEHOLDER).with_suggestions(Arc::clone(&configured)),
+            input: TextInput::new(PLACEHOLDER)
+                .one_row()
+                .with_suggestions(Arc::clone(&configured)),
             list: SelectionList::new(),
             configured,
             lookups: Vec::new(),
             collaborators: None,
+            drawn: Drawn::default(),
         }
     }
 
@@ -307,87 +320,152 @@ impl ReviewersField {
         self.input.captured_mouse(event)
     }
 
-    /// A left press at `event` on a field drawn in `area` (both in the coordinates it was drawn in): on the input it
-    /// moves the cursor there and asks for focus; on a listed login it toggles, and so removes, it.
-    pub fn handle_mouse(&mut self, event: &MouseEvent, area: Rect) -> ReviewersOutcome {
+    /// A left press at `event`, in the coordinates the field was last drawn in: on the input it moves the cursor there
+    /// and asks for focus, as a press on the collapsed summary does; on a listed login's item it removes the login.
+    pub fn handle_mouse(&mut self, event: &MouseEvent) -> ReviewersOutcome {
         if event.kind != MouseEventKind::Down(MouseButton::Left) {
             return ReviewersOutcome::Ignored;
         }
         let at = Position::new(event.column, event.row);
-        let input = self.area_of(ReviewersFocus::Input, area);
-        if input.contains(at) {
-            self.input.press(input, event.column);
+        if self.drawn.input.contains(at) {
+            self.input.press(self.drawn.input, event.column);
             return ReviewersOutcome::Focus(ReviewersFocus::Input);
         }
-        let list = self.area_of(ReviewersFocus::List, area);
-        if !list.contains(at) {
-            return ReviewersOutcome::Ignored;
+        if let Some(index) = self.drawn.items.iter().position(|item| item.contains(at)) {
+            return self.on_list(ListOutcome::Toggled { index, selected: false });
         }
-        match self.list.handle_mouse(event) {
-            ListOutcome::Ignored => ReviewersOutcome::Focus(ReviewersFocus::List),
-            outcome => self.on_list(outcome),
+        if self.drawn.summary.contains(at) {
+            return ReviewersOutcome::Focus(ReviewersFocus::Input);
         }
+        ReviewersOutcome::Ignored
     }
 
-    /// The rows the field takes: the label and the input, then the list's label and the list while anyone is
-    /// listed.
-    pub fn height(&self) -> u16 {
-        let input = 1 + text_input::HEIGHT;
+    /// The collapsed field's text after its label: the listed logins, comma-separated, or `none`.
+    pub fn summary(&self) -> String {
         if self.list.is_empty() {
-            input
+            NONE.to_owned()
         } else {
-            input + 1 + self.list.height()
+            self.reviewers().join(", ")
         }
     }
 
-    /// The rows `focus` takes, from the field's top.
-    pub fn rows(&self, focus: ReviewersFocus) -> Range<u16> {
-        match focus {
-            ReviewersFocus::Input => 1..1 + text_input::HEIGHT,
-            ReviewersFocus::List => {
-                let top = 2 + text_input::HEIGHT;
-                top..top + self.list.height()
+    /// Where each listed login's item goes when the items are `width` columns wide: its row from the first item row,
+    /// and its columns from the left. Items flow left to right with a gap between them, wrapping before one that
+    /// doesn't fit.
+    fn item_layout(&self, width: u16) -> Vec<Rect> {
+        let mut items = Vec::with_capacity(self.list.len());
+        let (mut x, mut y) = (0u16, 0u16);
+        for login in self.list.labels() {
+            let item = super::layout::text_width(login).saturating_add(super::layout::text_width(REMOVE));
+            if x > 0 && x.saturating_add(item) > width {
+                (x, y) = (0, y + 1);
             }
+            items.push(Rect::new(x, y, item.min(width), 1));
+            x = x.saturating_add(item + ITEM_GAP);
+        }
+        items
+    }
+
+    /// The rows the field takes with its items `width` columns wide: the summary row while collapsed; expanded (while
+    /// it has focus), the input row and the rows of the items.
+    pub fn height(&self, expanded: bool, width: u16) -> u16 {
+        if !expanded {
+            return 1;
+        }
+        1 + self.item_layout(width).last().map_or(0, |last| last.y + 1)
+    }
+
+    /// The rows `focus` takes from the expanded field's top, with its items `width` columns wide.
+    pub fn rows(&self, focus: ReviewersFocus, width: u16) -> Range<u16> {
+        match focus {
+            ReviewersFocus::Input => 0..1,
+            ReviewersFocus::List => 1..self.height(true, width).max(2),
         }
     }
 
-    /// Where `focus` goes in a field drawn in `area`. Empty for a hidden list.
-    fn area_of(&self, focus: ReviewersFocus, area: Rect) -> Rect {
-        if focus == ReviewersFocus::List && self.list.is_empty() {
-            return Rect::default();
-        }
-        let rows = self.rows(focus);
-        Rect {
-            y: area.y.saturating_add(rows.start),
-            height: rows.end - rows.start,
-            ..area
-        }
-        .intersection(area)
-    }
-
-    /// Draws the field into the top [`Self::height`] rows of `area`, over the dialog's background `under`, with
-    /// `focus` drawn focused.
-    pub fn render(&mut self, buf: &mut Buffer, area: Rect, theme: &Theme, under: Paint, focus: Option<ReviewersFocus>) {
+    /// Draws the field into `area`, over the dialog's background `under`, its label in the first `label_column`
+    /// columns. With `focus` (the part that has it) it's expanded: the input, then the listed logins' items, the
+    /// highlighted one in the block cursor while the list has focus. Without, the one-row summary.
+    pub fn render(
+        &mut self,
+        buf: &mut Buffer,
+        area: Rect,
+        label_column: u16,
+        theme: &Theme,
+        under: Paint,
+        focus: Option<ReviewersFocus>,
+    ) {
+        self.drawn = Drawn::default();
         let area = area.intersection(buf.area);
         if area.is_empty() {
             return;
         }
-        let text = Style::new().fg(theme.color(theme.roles().text.plain, under));
-        let width = usize::from(area.width);
-        buf.set_stringn(area.x, area.y, LABEL, width, text.add_modifier(Modifier::BOLD));
-        let input = self.area_of(ReviewersFocus::Input, area);
-        self.input
-            .render(buf, input, theme, under, focus == Some(ReviewersFocus::Input));
-        if self.list.is_empty() {
+        let roles = theme.roles();
+        let text = Style::new().fg(theme.color(roles.text.plain, under));
+        let dim = Style::new().fg(theme.color(roles.text.muted, under));
+        let label = if focus.is_some() {
+            LabelState::Focused
+        } else {
+            LabelState::Plain
+        };
+        render_label(buf, area, label_column, LABEL, label, theme, under);
+        let rest = Rect {
+            height: 1,
+            ..field_area(area, label_column)
+        };
+        let Some(focus) = focus else {
+            let line = Line::from(vec![
+                Span::styled(self.summary(), text),
+                Span::raw("  "),
+                Span::styled(HINT, dim),
+            ]);
+            buf.set_line(rest.x, rest.y, &line, rest.width);
+            self.drawn.summary = Rect { height: 1, ..area };
             return;
+        };
+        let input_focused = focus == ReviewersFocus::Input;
+        self.input.render(buf, rest, theme, under, input_focused);
+        self.drawn.input = rest;
+        let cursor = roles.cursor.focused;
+        let cursor_bg = cursor.bg.over(under);
+        let highlighted = cursor.style.apply(
+            Style::new()
+                .fg(theme.color(cursor.fg, cursor_bg))
+                .bg(theme.paint(cursor_bg)),
+        );
+        let highlight = self.list.highlighted().filter(|_| focus == ReviewersFocus::List);
+        let layout = self.item_layout(rest.width);
+        for (index, (item, login)) in layout.into_iter().zip(self.list.labels()).enumerate() {
+            let item = Rect {
+                x: rest.x + item.x,
+                y: area.y + 1 + item.y,
+                ..item
+            }
+            .intersection(area);
+            if item.is_empty() {
+                continue;
+            }
+            let (name, remove) = if highlight == Some(index) {
+                (highlighted, highlighted)
+            } else {
+                (text, dim)
+            };
+            let line = Line::from(vec![Span::styled(login, name), Span::styled(REMOVE, remove)]);
+            buf.set_line(item.x, item.y, &line, item.width);
+            self.drawn.items.push(item);
         }
-        let list = self.area_of(ReviewersFocus::List, area);
-        if let Some(y) = list.y.checked_sub(1).filter(|&y| y >= area.y) {
-            buf.set_stringn(area.x, y, LIST_LABEL, width, text);
-        }
-        self.list
-            .render(buf, list, theme, under, focus == Some(ReviewersFocus::List));
     }
+}
+
+/// Where the field's parts were last drawn, for presses. Empty for a part that wasn't drawn.
+#[derive(Debug, Default)]
+struct Drawn {
+    /// The collapsed summary row.
+    summary: Rect,
+    /// The input's box, while expanded.
+    input: Rect,
+    /// Each listed login's item, in list order, while expanded.
+    items: Vec<Rect>,
 }
 
 #[cfg(test)]

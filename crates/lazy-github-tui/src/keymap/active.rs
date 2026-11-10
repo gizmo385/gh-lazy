@@ -66,9 +66,9 @@ pub fn active_bindings(
                 owner: link.owner,
                 id,
                 key: keymap.key_display(id, token),
-                enabled: binding_state != BindingState::Disabled,
+                enabled: !matches!(binding_state, BindingState::Disabled | BindingState::DisabledAs(_)),
                 relabel: match binding_state {
-                    BindingState::Relabeled(label) => Some(label),
+                    BindingState::Relabeled(label) | BindingState::DisabledAs(label) => Some(label),
                     BindingState::Enabled | BindingState::Disabled | BindingState::Hidden => None,
                 },
             };
@@ -233,6 +233,15 @@ mod tests {
         // Without a relabel, the link's label still applies.
         assert_eq!(active[1].label(), "Line down");
         assert_eq!(active[1].relabel, None);
+    }
+
+    #[test]
+    fn disabled_as_is_greyed_out_under_its_label() {
+        let chain = [link(Owner::DiffBody, &[BindingId::DiffFoldAll])];
+        let state = |_: Owner, _: BindingId| BindingState::DisabledAs("Unfold Files");
+        let active = active_bindings(&chain, &Keymap::defaults(), state);
+        assert_eq!(active[0].label(), "Unfold Files");
+        assert!(!active[0].enabled && active[0].shown());
     }
 
     #[test]

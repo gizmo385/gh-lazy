@@ -1,0 +1,20 @@
+---
+source: crates/lazy-github-tui/src/modal/pull_request/tests.rs
+expression: "app.screen(48, 16)"
+---
+┌──────────────────────────────────────────────┐
+│C█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+└─█ Base        m  ← Compare  Ch   Draft [ ] █─┘
+┌─█ Title       Title                        █─┐
+┌─█                                          █ │
+│ █ Description  Write   Preview  ────────── █━│
+│ █  1  Describe the change (markdown)       █ │
+│ █                                          █ │
+└─█                                          █ │
+┌─█                                          █ │
+│ █                                          █▅│
+└─█                                          █ │
+┌─█ Reviewers   Reviewer to add              █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+└─────────────────┘└───────────────────────────┘
+ ^s Create  shift+⏎ Create  ^t Preview  ^o Expan

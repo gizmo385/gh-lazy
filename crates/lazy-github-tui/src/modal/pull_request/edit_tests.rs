@@ -110,7 +110,7 @@ fn update_of(title: &str, body: &str) -> PullRequestUpdate {
 #[test]
 fn the_fields_are_prefilled_from_the_pull_request() {
     let dialog = direct(pull_request(5));
-    assert_eq!(dialog.heading(), "Editing PR 5");
+    assert_eq!(dialog.heading(), "Editing PR 5 · parity-bot/pr-details");
     assert_eq!(
         dialog.form(),
         PullRequestForm {
@@ -122,7 +122,7 @@ fn the_fields_are_prefilled_from_the_pull_request() {
             reviewers: Vec::new(),
         }
     );
-    assert_eq!(dialog.ring.focused(), Some(PrField::Title));
+    assert_eq!(Some(dialog.focus), Some(PrField::Title));
     // The title's text is selected, so typing replaces it.
     assert_eq!(dialog.title.selection(), Some((0, "Add a cursor to the viewer".len())));
 }
@@ -136,21 +136,15 @@ fn a_pull_request_without_a_body_gives_an_empty_editor() {
 
 #[test]
 fn a_short_terminal_opens_scrolled_to_the_focused_title() {
-    // Edit PR shares Create PR's form: first drawn at 48x16, it scrolls to the title it focused on opening (#336).
+    // Edit PR shares Create PR's sheet: first drawn at 48x16, it opens with the title it focused in view (#336).
     let mut app = selected(TestApp::with_github(Config::default(), edit_gh()));
     app.press(&["E"]);
     settle(&mut app);
     assert!(is_open(&app), "E opens Edit PR");
     let screen = app.screen(48, 16);
-    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Edit PR is open");
-    assert!(dialog.scroll.offset() > 0, "the form is scrolled");
     assert!(
-        screen.contains("Add a cursor to the viewer"),
+        screen.contains("cursor to the viewer"),
         "the title is in view:\n{screen}"
-    );
-    assert!(
-        !screen.contains("Compare"),
-        "the branches are above the fold:\n{screen}"
     );
 }
 
@@ -183,37 +177,35 @@ fn e_asks_for_the_collaborators_and_the_requested_reviewers_but_not_the_branches
 
 #[test]
 fn the_requested_reviewers_are_listed_when_they_arrive_and_a_failure_lists_none() {
-    // The Reviewers input scrolls the list into view.
+    // The collapsed section names them; focused, it lists them as items.
     let mut app = editing();
+    let screen = dialog_view(&mut app).screen;
+    assert!(screen.contains("Reviewers  parity-reviewer  (tab to edit)"), "{screen}");
     app.press(&["tab", "tab"]);
     let screen = dialog_view(&mut app).screen;
-    assert!(
-        screen.contains("Current Reviewers - Click/Select them to remove"),
-        "{screen}"
-    );
-    assert!(screen.contains("parity-reviewer"), "{screen}");
+    assert!(screen.contains("           parity-reviewer ✕"), "{screen}");
 
     let gh = edit_gh().with_requested_reviewers(REPO, 5, Err(refused()));
     let mut app = editing_with(gh);
-    app.press(&["tab", "tab"]);
     let screen = dialog_view(&mut app).screen;
-    assert!(!screen.contains("Current Reviewers"), "{screen}");
+    assert!(screen.contains("Reviewers  none  (tab to edit)"), "{screen}");
 }
 
 #[test]
 fn the_branch_row_is_disabled_and_out_of_the_focus_order() {
     use PrField::*;
     let mut dialog = direct(pull_request(5));
-    assert!(dialog.base.is_disabled() && dialog.compare.is_disabled() && dialog.draft.is_disabled());
     let reviewer = Reviewers(ReviewersFocus::Input);
+    assert_eq!(walk(&mut dialog, FocusMove::Next, 3), [Description, reviewer, Title]);
     assert_eq!(
-        walk(&mut dialog, FocusMove::Next, 6),
-        [Description, reviewer, Submit, Cancel, Scroll, Title]
+        walk(&mut dialog, FocusMove::Previous, 3),
+        [reviewer, Description, Title]
     );
-    assert_eq!(
-        walk(&mut dialog, FocusMove::Previous, 6),
-        [Scroll, Cancel, Submit, reviewer, Description, Title]
-    );
+    // From the sheet, tab goes to the first field and shift+tab to the last.
+    dialog.focus = Sheet;
+    assert_eq!(walk(&mut dialog, FocusMove::Next, 1), [Title]);
+    dialog.focus = Sheet;
+    assert_eq!(walk(&mut dialog, FocusMove::Previous, 1), [reviewer]);
 }
 
 #[test]
@@ -222,14 +214,11 @@ fn the_reviewers_list_joins_the_focus_order_while_anyone_is_listed() {
     let mut dialog = direct(pull_request(5));
     dialog.reviewers.add_existing(["parity-reviewer".to_owned()]);
     assert_eq!(
-        walk(&mut dialog, FocusMove::Next, 7),
+        walk(&mut dialog, FocusMove::Next, 4),
         [
             Description,
             Reviewers(ReviewersFocus::Input),
             Reviewers(ReviewersFocus::List),
-            Submit,
-            Cancel,
-            Scroll,
             Title
         ]
     );
@@ -239,34 +228,39 @@ fn the_reviewers_list_joins_the_focus_order_while_anyone_is_listed() {
 fn a_click_on_the_branch_row_changes_nothing() {
     let mut app = editing();
     let before = dialog_view(&mut app).screen;
-    // Base's input, Compare's and the switch, on the branch row's middle line.
-    for column in [40, 80, 110] {
-        app.click(column, 14);
+    let y = before
+        .lines()
+        .position(|row| row.contains("Base        main"))
+        .expect("the branch row");
+    let row = before.lines().nth(y).unwrap_or_default().to_owned();
+    // Base's box, Compare's and the switch.
+    let column = |text: &str| u16::try_from(row[..row.find(text).unwrap()].chars().count()).unwrap();
+    let y = u16::try_from(y).unwrap();
+    for x in [column("main"), column("cursor"), column("[ ]") + 1] {
+        app.click(x, y);
     }
     assert!(is_open(&app));
-    let dialog = dialog_view(&mut app).screen;
+    let after = dialog_view(&mut app).screen;
     assert_eq!(
-        dialog.lines().nth(14),
-        before.lines().nth(14),
+        after.lines().nth(usize::from(y)),
+        Some(row.as_str()),
         "the switch didn't flip and no cursor shows"
     );
-    // The title lost focus to the scroll area: typing does nothing.
-    type_text(&mut app, "x");
-    assert!(!dialog_view(&mut app).screen.contains("xAdd"), "nothing typed");
+    let dialog = app.app().top_dialog::<PullRequestDialog>().expect("Edit PR is open");
+    assert_eq!(dialog.focus, PrField::Title, "focus stays on the title");
 }
 
 // Closing.
 
 #[test]
-fn cancel_escape_and_q_outside_the_text_fields_close_without_a_request() {
-    // escape from the title; q from the reviewers list, Update and Cancel; Cancel pressed. parity-reviewer is
-    // listed, so the list is a stop.
+fn escape_or_q_from_the_sheet_closes_without_a_request() {
+    // escape out of the title, the description or the reviewers list, then escape or q. parity-reviewer is listed,
+    // so the list is a stop.
     for keys in [
-        &["escape"][..],
-        &["tab", "tab", "tab", "q"],
-        &["tab", "tab", "tab", "tab", "q"],
-        &["tab", "tab", "tab", "tab", "tab", "q"],
-        &["tab", "tab", "tab", "tab", "tab", "enter"],
+        &["escape", "escape"][..],
+        &["tab", "escape", "q"],
+        &["tab", "tab", "tab", "q", "q"],
+        &["tab", "tab", "tab", "escape", "escape"],
     ] {
         let mut app = editing();
         app.press(keys);
@@ -452,7 +446,7 @@ fn a_second_submit_mid_chain_is_ignored() {
 fn escape_mid_chain_drops_the_later_answers() {
     let mut app = editing();
     type_text(&mut app, "T");
-    app.press(&["shift+enter", "escape"]);
+    app.press(&["shift+enter", "escape", "escape"]);
     settle(&mut app);
     assert!(!is_open(&app));
     assert_eq!(listings(&app), 1, "no listing after the update");
@@ -477,18 +471,23 @@ fn edit_pr_opened() {
 }
 
 #[test]
-fn edit_pr_scrolled_to_the_reviewers() {
+fn edit_pr_reviewers_expanded() {
     let mut app = editing();
-    app.press(&["tab", "tab"]);
+    app.press(&["tab", "tab", "tab", "down"]);
     insta::assert_snapshot!(app.screen(160, 48));
 }
 
 #[test]
 fn edit_pr_disabled_branch_row() {
     let mut app = editing();
+    let text = app.screen(160, 48);
+    let y = text
+        .lines()
+        .position(|row| row.contains("Base        "))
+        .expect("the branch row");
     let screen = app.render(160, 48);
-    // The branch row with its labels, faded inputs and switch.
-    let row = Rect::new(30, 13, 100, 3);
+    // The branch row with its labels, faded boxes and switch.
+    let row = Rect::new(30, u16::try_from(y).unwrap(), 100, 1);
     let mut branches = ratatui::buffer::Buffer::empty(row);
     for (x, y) in row.positions().map(|p| (p.x, p.y)) {
         branches[(x, y)] = screen[(x, y)].clone();

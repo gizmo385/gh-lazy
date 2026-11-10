@@ -135,8 +135,8 @@ fn toggling_draft_and_adding_a_reviewer_start_no_timer() {
     app.press(&["enter"]);
     settle(&mut app);
     assert_eq!(save_timeouts(&app), 0);
-    // Both are still saved by the next save.
-    app.press(&["escape"]);
+    // Both are still saved by the next save: leaving the input, then closing.
+    app.press(&["escape", "escape"]);
     let draft = saved(&app).unwrap();
     assert!(draft.is_draft);
     assert_eq!(draft.reviewers, ["parity-friend"]);
@@ -170,7 +170,7 @@ fn the_timer_saves_the_form_with_the_title_and_description_stripped() {
 
 #[test]
 fn cancel_and_modal_close_save_at_once_and_drop_the_timer() {
-    for keys in [&["escape"][..], &["tab", "tab", "tab", "tab", "enter"][..]] {
+    for keys in [&["escape", "escape"][..], &["tab", "escape", "q"][..]] {
         let mut app = opened();
         type_text(&mut app, "Kept");
         app.press(keys);
@@ -191,7 +191,7 @@ fn a_save_with_nothing_in_it_deletes_the_draft() {
     for typed in ["", "  "] {
         let mut app = opened_in(app_with(gh()).with_cache_file(draft_path(), "{}"));
         type_text(&mut app, typed);
-        app.press(&["escape"]);
+        app.press(&["escape", "escape"]);
         assert!(!is_open(&app));
         assert_eq!(
             draft_writes(&app),
@@ -285,12 +285,8 @@ fn a_saved_draft_fills_every_field_in_schedules_a_save_and_toasts() {
     assert!(!screen.contains("Template text"), "{screen}");
     assert_eq!(messages(&app), [plain("Restored saved PR draft")]);
     assert_eq!(save_timeouts(&app), 1, "restoring counts as a change");
-    // The reviewers are listed below the fold: the list's focus brings them up (title, description, list).
-    app.press(&["tab", "tab"]);
-    let screen = app.screen(160, 48);
-    for shown in ["Current Reviewers - Click/Select them to remove", "parity-friend"] {
-        assert!(screen.contains(shown), "{shown}:\n{screen}");
-    }
+    // The reviewers are in the collapsed section's summary.
+    assert!(screen.contains("Reviewers  parity-friend  (tab to edit)"), "{screen}");
     // The 2 s save writes the same draft back, every field included.
     app.advance(Duration::from_secs(2));
     assert_eq!(saved(&app), Some(restored_draft()));
@@ -371,7 +367,7 @@ fn the_app_hands_a_timer_tick_to_the_open_dialog_and_drops_it_without_one() {
     type_text(&mut app, "Ticked");
     app.dispatch(Action::Timer(TimerId::PrDraftSave));
     assert_eq!(saved(&app).map(|draft| draft.title), Some("Ticked".into()));
-    app.press(&["escape"]);
+    app.press(&["escape", "escape"]);
     let writes = draft_writes(&app).len();
     let logged = crate::test_util::logs(|| {
         app.dispatch(Action::Timer(TimerId::PrDraftSave));

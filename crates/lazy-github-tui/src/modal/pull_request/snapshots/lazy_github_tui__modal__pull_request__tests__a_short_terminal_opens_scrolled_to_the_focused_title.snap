@@ -3,18 +3,18 @@ source: crates/lazy-github-tui/src/modal/pull_request/tests.rs
 expression: screen
 ---
 ┌──────────────────────────────────────────────┐
-│Current repo: parity-bo                       │
-└█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-┌█
-┌█ Title
-│█ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
-│█ ▊  Title
-│█ ▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁
-└█
-┌█ Description
-│█ ▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔
-└█
-┌█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄
-│     ▌           ││reactions, comments and    │
+│C█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+└─█ New Pull Request · parity-bot/pr-details █─┘
+┌─█                                          █─┐
+┌─█ Base        m  ← Compare  Ch   Draft [ ] █ │
+│ █ Title       Title                        █━│
+│ █                                          █ │
+│ █ Description  Write   Preview  ────────── █ │
+└─█  1  Describe the change (markdown)       █ │
+┌─█                                          █ │
+│ █                                          █▅│
+└─█                                          █ │
+┌─█                                          █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
 └─────────────────┘└───────────────────────────┘
- / Search  O Lookup Pull Request  s Search GitHu
+ ^s Create  shift+⏎ Create  ^t Preview  ^o Expan

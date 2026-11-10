@@ -178,10 +178,8 @@ pub const KEY_CONTEXTS: &[KeyContext] = &[
         links: &[COMPOSE_BINDINGS],
     },
     dialog!("Edit issue dialog", SELECT_BINDINGS, COMPOSE_BINDINGS),
-    dialog!("Pull request dialog", INFO_BINDINGS, PR_BINDINGS),
     dialog!("Pull request dialog", SWITCH_BINDINGS, PR_BINDINGS),
     dialog!("Pull request dialog", SELECTION_LIST_BINDINGS, PR_BINDINGS),
-    dialog!("Pull request dialog", BUTTON_BINDINGS, PR_BINDINGS),
     // A compose sheet with its body left (`escape`): the body itself types, so it isn't a context.
     KeyContext {
         name: "New comment dialog",

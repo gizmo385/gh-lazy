@@ -1555,7 +1555,7 @@ fn keys_work_before_a_large_description_lands() {
     assert_eq!(main(&app).focus(), FocusTarget::DetailsContent);
     app.press(&["E"]);
     assert_eq!(app.app().modals(), [crate::modal::ModalKind::PullRequest]);
-    app.press(&["escape"]);
+    app.press(&["escape", "escape"]);
     settle(&mut app);
     // The Diff tab shows the diff.
     app.press(&["5", "right"]);

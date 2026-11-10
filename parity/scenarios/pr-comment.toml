@@ -1,6 +1,8 @@
 version = 1
 description = "PR Conversation: r on a review comment opens the reply modal and posts through the review-reply API; n opens New comment, posts an issue comment and reloads the conversation"
-# The modal's footer isn't compared (Rust binds `modal.submit` there, Py bug B17). After the reply Rust reloads the
+# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# (Python's 100 x 50 modal hides the panes, Rust's sheet leaves them in view), and [expect] checks the text both
+# show. After the reply Rust reloads the
 # conversation (Py bug B18's recommendation) and Python doesn't, so the reply's text is only in [expect] after the
 # reload that `n` causes in both apps.
 gate = true
@@ -90,19 +92,26 @@ wait.text = "Replying to comment from parity-bot"
 
 [[step]]
 capture = "reply-open"
-checks = ["titles", "focus"]
+checks = []
 
 [[step]]
 type = "It stops, yes."
 
+# Python's Post Comment is below the screen's edge until tab scrolls to it; in Rust's sheet tab does nothing.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { focused = "Post Comment" }
+wait.regex = 'Post Comment|\^s Post'
 
+# Rust's compose sheet has no Post Comment button (decision compose-dialogs): the click lands on Python's button and
+# on Rust's footer `^s Post`, the first "Post" on each screen.
 [[step]]
-keys = ["enter"]
+click = { text = "Post" }
+
+# Park the pointer off the footer, which Rust would otherwise draw hovered once the dialog closes.
+[[step]]
+move = { at = [100, 1] }
 
 [[step]]
 wait.log.method = "POST"
@@ -126,23 +135,26 @@ checks = ["titles", "tabs", "focus"]
 keys = ["n"]
 
 [[step]]
-wait.text = "Post Comment"
+wait.text = "New comment"
 
 [[step]]
 capture = "new-open"
-checks = ["titles", "focus"]
+checks = []
 
 [[step]]
 type = "Ship it."
 
 [[step]]
-keys = ["tab"]
+wait.text = "Ship it."
 
+# Rust's compose sheet has no Post Comment button (decision compose-dialogs): the click lands on Python's button and
+# on Rust's footer `^s Post`, the first "Post" on each screen. Python's button is on screen here.
 [[step]]
-wait = { focused = "Post Comment" }
+click = { text = "Post" }
 
+# Park the pointer off the footer, which Rust would otherwise draw hovered once the dialog closes.
 [[step]]
-keys = ["enter"]
+move = { at = [100, 1] }
 
 [[step]]
 wait.log.method = "POST"
@@ -150,7 +162,7 @@ wait.log.path = "/repos/parity-bot/pr-details/issues/5/comments"
 wait.log.body.body = "Ship it."
 
 [[step]]
-wait.gone = "Post Comment"
+wait.gone = "New comment"
 
 # The reloaded conversation has the new comment (below the fold): its reactions are asked for.
 [[step]]
@@ -169,13 +181,13 @@ checks = ["titles", "tabs", "focus"]
 contains = ["Should the cursor wrap at the end?"]
 
 [expect.reply-open]
-contains = ["Replying to comment from parity-bot at Mon Feb  2 10:00:00 2026", "Should the cursor wrap at the end?", "New comment", "Preview"]
+contains = ["Replying to comment from parity-bot at Mon Feb  2 10:00:00 2026", "Should the cursor wrap at the end?", "Preview"]
 
 [expect.replied]
 not_contains = ["Replying to comment", "Traceback"]
 
 [expect.new-open]
-contains = ["New comment", "Preview", "Post Comment"]
+contains = ["New comment", "Preview"]
 not_contains = ["Replying to comment"]
 
 [expect.reloaded]

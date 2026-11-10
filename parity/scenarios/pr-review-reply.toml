@@ -81,10 +81,13 @@ keys = ["r"]
 [[step]]
 wait.text = "Replying to comment from"
 
+# Rust draws the modal as the compose sheet (decision compose-dialogs), which leaves the panes behind it in view
+# where Python's 100 x 50 modal hides them: nothing is compared across apps, [expect] checks the text.
 [[step]]
 capture = "reply-open"
-checks = ["titles", "focus"]
+checks = []
 
 [expect.reply-open]
-contains = ["Replying to comment from parity-bot", "New comment", "Preview"]
-not_contains = ["Should the cursor wrap at the end?", "Traceback"]
+# The review's body is quoted. Rust's sheet is short, so the thread's comment shows behind it.
+contains = ["Replying to comment from parity-bot", "Looks close. One question inline.", "Preview"]
+not_contains = ["Traceback"]

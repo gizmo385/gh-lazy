@@ -1,0 +1,90 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│C█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+└─█ New comment                                                                                  █─┘
+┌─█  Write   Preview  ────────────────────────────────────────────────────────────────────────── █─┐
+│ █  A new comment                                                                               █ │
+│ █                                                                                              █━│
+│ █  Agreed, and I think the README should say so explicitly. Here's what I'd add under Keys:    █ │
+│ █                                                                                              █ │
+│ █  • j / k move one line and stop at either end of the file; they never wrap around.           █ │
+└─█  • G jumps to the last line and g to the first.                                              █ │
+┌─█  • J / K move by hunk, and stop at the first and the last hunk.                              █ │
+│ █                                                                                              █ │
+│ █  I also checked the three cases you listed against the current build. All three behave as    █ │
+│ █  described, so I don't think we need a code change here, just the docs. If you want, I       █ │
+│ █  can open a follow-up for the wrap-around idea, since a few people asked for it in the       █ │
+│ █  discussion, but I'd keep it behind a setting so the default stays the same as today.        █ │
+│ █                                                                                          ▅▅  █ │
+└─█  One more thing: the help panel lists j as "Line down" but the footer says "Down". We        █ │
+┌─█  should pick one. I'd go with the help panel's wording because it's more specific, and       █ │
+│ █  the footer has room for it at 100 columns.                                                  █ │
+│ █                                                                                              █ │
+│ █  Steps I ran:                                                                                █ │
+│ █                                                                                              █ │
+│ █   1. Open a file longer than the screen                                                      █ │
+│ █   2. Press G                                                                                 █ │
+└─█   3. Press j, then k, then g                                                                 █ │
+┌─█   4. Press J and K on a file with three hunks                                                █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Post  shift+⏎ Post  ^t Write  ^o Expand  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccba
+aacddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcaa
+eecdfffffffdgggggggggdhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdcii
+ejcd...kkk...................................................................................ll.dcbi
+emcd.........................................................................................ll.dcni
+eocd.........................................................................................ll.dcbi
+eocd.........................................................................................ll.dcbi
+epcd.qqr...r.................................................................................ll.dcbi
+eecd.qqr............................r........................................................ll.dcbi
+eecd.qqr...r.................................................................................ll.dcbi
+ejcd.........................................................................................ll.dcbi
+emcd.........................................................................................ll.dcbi
+epcd.........................................................................................ll.dcbi
+ebcd.........................................................................................ll.dcbi
+ebcd.........................................................................................ll.dcbi
+ebcd.........................................................................................ss.dcbi
+eecd......................................r..................................................tt.dcbi
+eecd.........................................................................................tt.dcbi
+ejcd.........................................................................................tt.dcbi
+emcd.........................................................................................tt.dcbi
+eocd.........................................................................................tt.dcbi
+eocd.........................................................................................tt.dcbi
+eocd.qqqq....................................................................................tt.dcbi
+epcd.qqqq......r.............................................................................tt.dcbi
+eecd.qqqq......r.......r.......r.............................................................tt.dcbi
+eecd.qqqq......r.....r.......................................................................tt.dcbi
+epccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbi
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+uuuuvvvvvuuuuuuuuuvvvvvuuuuvvvvvvuuuuvvvvvvvuuuuuvvvvvvwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww
+--- legend
+. fg=#e0e0e0 bg=#1e1e1e
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#e0e0e0 bg=#4f4f4f
+e fg=#365270 bg=#121212
+f fg=#b8b8b8 bg=#4f4f4f
+g fg=#e0e0e0 bg=#4f4f4f inverse
+h fg=#004578 bg=#4f4f4f
+i fg=#2a5738 bg=#121212
+j fg=#646464 bg=#191d21 bold
+k fg=#e0e0e0 bg=#1e1e1e bold
+l fg=#003054 bg=#1e1e1e inverse
+m fg=#646464 bg=#13212c
+n fg=#1a1a1a bg=#121212
+o fg=#646464 bg=#161616
+p fg=#0a1e2c bg=#161616 inverse
+q fg=#57a5e2 bg=#1e1e1e
+r fg=#f4bc6e bg=#2f281e
+s fg=#003054 bg=#000000 inverse
+t fg=#e0e0e0 bg=#000000
+u fg=#ffa62b bg=#242f38 bold
+v fg=#e0e0e0 bg=#242f38
+w bg=#242f38

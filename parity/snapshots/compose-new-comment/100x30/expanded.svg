@@ -1,0 +1,236 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="600" viewBox="0 0 1000 600" xml:space="preserve">
+<title>compose-new-comment · expanded · 100x30</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #121212; }
+.s1 { fill: #e0e0e0; }
+.s2 { fill: #b8b8b8; }
+.s3 { fill: #4f4f4f; }
+.s4 { fill: #004578; }
+.s5 { fill: #e0e0e0; font-weight: bold; }
+.s6 { fill: #57a5e2; }
+.s7 { fill: #f4bc6e; }
+.s8 { fill: #000000; }
+.s9 { fill: #ffa62b; font-weight: bold; }
+</style>
+<rect width="1000" height="600" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="0" y="0" width="1000" height="20" fill="#4f4f4f"/>
+<rect x="0" y="20" width="1000" height="20" fill="#4f4f4f"/>
+<rect x="0" y="40" width="100" height="20" fill="#4f4f4f"/>
+<rect x="100" y="40" width="90" height="20" fill="#e0e0e0"/>
+<rect x="190" y="40" width="810" height="20" fill="#4f4f4f"/>
+<rect x="0" y="60" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="60" width="20" height="20" fill="#003054"/>
+<rect x="980" y="60" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="80" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="80" width="20" height="20" fill="#003054"/>
+<rect x="980" y="80" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="100" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="100" width="20" height="20" fill="#003054"/>
+<rect x="980" y="100" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="120" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="120" width="20" height="20" fill="#003054"/>
+<rect x="980" y="120" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="140" width="20" height="20" fill="#4f4f4f"/>
+<rect x="50" y="140" width="10" height="20" fill="#2f281e"/>
+<rect x="90" y="140" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="140" width="20" height="20" fill="#003054"/>
+<rect x="980" y="140" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="160" width="20" height="20" fill="#4f4f4f"/>
+<rect x="50" y="160" width="10" height="20" fill="#2f281e"/>
+<rect x="340" y="160" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="160" width="20" height="20" fill="#003054"/>
+<rect x="980" y="160" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="180" width="20" height="20" fill="#4f4f4f"/>
+<rect x="50" y="180" width="10" height="20" fill="#2f281e"/>
+<rect x="90" y="180" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="180" width="20" height="20" fill="#003054"/>
+<rect x="980" y="180" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="200" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="200" width="20" height="20" fill="#003054"/>
+<rect x="980" y="200" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="220" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="220" width="20" height="20" fill="#003054"/>
+<rect x="980" y="220" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="240" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="240" width="20" height="20" fill="#003054"/>
+<rect x="980" y="240" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="260" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="260" width="20" height="20" fill="#003054"/>
+<rect x="980" y="260" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="280" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="280" width="20" height="20" fill="#003054"/>
+<rect x="980" y="280" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="300" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="300" width="20" height="20" fill="#003054"/>
+<rect x="980" y="300" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="320" width="20" height="20" fill="#4f4f4f"/>
+<rect x="400" y="320" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="320" width="20" height="20" fill="#003054"/>
+<rect x="980" y="320" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="340" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="340" width="20" height="20" fill="#003054"/>
+<rect x="980" y="340" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="360" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="360" width="20" height="20" fill="#000000"/>
+<rect x="980" y="360" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="380" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="380" width="20" height="20" fill="#000000"/>
+<rect x="980" y="380" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="400" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="400" width="20" height="20" fill="#000000"/>
+<rect x="980" y="400" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="420" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="420" width="20" height="20" fill="#000000"/>
+<rect x="980" y="420" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="440" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="440" width="20" height="20" fill="#000000"/>
+<rect x="980" y="440" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="460" width="20" height="20" fill="#4f4f4f"/>
+<rect x="130" y="460" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="460" width="20" height="20" fill="#000000"/>
+<rect x="980" y="460" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="480" width="20" height="20" fill="#4f4f4f"/>
+<rect x="130" y="480" width="10" height="20" fill="#2f281e"/>
+<rect x="210" y="480" width="10" height="20" fill="#2f281e"/>
+<rect x="290" y="480" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="480" width="20" height="20" fill="#000000"/>
+<rect x="980" y="480" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="500" width="20" height="20" fill="#4f4f4f"/>
+<rect x="130" y="500" width="10" height="20" fill="#2f281e"/>
+<rect x="190" y="500" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="500" width="20" height="20" fill="#000000"/>
+<rect x="980" y="500" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="520" width="20" height="20" fill="#4f4f4f"/>
+<rect x="950" y="520" width="20" height="20" fill="#000000"/>
+<rect x="980" y="520" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="540" width="20" height="20" fill="#4f4f4f"/>
+<rect x="850" y="540" width="10" height="20" fill="#2f281e"/>
+<rect x="950" y="540" width="20" height="20" fill="#000000"/>
+<rect x="980" y="540" width="20" height="20" fill="#4f4f4f"/>
+<rect x="0" y="560" width="1000" height="20" fill="#4f4f4f"/>
+<rect x="0" y="580" width="1000" height="20" fill="#242f38"/>
+</g>
+<text class="s0" x="0" y="15" textLength="1000" lengthAdjust="spacingAndGlyphs">█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="35" textLength="980" lengthAdjust="spacingAndGlyphs"> New comment                                                                                      </text>
+<text class="s0" x="990" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s2" x="20" y="55" textLength="70" lengthAdjust="spacingAndGlyphs"> Write </text>
+<text class="s3" x="100" y="55" textLength="90" lengthAdjust="spacingAndGlyphs"> Preview </text>
+<text class="s4" x="200" y="55" textLength="780" lengthAdjust="spacingAndGlyphs">──────────────────────────────────────────────────────────────────────────────</text>
+<text class="s0" x="990" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="75" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="75" textLength="40" lengthAdjust="spacingAndGlyphs">  A </text>
+<text class="s5" x="50" y="75" textLength="30" lengthAdjust="spacingAndGlyphs">new</text>
+<text class="s1" x="80" y="75" textLength="870" lengthAdjust="spacingAndGlyphs"> comment                                                                               </text>
+<text class="s0" x="990" y="75" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="990" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="115" textLength="940" lengthAdjust="spacingAndGlyphs">  Agreed, and I think the README should say so explicitly. Here&apos;s what I&apos;d add under Keys:    </text>
+<text class="s0" x="990" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="990" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="155" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s7" x="50" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="60" y="155" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s7" x="90" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">k</text>
+<text class="s1" x="100" y="155" textLength="850" lengthAdjust="spacingAndGlyphs"> move one line and stop at either end of the file; they never wrap around.           </text>
+<text class="s0" x="990" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="175" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s7" x="50" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">G</text>
+<text class="s1" x="60" y="175" textLength="280" lengthAdjust="spacingAndGlyphs"> jumps to the last line and </text>
+<text class="s7" x="340" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">g</text>
+<text class="s1" x="350" y="175" textLength="600" lengthAdjust="spacingAndGlyphs"> to the first.                                              </text>
+<text class="s0" x="990" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s7" x="50" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">J</text>
+<text class="s1" x="60" y="195" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s7" x="90" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">K</text>
+<text class="s1" x="100" y="195" textLength="850" lengthAdjust="spacingAndGlyphs"> move by hunk, and stop at the first and the last hunk.                              </text>
+<text class="s0" x="990" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="990" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="235" textLength="940" lengthAdjust="spacingAndGlyphs">  I also checked the three cases you listed against the current build. All three behave as    </text>
+<text class="s0" x="990" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="255" textLength="940" lengthAdjust="spacingAndGlyphs">  described, so I don&apos;t think we need a code change here, just the docs. If you want, I can   </text>
+<text class="s0" x="990" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="275" textLength="940" lengthAdjust="spacingAndGlyphs">  open a follow-up for the wrap-around idea, since a few people asked for it in the           </text>
+<text class="s0" x="990" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="295" textLength="940" lengthAdjust="spacingAndGlyphs">  discussion, but I&apos;d keep it behind a setting so the default stays the same as today.        </text>
+<text class="s0" x="990" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="990" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="335" textLength="390" lengthAdjust="spacingAndGlyphs">  One more thing: the help panel lists </text>
+<text class="s7" x="400" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="410" y="335" textLength="540" lengthAdjust="spacingAndGlyphs"> as &quot;Line down&quot; but the footer says &quot;Down&quot;. We should </text>
+<text class="s0" x="990" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="355" textLength="940" lengthAdjust="spacingAndGlyphs">  pick one. I&apos;d go with the help panel&apos;s wording because it&apos;s more specific, and the footer   </text>
+<text class="s8" x="950" y="355" textLength="20" lengthAdjust="spacingAndGlyphs">▃▃</text>
+<text class="s0" x="990" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="375" textLength="980" lengthAdjust="spacingAndGlyphs">  has room for it at 100 columns.                                                                 </text>
+<text class="s0" x="990" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="990" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="415" textLength="980" lengthAdjust="spacingAndGlyphs">  Steps I ran:                                                                                    </text>
+<text class="s0" x="990" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="990" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="455" textLength="40" lengthAdjust="spacingAndGlyphs"> 1. </text>
+<text class="s1" x="70" y="455" textLength="920" lengthAdjust="spacingAndGlyphs">Open a file longer than the screen                                                          </text>
+<text class="s0" x="990" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="475" textLength="40" lengthAdjust="spacingAndGlyphs"> 2. </text>
+<text class="s1" x="70" y="475" textLength="60" lengthAdjust="spacingAndGlyphs">Press </text>
+<text class="s7" x="130" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">G</text>
+<text class="s0" x="990" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="495" textLength="40" lengthAdjust="spacingAndGlyphs"> 3. </text>
+<text class="s1" x="70" y="495" textLength="60" lengthAdjust="spacingAndGlyphs">Press </text>
+<text class="s7" x="130" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="140" y="495" textLength="70" lengthAdjust="spacingAndGlyphs">, then </text>
+<text class="s7" x="210" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">k</text>
+<text class="s1" x="220" y="495" textLength="70" lengthAdjust="spacingAndGlyphs">, then </text>
+<text class="s7" x="290" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">g</text>
+<text class="s0" x="990" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="515" textLength="40" lengthAdjust="spacingAndGlyphs"> 4. </text>
+<text class="s1" x="70" y="515" textLength="60" lengthAdjust="spacingAndGlyphs">Press </text>
+<text class="s7" x="130" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">J</text>
+<text class="s1" x="140" y="515" textLength="50" lengthAdjust="spacingAndGlyphs"> and </text>
+<text class="s7" x="190" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">K</text>
+<text class="s1" x="200" y="515" textLength="790" lengthAdjust="spacingAndGlyphs"> on a file with three hunks                                                    </text>
+<text class="s0" x="990" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="990" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="555" textLength="840" lengthAdjust="spacingAndGlyphs">  Every one of them stopped where the docs will say it stops. The only surprise was </text>
+<text class="s7" x="850" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">K</text>
+<text class="s1" x="860" y="555" textLength="130" lengthAdjust="spacingAndGlyphs"> on the      </text>
+<text class="s0" x="990" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="575" textLength="1000" lengthAdjust="spacingAndGlyphs">█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█</text>
+<text class="s9" x="0" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^s </text>
+<text class="s1" x="40" y="595" textLength="50" lengthAdjust="spacingAndGlyphs">Post </text>
+<text class="s9" x="90" y="595" textLength="90" lengthAdjust="spacingAndGlyphs"> shift+⏎ </text>
+<text class="s1" x="180" y="595" textLength="50" lengthAdjust="spacingAndGlyphs">Post </text>
+<text class="s9" x="230" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^t </text>
+<text class="s1" x="270" y="595" textLength="60" lengthAdjust="spacingAndGlyphs">Write </text>
+<text class="s9" x="330" y="595" textLength="40" lengthAdjust="spacingAndGlyphs"> ^o </text>
+<text class="s1" x="370" y="595" textLength="90" lengthAdjust="spacingAndGlyphs">Collapse </text>
+<text class="s9" x="460" y="595" textLength="50" lengthAdjust="spacingAndGlyphs"> esc </text>
+<text class="s1" x="510" y="595" textLength="60" lengthAdjust="spacingAndGlyphs">Leave </text>
+</svg>

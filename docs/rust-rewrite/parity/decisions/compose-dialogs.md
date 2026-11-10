@@ -10,7 +10,7 @@
   `ctrl+t` (`compose.toggle_preview`) to switch to a markdown preview in place, and `ctrl+o` (`compose.expand`) to
   make the sheet full-screen. `escape` in a field leaves it; `escape` or `q` on the sheet closes the dialog. What
   each dialog sends doesn't change.
-- Decided by: Chris, 2026-11-09 (#419: D1 b, D2 a, D3 a, D4 a, D5 a, D6 a, D7 a; the sheet grows to the screen less the footer margin before the body scrolls, with no scrollbar until it overflows)
+- Decided by: Chris, 2026-11-09 (#419: D1 a, D2 a, D3 a, D4 a, D5 a, D6 a, D7 a; the sheet grows to the screen less the footer margin before the body scrolls, with no scrollbar until it overflows)
 - Link: #419 (tracking), #420, #421, #422, #423
 - Rows: `modals.compose-sheet`, `modals.compose-preview`, `modals.compose-expand`, `keybindings.compose-submit`, `keybindings.compose-toggle-preview`, `keybindings.compose-expand`
 

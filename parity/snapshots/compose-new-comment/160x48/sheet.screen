@@ -1,0 +1,130 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issu█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+└─────────────────────────────█ New comment                                                                                      █─────────────────────────────┘
+┌─ [1] Repositories ──────────█  Write   Preview  ────────────────────────────────────────────────────────────────────────────── █─────────────────────────────┐
+│ ★  Owner       Name         █  A **new** comment                                                                               █                             │
+│ ☆  parity-bot  issue-fixture█                                                                                                  █━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     █                                                                                                  █                             │
+│ ☆  parity-bot  hello-world  █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│ ☆  parity-bot  lazy-demo      ✘                              ││ │ parity-bot • Tue Feb  3 10:15:30 2026                                                      │
+│                                                              ││ │                                                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││ │ A comment from a deleted account.                                                          │
+│                                                              ││ │                                                                                            │
+│                                                              ││ │ Unknown • Wed Feb  4 11:00:00 2026                                                         │
+│                                                              ││ │                                                                                            │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [2] Pull Requests ──────────────────────────────────────────┐│ │ Fixed in #13. The fix reads the file first and falls back to the defaults when it is empty,│
+│ #  Status  Author      Title                                 ││ │ which is what the documentation already promised, so nothing else changes for people who   │
+│ 8  open    parity-bot  A pull request among the issues       ││ │ never had the problem.                                                                     │
+│                                                              ││ │                                                                                            │
+│                                                              ││ │ The second paragraph.                                                                      │
+│                                                              ││ │                                                                                            │
+│                                                              ││ │ parity-friend • Tue Feb 10 08:45:00 2026                                                   │
+│                                                              ││ │                                                                                            │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [3] Issues ─────────────────────────────────────────────────┐│                                                                                              │
+│ #   Status  Author         Title                             ││                                                                                              │
+│ 12  open    parity-friend  Crash when the config file is empt││                                                                                              │
+│ 11  closed  parity-bot     Closed without a body             ││                                                                                              │
+│ 10  open    parity-bot     Comments that load slowly         ││                                                                                              │
+│ 9   open    parity-friend  Comments that fail to load        ││                                                                                              │
+│                                                            ▏ ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘│                                                                                              │
+┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                                                                              │
+│ Time  Result  Job Name  Run Name  Run #                      ││                                                                                              │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^s Post  shift+⏎ Post  ^t Preview  ^o Expand  q Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.............................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaacddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdfffffffdgggggggggdhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdciiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+ejkjjjjjjjjjjjjjjjjjjjjjjjjjjjcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmldc.............................i
+ennnnnnnnnnnnnnnnnnnnnnnnnnnnncdlooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooldcpppppppppppppppppppppppppppppi
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcdlooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooldc.............................i
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqcccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.............................i
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqei.r.sssssssssssssssssssssssssssssssssssss......................................................i
+e..............................................................ei.r............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei.r............................................................................................i
+e..............................................................ei.r............................................................................................i
+e..............................................................ei.r.ssssssssssssssssssssssssssssssssss.........................................................i
+e..............................................................ei.r............................................................................................i
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeei..............................................................................................i
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeei.r..........ttt...............................................................................i
+ejjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjei.r............................................................................................i
+ennnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnei.r............................................................................................i
+e..............................................................ei.r............................................................................................i
+e..............................................................ei.r............................................................................................i
+e..............................................................ei.r............................................................................................i
+e..............................................................ei.r.ssssssssssssssssssssssssssssssssssssssss...................................................i
+e..............................................................ei.r............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeei..............................................................................................i
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeei..............................................................................................i
+ejjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjei..............................................................................................i
+ennnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnei..............................................................................................i
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqei..............................................................................................i
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqei..............................................................................................i
+eqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqei..............................................................................................i
+euuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuvwei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+e..............................................................ei..............................................................................................i
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeei..............................................................................................i
+eeeeeeeeeeeeeeeeexxxxxxxeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeei..............................................................................................i
+ejjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjei..............................................................................................i
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii
+yyyyzzzzzyyyyyyyyyzzzzzyyyyzzzzzzzzyyyyzzzzzzzyyyzzzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+--- legend
+. fg=#646464 bg=#121212
+a fg=#0a263a bg=#121212
+b fg=#50701d bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#e0e0e0 bg=#4f4f4f
+e fg=#365270 bg=#121212
+f fg=#e0e0e0 bg=#4f4f4f inverse
+g fg=#b8b8b8 bg=#4f4f4f
+h fg=#004578 bg=#4f4f4f
+i fg=#2a5738 bg=#121212
+j fg=#646464 bg=#191d21 bold
+k fg=#476419 bg=#191d21 bold
+l bg=#1e1e1e
+m fg=#e0e0e0 bg=#262626
+n fg=#646464 bg=#13212c
+o fg=#e0e0e0 bg=#1e1e1e
+p fg=#1a1a1a bg=#121212
+q fg=#646464 bg=#161616
+r fg=#1f2225 bg=#121212
+s fg=#4a4a4a bg=#121212
+t fg=#646464 bg=#121212 underline
+u fg=#0a1e2c bg=#161616 inverse
+v fg=#0a1e2c bg=#0a0a0a
+w fg=#646464 bg=#0a0a0a
+x fg=#2a3c50 bg=#121212
+y fg=#ffa62b bg=#242f38 bold
+z fg=#e0e0e0 bg=#242f38
+A bg=#242f38

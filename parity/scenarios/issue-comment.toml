@@ -1,7 +1,9 @@
 version = 1
-description = "New comment (n) and reply (r) on the issue Comments tab: the empty modal, the live markdown preview, Post Comment appending the comment, the reply modal's heading and quote, and the posted reply appended"
-# The modal's footer isn't compared: Rust binds `modal.submit` there (Py bug B17's recommendation), so it shows
-# `shift+⏎ Submit` where Python shows only `esc Close`.
+description = "New comment (n) and reply (r) on the issue Comments tab: the empty modal, the markdown preview, posting appending the comment, the reply modal's heading and quote, and the posted reply appended"
+# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# (Python's 100 x 50 modal with button rows and a live preview hides the panes, Rust's sheet leaves them in view
+# and has footer keys and Write/Preview tabs), and [expect] checks the text both show. The writes are compared as
+# before.
 gate = true
 parity_rows = [
     "modals.new-comment",
@@ -71,30 +73,37 @@ wait = { text = "n New Comment" }
 keys = ["n"]
 
 [[step]]
-wait.text = "Post Comment"
+wait.text = "New comment"
 
 [[step]]
 capture = "open"
-checks = ["titles", "focus"]
+checks = []
 
 [[step]]
 type = "A **new** comment"
+
+[[step]]
+wait.text = "A **new** comment"
+
+# Rust's preview is behind `ctrl+t` (`compose.toggle_preview`); Python's is always on and binds nothing to the key.
+[[step]]
+keys = ["ctrl+t"]
 
 [[step]]
 wait.text = "A new comment"
 
 [[step]]
 capture = "preview"
-checks = ["titles", "focus"]
+checks = []
 
+# Rust's compose sheet has no Post Comment button (decision compose-dialogs): the click lands on Python's button and
+# on Rust's footer `^s Post`, the first "Post" on each screen. Python's button is on screen here.
 [[step]]
-keys = ["tab"]
+click = { text = "Post" }
 
+# Park the pointer off the footer, which Rust would otherwise draw hovered once the dialog closes.
 [[step]]
-wait = { focused = "Post Comment" }
-
-[[step]]
-keys = ["enter"]
+move = { at = [100, 1] }
 
 [[step]]
 wait.log.method = "POST"
@@ -102,7 +111,7 @@ wait.log.path = "/repos/parity-bot/issue-fixture/issues/12/comments"
 wait.log.body.body = "A **new** comment"
 
 [[step]]
-wait.gone = "Post Comment"
+wait.gone = "New comment"
 
 [[step]]
 wait.text = "parity-bot • Tue Mar  3 09:00:00 2026"
@@ -132,20 +141,27 @@ wait.text = "Replying to comment from Unknown"
 
 [[step]]
 capture = "reply-open"
-checks = ["titles", "focus"]
+checks = []
 
-# The modal is taller than the screen here, so Post Comment is below the bottom edge; tab still reaches it.
 [[step]]
 type = "Agreed, thanks."
 
+# Python's modal is taller than the screen here, so Post Comment is below the bottom edge until tab scrolls to it. In
+# Rust's sheet tab does nothing: the body is its only field.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { focused = "Post Comment" }
+wait.regex = 'Post Comment|\^s Post'
 
+# Rust's compose sheet has no Post Comment button (decision compose-dialogs): the click lands on Python's button and
+# on Rust's footer `^s Post`, the first "Post" on each screen.
 [[step]]
-keys = ["enter"]
+click = { text = "Post" }
+
+# Park the pointer off the footer, which Rust would otherwise draw hovered once the dialog closes.
+[[step]]
+move = { at = [100, 1] }
 
 [[step]]
 wait.log.method = "POST"
@@ -153,7 +169,7 @@ wait.log.path = "/repos/parity-bot/issue-fixture/issues/12/comments"
 wait.log.body.body = "Agreed, thanks."
 
 [[step]]
-wait.gone = "Post Comment"
+wait.gone = "Replying to comment"
 
 [[step]]
 wait.text = "parity-bot • Tue Mar  3 09:05:00 2026"
@@ -162,29 +178,30 @@ wait.text = "parity-bot • Tue Mar  3 09:05:00 2026"
 capture = "replied"
 checks = ["titles", "tabs", "focus"]
 
-# Cancel: escape leaves the editor's modal without posting.
+# Cancel: escape closes Python's modal without posting. In Rust's sheet the first escape leaves the body and the
+# second closes; in Python the second reaches the main screen, where escape only clears a text selection.
 [[step]]
 keys = ["n"]
 
 [[step]]
-wait.text = "Post Comment"
+wait.text = "New comment"
 
 [[step]]
-keys = ["escape"]
+keys = ["escape", "escape"]
 
 [[step]]
-wait.gone = "Post Comment"
+wait.gone = "New comment"
 
 [[step]]
 capture = "cancelled"
 checks = ["titles", "tabs", "focus"]
 
 [expect.open]
-contains = ["New comment", "Preview", "Post Comment", "Cancel"]
+contains = ["New comment", "Preview"]
 not_contains = ["Replying to comment"]
 
 [expect.preview]
-contains = ["A **new** comment", "A new comment"]
+contains = ["A new comment"]
 
 [expect.posted]
 focused = ["[5] Issue #12 Details"]
@@ -195,7 +212,7 @@ not_contains = ["Post Comment", "Traceback"]
 contains = ["A comment from a deleted account.", " r Reply to Comment  n New Comment  ^v Paste link"]
 
 [expect.reply-open]
-contains = ["Replying to comment from Unknown at Wed Feb  4 11:00:00 2026", "A comment from a deleted account.", "New comment", "Preview"]
+contains = ["Replying to comment from Unknown at Wed Feb  4 11:00:00 2026", "A comment from a deleted account.", "Preview"]
 
 [expect.replied]
 focused = ["[5] Issue #12 Details"]
@@ -204,4 +221,4 @@ not_contains = ["Post Comment", "Traceback"]
 
 [expect.cancelled]
 focused = ["[5] Issue #12 Details"]
-not_contains = ["Post Comment", "Traceback"]
+not_contains = ["New comment", "Post Comment", "Traceback"]

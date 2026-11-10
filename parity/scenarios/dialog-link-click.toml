@@ -59,10 +59,17 @@ wait = { text = "n New Comment" }
 keys = ["n"]
 
 [[step]]
-wait.text = "Post Comment"
+wait.text = "New comment"
 
 [[step]]
 type = "see [zzdocs](https://example.com/docs) here"
+
+[[step]]
+wait.text = "see [zzdocs](https://example.com/docs) here"
+
+# Rust's preview is behind `ctrl+t` (decision compose-dialogs); Python's is always on and binds nothing to the key.
+[[step]]
+keys = ["ctrl+t"]
 
 [[step]]
 wait.text = "see zzdocs here"
@@ -78,11 +85,13 @@ click = { text = "see zzdocs here", offset = [5, 0] }
 [[step]]
 wait = { stable_ms = 1000 }
 
+# Rust draws the modal as the compose sheet (decision compose-dialogs), which leaves the panes behind it in view
+# where Python's 100 x 50 modal hides them: nothing is compared across apps, [expect] checks the text.
 [[step]]
 capture = "clicked"
-checks = ["titles", "focus"]
+checks = []
 
 [expect.clicked]
-contains = ["New comment", "Preview", "see zzdocs here", "Post Comment"]
+contains = ["New comment", "Preview", "see zzdocs here"]
 not_contains = ["Opening", "Traceback"]
 opened = ["https://example.com/docs"]

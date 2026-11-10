@@ -1,0 +1,92 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Issue #12 Details ──────────────────────────────────┐
+│ ★  Owner       Name           Priva  ││ Overview  Comments                                       │
+│ ☆  parity-bot  issue-fixture  ✘      ││━━━━━━━━━━╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles       ✘      ││ │ Thanks @parity-friend, I can reproduce it on main.     │
+│ ☆  parity-bot  hello-world    ✘    ▆▆││ │                                                        │
+│                                 ▎    ││ │ parity-bot • Tue Feb  3 10:15:30 2026                  │
+└──────────────────────────────────────┘│ │                                                        │
+┌─ [2] Pull Requests ──────────────────┐│                                                          │
+│ #  Status  Author      Title         ││ │ A comment from a deleted account.                      │
+│ 8  open    parity-bot  A pull request││ │                                                        │
+│                         ▉            ││ │ Unknown • Wed Feb  4 11:00:00 2026                     │
+│                                      ││ │                                                        │
+│                                      ││                                                          │
+│                                      ││ │ Fixed in #13. The fix reads the file first and falls   │
+└──────────────────────────────────────┘│ │ back to the defaults when it is empty, which is what   │
+┌─ [3] Issues ─────────────────────────┐│ │ the documentation already promised, so nothing else    │
+│ #   Status  Author         Title     ││ │ changes for people who never had the problem.          │
+│ 12  open    parity-friend  Crash when││ │                                                        │
+│ 11  closed  parity-bot     Closed wit││ │ The second paragraph.                                  │
+│ 10  open    parity-bot     Comments t││ │                                                        │
+│ 9   open    parity-friend  Comments t││ │ parity-friend • Tue Feb 10 08:45:00 2026               │
+│                      ▋               ││ │                                                        │
+└──────────────────────────────────────┘│                                                        ▅▅│
+┌─ [4] Workflows (empty) ──────────────┐│ │ A new comment                                          │
+│                               ▋      ││ │                                                        │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ n New Comment  ^v Paste link  f Follow link  F Follow link (browser)  q Quit  ^p Command Palette  M
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbbbbb............................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeggcd.hhhhhhhh.................................................d
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiggcdjjjjjjjjjjjkkkkkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjd
+cllllllllllllllllllllllllllllllllllllggcd.m........nnnnnnnnnnnnnn........................oooo....ppd
+cllllllllllllllllllllllllllllllllllllqqcd.m......................................................ppd
+cgggggggggggggggggggggggggggggggggrssttcd.m.uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu................ppd
+ccccccccccccccccccccccccccccccccccccccccd.m......................................................ppd
+ccccccccccccccccccccccccccccccccccccccccd........................................................ppd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.m......................................................ppd
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicd.m......................................................ppd
+cgggggggggggggggggggggggggrsssssssssssscd.m.uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu...................ppd
+c......................................cd.m......................................................ppd
+c......................................cd........................................................ppd
+c......................................cd.m..........nnn.........................................ppd
+ccccccccccccccccccccccccccccccccccccccccd.m......................................................ppd
+ccccccccccccccccccccccccccccccccccccccccd.m......................................................ppd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.m......................................................ppd
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicd.m......................................................ppd
+cllllllllllllllllllllllllllllllllllllllcd.m......................................................ppd
+cllllllllllllllllllllllllllllllllllllllcd.m......................................................ppd
+cllllllllllllllllllllllllllllllllllllllcd.m.uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.............ppd
+cggggggggggggggggggggggrssssssssssssssscd.m......................................................ppd
+ccccccccccccccccccccccccccccccccccccccccd........................................................qqd
+cccccccccccccccccvvvvvvvccccccccccccccccd.m...www................................................ssd
+cgggggggggggggggggggggggggggggggrssssttcd.m......................................................ssd
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+xxxyyyyyyyyyyyyxxxxyyyyyyyyyyyxxxyyyyyyyyyyyyxxxyyyyyyyyyyyyyyyyyyyyyyxxxyyyyyxxxxyyyyyyyyyyyyyyyyxx
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#adff2f bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#e0e0e0 bg=#242f38 bold
+f fg=#98e024 bg=#242f38 bold
+g fg=#003054 bg=#1e1e1e inverse
+h fg=#797979 bg=#121212
+i fg=#e0e0e0 bg=#153854
+j fg=#262626 bg=#121212
+k fg=#0178d4 bg=#121212
+l fg=#e0e0e0 bg=#1e1e1e
+m fg=#333b42 bg=#121212
+n fg=#e0e0e0 bg=#121212 underline
+o fg=#f4bb6e bg=#241d13
+p fg=#003054 bg=#121212 inverse
+q fg=#003054 bg=#000000 inverse
+r fg=#003054 bg=#000000
+s fg=#e0e0e0 bg=#000000
+t bg=#000000
+u fg=#a0a0a0 bg=#121212
+v fg=#4e7bae bg=#121212
+w fg=#e0e0e0 bg=#121212 bold
+x fg=#ffa62b bg=#242f38 bold
+y fg=#e0e0e0 bg=#242f38

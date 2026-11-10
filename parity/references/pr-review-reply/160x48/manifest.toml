@@ -4,11 +4,11 @@ size = "160x48"
 captures = ["review-focused", "reply-open"]
 
 [inputs]
-scenario = "240a39056d9dc14518947a12af367d822cb51448"
+scenario = "d24847d8777fd156d400e2d5917065a57bd2a198"
 fixtures = "f08beddbcecbffb29234d9f65e3b95c0aa7e36cf"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
-python = "3.14.7"
+python = "3.14.8"
 os = "linux"

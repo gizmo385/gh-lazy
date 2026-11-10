@@ -314,7 +314,7 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s7" x="300" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s17" x="310" y="395" textLength="490" lengthAdjust="spacingAndGlyphs">    Maximize                   M                 </text>
 <text class="s15" x="800" y="395" textLength="190" lengthAdjust="spacingAndGlyphs">app.maximize_widget</text>
-<text class="s19" x="1260" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">▁▁</text>
+<text class="s19" x="1260" y="395" textLength="20" lengthAdjust="spacingAndGlyphs">▂▂</text>
 <text class="s7" x="1290" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
 <text class="s3" x="1590" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="415" textLength="300" lengthAdjust="spacingAndGlyphs">┌─ [2] Pull Requests ─────────</text>

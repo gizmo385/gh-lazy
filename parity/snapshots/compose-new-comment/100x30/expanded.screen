@@ -1,0 +1,81 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█ New comment                                                                                      █
+█  Write   Preview  ────────────────────────────────────────────────────────────────────────────── █
+█  A new comment                                                                                   █
+█                                                                                                  █
+█  Agreed, and I think the README should say so explicitly. Here's what I'd add under Keys:        █
+█                                                                                                  █
+█  • j / k move one line and stop at either end of the file; they never wrap around.               █
+█  • G jumps to the last line and g to the first.                                                  █
+█  • J / K move by hunk, and stop at the first and the last hunk.                                  █
+█                                                                                                  █
+█  I also checked the three cases you listed against the current build. All three behave as        █
+█  described, so I don't think we need a code change here, just the docs. If you want, I can       █
+█  open a follow-up for the wrap-around idea, since a few people asked for it in the               █
+█  discussion, but I'd keep it behind a setting so the default stays the same as today.            █
+█                                                                                                  █
+█  One more thing: the help panel lists j as "Line down" but the footer says "Down". We should     █
+█  pick one. I'd go with the help panel's wording because it's more specific, and the footer   ▃▃  █
+█  has room for it at 100 columns.                                                                 █
+█                                                                                                  █
+█  Steps I ran:                                                                                    █
+█                                                                                                  █
+█   1. Open a file longer than the screen                                                          █
+█   2. Press G                                                                                     █
+█   3. Press j, then k, then g                                                                     █
+█   4. Press J and K on a file with three hunks                                                    █
+█                                                                                                  █
+█  Every one of them stopped where the docs will say it stops. The only surprise was K on the      █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+ ^s Post  shift+⏎ Post  ^t Write  ^o Collapse  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbba
+abcccccccbdddddddddbeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeba
+ab...fff.......................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.hhi...i.....................................................................................gg.ba
+ab.hhi............................i............................................................gg.ba
+ab.hhi...i.....................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab.............................................................................................gg.ba
+ab......................................i......................................................gg.ba
+ab.............................................................................................jj.ba
+ab.............................................................................................kk.ba
+ab.............................................................................................kk.ba
+ab.............................................................................................kk.ba
+ab.............................................................................................kk.ba
+ab.hhhh........................................................................................kk.ba
+ab.hhhh......i.................................................................................kk.ba
+ab.hhhh......i.......i.......i.................................................................kk.ba
+ab.hhhh......i.....i...........................................................................kk.ba
+ab.............................................................................................kk.ba
+ab...................................................................................i.........kk.ba
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+llllmmmmmlllllllllmmmmmllllmmmmmmllllmmmmmmmmmlllllmmmmmmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn
+--- legend
+. fg=#e0e0e0 bg=#1e1e1e
+a fg=#121212 bg=#4f4f4f
+b fg=#e0e0e0 bg=#4f4f4f
+c fg=#b8b8b8 bg=#4f4f4f
+d fg=#e0e0e0 bg=#4f4f4f inverse
+e fg=#004578 bg=#4f4f4f
+f fg=#e0e0e0 bg=#1e1e1e bold
+g fg=#003054 bg=#1e1e1e inverse
+h fg=#57a5e2 bg=#1e1e1e
+i fg=#f4bc6e bg=#2f281e
+j fg=#003054 bg=#000000 inverse
+k fg=#e0e0e0 bg=#000000
+l fg=#ffa62b bg=#242f38 bold
+m fg=#e0e0e0 bg=#242f38
+n bg=#242f38

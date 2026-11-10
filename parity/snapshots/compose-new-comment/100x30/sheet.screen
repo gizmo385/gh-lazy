@@ -1,0 +1,93 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│C█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+└─█ New comment                                                                                  █─┘
+┌─█  Write   Preview  ────────────────────────────────────────────────────────────────────────── █─┐
+│ █  A **new** comment                                                                           █ │
+│ █                                                                                              █━│
+│ █                                                                                              █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+│                                 ▎    ││ │ parity-bot • Tue Feb  3 10:15:30 2026                  │
+└──────────────────────────────────────┘│ │                                                        │
+┌─ [2] Pull Requests ──────────────────┐│                                                          │
+│ #  Status  Author      Title         ││ │ A comment from a deleted account.                      │
+│ 8  open    parity-bot  A pull request││ │                                                        │
+│                         ▉            ││ │ Unknown • Wed Feb  4 11:00:00 2026                     │
+│                                      ││ │                                                        │
+│                                      ││                                                          │
+│                                      ││ │ Fixed in #13. The fix reads the file first and falls   │
+└──────────────────────────────────────┘│ │ back to the defaults when it is empty, which is what   │
+┌─ [3] Issues ─────────────────────────┐│ │ the documentation already promised, so nothing else    │
+│ #   Status  Author         Title     ││ │ changes for people who never had the problem.          │
+│ 12  open    parity-friend  Crash when││ │                                                        │
+│ 11  closed  parity-bot     Closed wit││ │ The second paragraph.                                  │
+│ 10  open    parity-bot     Comments t││ │                                                        │
+│ 9   open    parity-friend  Comments t││ │ parity-friend • Tue Feb 10 08:45:00 2026               │
+│                      ▋               ││ │                                                        │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Post  shift+⏎ Post  ^t Preview  ^o Expand  q Close
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a.bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.a
+aabccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbaa
+ddbceeeeeeecfffffffffcggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggcbhh
+dibcjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjcb.h
+dlbcjmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmjcbnh
+dobcjmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmjcb.h
+dobbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.h
+dpppppppppppppppppppppppppppppppppqrrssdh.t.uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu..................h
+ddddddddddddddddddddddddddddddddddddddddh.t........................................................h
+ddddddddddddddddddddddddddddddddddddddddh..........................................................h
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidh.t........................................................h
+dlllllllllllllllllllllllllllllllllllllldh.t........................................................h
+dpppppppppppppppppppppppppqrrrrrrrrrrrrdh.t.uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu.....................h
+d......................................dh.t........................................................h
+d......................................dh..........................................................h
+d......................................dh.t..........vvv...........................................h
+ddddddddddddddddddddddddddddddddddddddddh.t........................................................h
+ddddddddddddddddddddddddddddddddddddddddh.t........................................................h
+diiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiidh.t........................................................h
+dlllllllllllllllllllllllllllllllllllllldh.t........................................................h
+doooooooooooooooooooooooooooooooooooooodh.t........................................................h
+doooooooooooooooooooooooooooooooooooooodh.t........................................................h
+doooooooooooooooooooooooooooooooooooooodh.t.uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu...............h
+dppppppppppppppppppppppqrrrrrrrrrrrrrrrdh.t........................................................h
+ddddddddddddddddddddddddddddddddddddddddh..........................................................h
+dddddddddddddddddwwwwwwwddddddddddddddddh..........................................................h
+dpppppppppppppppppppppppppppppppqrrrrssdh..........................................................h
+ddddddddddddddddddddddddddddddddddddddddhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+xxxxyyyyyxxxxxxxxxyyyyyxxxxyyyyyyyyxxxxyyyyyyyxxxyyyyyyzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz
+--- legend
+. fg=#646464 bg=#121212
+a fg=#0a263a bg=#121212
+b fg=#121212 bg=#4f4f4f
+c fg=#e0e0e0 bg=#4f4f4f
+d fg=#365270 bg=#121212
+e fg=#e0e0e0 bg=#4f4f4f inverse
+f fg=#b8b8b8 bg=#4f4f4f
+g fg=#004578 bg=#4f4f4f
+h fg=#2a5738 bg=#121212
+i fg=#646464 bg=#191d21 bold
+j bg=#1e1e1e
+k fg=#e0e0e0 bg=#262626
+l fg=#646464 bg=#13212c
+m fg=#e0e0e0 bg=#1e1e1e
+n fg=#1a1a1a bg=#121212
+o fg=#646464 bg=#161616
+p fg=#0a1e2c bg=#161616 inverse
+q fg=#0a1e2c bg=#0a0a0a
+r fg=#646464 bg=#0a0a0a
+s bg=#0a0a0a
+t fg=#1f2225 bg=#121212
+u fg=#4a4a4a bg=#121212
+v fg=#646464 bg=#121212 underline
+w fg=#2a3c50 bg=#121212
+x fg=#ffa62b bg=#242f38 bold
+y fg=#e0e0e0 bg=#242f38
+z bg=#242f38

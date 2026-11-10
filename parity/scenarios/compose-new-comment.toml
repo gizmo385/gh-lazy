@@ -1,0 +1,219 @@
+version = 1
+description = "Compose sheet on New comment (n on the issue Comments tab): 7 rows empty, growing with a short body, at its cap with a long one (the body scrolls, its scrollbar shown only then), ctrl+t Preview, ctrl+o full screen and back, escape leaving the body (q Close), and ctrl+s posting the same write as Python's Post Comment (#420)"
+# Rust-only: the compose sheet is new behavior (decision compose-dialogs). Checked by eye at both sizes.
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "modals.compose-sheet",
+    "modals.compose-preview",
+    "modals.compose-expand",
+    "keybindings.compose-submit",
+    "keybindings.compose-toggle-preview",
+    "keybindings.compose-expand",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# The `issue-comment` scenario's: issue-write answers POST .../issues/12/comments for "A **new** comment".
+fixtures = ["issue-write", "issue-details", "base"]
+
+[[step]]
+wait.text = "issue-fixture"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Issues with bodies and comments."
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Workaround: delete the file"
+wait.timeout_ms = 15000
+
+# The Comments tab, then into its scroll area, where `n` is bound.
+[[step]]
+keys = ["5"]
+
+[[step]]
+wait = { focused = "Details" }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait.text = "A comment from a deleted account."
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "n New Comment" }
+
+[[step]]
+keys = ["n"]
+
+[[step]]
+wait.text = "Write a comment (markdown)"
+
+[[step]]
+capture = "open"
+
+[[step]]
+type = "A **new** comment"
+
+[[step]]
+wait.text = "A **new** comment"
+
+[[step]]
+capture = "short"
+
+# Long enough to pass the cap at both sizes: the sheet stops growing and the body scrolls to the cursor at its end.
+# It starts with a blank line under the short body.
+[[step]]
+paste = """
+
+
+Agreed, and I think the README should say so explicitly. Here's what I'd add under Keys:
+
+- `j` / `k` move one line and stop at either end of the file; they never wrap around.
+- `G` jumps to the last line and `g` to the first.
+- `J` / `K` move by hunk, and stop at the first and the last hunk.
+
+I also checked the three cases you listed against the current build. All three behave as described, so I don't think we need a code change here, just the docs. If you want, I can open a follow-up for the wrap-around idea, since a few people asked for it in the discussion, but I'd keep it behind a setting so the default stays the same as today.
+
+One more thing: the help panel lists `j` as "Line down" but the footer says "Down". We should pick one. I'd go with the help panel's wording because it's more specific, and the footer has room for it at 100 columns.
+
+Steps I ran:
+
+1. Open a file longer than the screen
+2. Press `G`
+3. Press `j`, then `k`, then `g`
+4. Press `J` and `K` on a file with three hunks
+
+Every one of them stopped where the docs will say it stops. The only surprise was `K` on the first hunk, which does nothing rather than wrapping to the last one, and that matches the rest.
+
+Finally, the screenshot in the README is from 0.5 and still shows the old title bar. I'll refresh it in the same PR, and add one of the diff view with a cursor on a hunk header, since that's the part people ask about.
+
+A few notes for whoever picks up the wrap-around follow-up:
+
+- keep the default as it is today
+- put the setting next to the other viewer settings
+- make `G` and `g` respect it too, so the keys stay consistent
+- add a snapshot for the wrapped position at both widths
+
+I'll link this thread from the follow-up so the context isn't lost. If anything in the list above looks wrong, say so here and I'll fix it before the PR goes up.
+
+Thanks again for the careful report. The steps made this quick to check."""
+
+[[step]]
+wait.text = "The steps made this quick to check."
+
+[[step]]
+capture = "long"
+
+[[step]]
+keys = ["ctrl+t"]
+
+[[step]]
+wait.text = "^t Write"
+
+[[step]]
+capture = "preview"
+
+[[step]]
+keys = ["ctrl+o"]
+
+[[step]]
+wait.text = "^o Collapse"
+
+[[step]]
+capture = "expanded"
+
+[[step]]
+keys = ["ctrl+o"]
+
+[[step]]
+wait.text = "^o Expand"
+
+# Back to the editor, and the paste undone (one undo batch): the text is the short body again.
+[[step]]
+keys = ["ctrl+t"]
+
+[[step]]
+wait.text = "^t Preview"
+
+[[step]]
+keys = ["ctrl+z"]
+
+[[step]]
+wait.gone = "The steps made this quick to check."
+
+# escape leaves the body: the sheet has focus, and the footer offers q Close.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.text = "q Close"
+
+[[step]]
+capture = "sheet"
+
+[[step]]
+keys = ["ctrl+s"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/issue-fixture/issues/12/comments"
+wait.log.body.body = "A **new** comment"
+
+[[step]]
+wait.gone = "^s Post"
+
+# The posted comment, appended (its date line is below the fold at 100x30).
+[[step]]
+wait.text = "A new comment"
+
+[[step]]
+capture = "posted"
+
+[expect.open]
+contains = ["New comment", " Write   Preview ", "Write a comment (markdown)", "^s Post"]
+footer = ["^s Post", "shift+⏎ Post", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.short]
+contains = ["A **new** comment"]
+not_contains = ["Write a comment (markdown)"]
+
+[expect.long]
+contains = ["The steps made this quick to check."]
+footer = ["^s Post", "shift+⏎ Post", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.preview]
+contains = ["A new comment", "Agreed, and I think the README should say so explicitly."]
+not_contains = ["A **new** comment"]
+footer = ["^s Post", "shift+⏎ Post", "^t Write", "^o Expand", "esc Leave"]
+
+[expect.expanded]
+contains = ["A new comment"]
+footer = ["^s Post", "shift+⏎ Post", "^t Write", "^o Collapse", "esc Leave"]
+
+[expect.sheet]
+contains = ["A **new** comment"]
+footer = ["^s Post", "shift+⏎ Post", "^t Preview", "^o Expand", "q Close"]
+
+[expect.posted]
+focused = ["[5] Issue #12 Details"]
+contains = ["A new comment"]
+not_contains = ["Write   Preview", "Traceback"]

@@ -37,6 +37,8 @@ const RUST_ONLY_IDS: &[&str] = &[
     "main.refresh",
     // Decision issue-milestone.
     "issue.milestone",
+    // Decision pr-milestone.
+    "pull_request.milestone",
     // Decision search-issues-and-prs.
     "search.open",
     "search.save_query",

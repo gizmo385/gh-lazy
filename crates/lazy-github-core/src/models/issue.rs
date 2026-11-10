@@ -98,12 +98,21 @@ pub struct Milestone {
 
 impl Milestone {
     /// The search query that lists the issues in this milestone of `repo` (`owner/name`):
-    /// `is:issue milestone:"<title>" repo:<repo>`.
-    ///
+    /// `is:issue milestone:"<title>" repo:<repo>` (#410).
+    pub fn issues_query(&self, repo: &str) -> String {
+        self.search_query("is:issue", repo)
+    }
+
+    /// The search query that lists the pull requests in this milestone of `repo` (`owner/name`):
+    /// `is:pr milestone:"<title>" repo:<repo>` (#417).
+    pub fn pull_requests_query(&self, repo: &str) -> String {
+        self.search_query("is:pr", repo)
+    }
+
     /// GitHub's search has no escape for `"` inside a quoted value, so double quotes are dropped from the title.
-    pub fn search_query(&self, repo: &str) -> String {
+    fn search_query(&self, kind: &str, repo: &str) -> String {
         let title: String = self.title.chars().filter(|&c| c != '"').collect();
-        format!("is:issue milestone:\"{title}\" repo:{repo}")
+        format!("{kind} milestone:\"{title}\" repo:{repo}")
     }
 }
 
@@ -419,15 +428,19 @@ mod tests {
     fn milestone_search_query() {
         let mut ms: Milestone = serde_json::from_value(milestone(None)).unwrap();
         assert_eq!(
-            ms.search_query("parity-bot/issue-fixture"),
+            ms.issues_query("parity-bot/issue-fixture"),
             r#"is:issue milestone:"v0.7" repo:parity-bot/issue-fixture"#
         );
         ms.title = "Rust M5: Parity sign-off".to_owned();
         assert_eq!(
-            ms.search_query("gizmo385/gh-lazy"),
+            ms.issues_query("gizmo385/gh-lazy"),
             r#"is:issue milestone:"Rust M5: Parity sign-off" repo:gizmo385/gh-lazy"#
         );
         ms.title = r#"The "big" one"#.to_owned();
-        assert_eq!(ms.search_query("o/r"), r#"is:issue milestone:"The big one" repo:o/r"#);
+        assert_eq!(ms.issues_query("o/r"), r#"is:issue milestone:"The big one" repo:o/r"#);
+        assert_eq!(
+            ms.pull_requests_query("o/r"),
+            r#"is:pr milestone:"The big one" repo:o/r"#
+        );
     }
 }

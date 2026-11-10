@@ -3,10 +3,10 @@
 
 use std::sync::Arc;
 
-use lazy_github_core::models::{Issue, IssueState, Milestone};
+use lazy_github_core::models::{Issue, IssueState};
 use ratatui::Frame;
 use ratatui::layout::Rect;
-use ratatui::style::{Modifier, Style};
+use ratatui::style::Modifier;
 
 use crate::component::Cx;
 use crate::components::command_log::Wheel;
@@ -17,7 +17,9 @@ use crate::effect::RequestId;
 use crate::theme::Theme;
 
 use super::super::details::BodyRenderCx;
-use super::super::overview_text::{HeaderStyles, OverviewMarkdown, append, mark, push_label, push_rule};
+use super::super::overview_text::{
+    HeaderStyles, OverviewMarkdown, append, mark, milestone_line, push_label, push_rule,
+};
 
 /// The Overview of one issue, and its scroll position.
 #[derive(Debug)]
@@ -163,40 +165,11 @@ fn overview(issue: &Issue, markdown: Option<&Markdown>, width: u16, theme: &Them
     out
 }
 
-/// `Milestone: <title> • <state> • due <date> • <closed> of <total> closed`, the due date and counts left out when
-/// GitHub has none.
-fn milestone_line(milestone: &Milestone, text: Style, link: Style, theme: &Theme) -> Vec<TextRun> {
-    const SEPARATOR: &str = " • ";
-    let state = match milestone.state {
-        IssueState::Open => mark(theme, theme.roles().marks.positive),
-        IssueState::Closed => mark(theme, theme.roles().marks.merged),
-    };
-    let mut runs = vec![
-        TextRun::new("Milestone: ", text),
-        TextRun::link(milestone.title.as_str(), link, milestone.html_url.as_str()),
-        TextRun::new(SEPARATOR, text),
-        TextRun::new(milestone.state.as_str(), state),
-    ];
-    if let Some(due_on) = milestone.due_on {
-        // `Timestamp::strftime` formats in UTC, the day GitHub stores.
-        runs.push(TextRun::new(SEPARATOR, text));
-        runs.push(TextRun::new(format!("due {}", due_on.strftime("%Y-%m-%d")), text));
-    }
-    let total = milestone.open_issues + milestone.closed_issues;
-    if total > 0 {
-        runs.push(TextRun::new(SEPARATOR, text));
-        runs.push(TextRun::new(
-            format!("{} of {total} closed", milestone.closed_issues),
-            text,
-        ));
-    }
-    runs
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::screens::main::issue_details::tests::fixture_issue;
+    use lazy_github_core::models::Milestone;
 
     fn text(rendered: &Rendered) -> Vec<String> {
         rendered

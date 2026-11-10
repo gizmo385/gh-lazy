@@ -1743,3 +1743,181 @@ mod gh_failures {
         }
     }
 }
+
+// The milestone line and `pull_request.milestone` (#417), against the `pr-milestone` fixtures: pull request 5 in the
+// open milestone v1.0, the rest in none.
+
+mod milestone {
+    use lazy_github_core::github::{SearchHit, SearchPage};
+    use lazy_github_core::models::IssueState;
+
+    use super::*;
+    use crate::component::{BindingState, Owner};
+    use crate::modal::{ModalKind, SearchDialog};
+
+    const QUERY: &str = r#"is:pr milestone:"v1.0" repo:parity-bot/pr-details"#;
+
+    fn footer(app: &mut TestApp) -> String {
+        app.screen(160, 48).lines().last().unwrap().to_owned()
+    }
+
+    fn milestone_body(path: &str) -> Value {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../parity/fixtures/pr-milestone")
+            .join(path);
+        let text = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{}: {e}", path.display()));
+        let fixture: Value = serde_json::from_str(&text).unwrap();
+        fixture["response"]["body"].clone()
+    }
+
+    fn milestoned_pr() -> FullPullRequest {
+        let body = milestone_body("repos/parity-bot/pr-details/pulls/5/GET.json");
+        FullPullRequest::from_api(body, &fixture_repo()).unwrap()
+    }
+
+    fn search_page() -> SearchPage {
+        let body = milestone_body(
+            "search/issues/GET.advanced_search-true_page-1_per_page-50_q-is-pr-milestone--v1.0--repo-parity-bot-f299.json",
+        );
+        SearchPage {
+            total_count: body["total_count"].as_u64().unwrap(),
+            incomplete_results: body["incomplete_results"].as_bool().unwrap(),
+            items: body["items"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|item| SearchHit::from_api_item(item.clone()).unwrap())
+                .collect(),
+        }
+    }
+
+    /// The app with pull request 5 in milestone v1.0, the pull request `moves` rows below 5 selected.
+    fn selected(moves: usize) -> TestApp {
+        let gh = gh()
+            .with_pull_request(NAME, 5, Ok(milestoned_pr()))
+            .with_search_page(Ok(search_page()));
+        let mut app = TestApp::with_github(config(), gh);
+        app.press(&["enter"]);
+        settle(&mut app);
+        app.press(&["2"]);
+        for _ in 0..moves {
+            app.press(&["j"]);
+        }
+        app.press(&["enter"]);
+        settle(&mut app);
+        app
+    }
+
+    fn searches(app: &TestApp) -> Vec<String> {
+        app.gh()
+            .calls()
+            .into_iter()
+            .filter_map(|call| match call {
+                GithubCall::SearchIssues(query) => Some(query.q().unwrap()),
+                _ => None,
+            })
+            .collect()
+    }
+
+    fn dialog(app: &TestApp) -> &SearchDialog {
+        app.app()
+            .top_dialog::<SearchDialog>()
+            .expect("the Search modal is open")
+    }
+
+    #[test]
+    fn the_fixture_has_the_milestone() {
+        let milestone = milestoned_pr().pr.issue.milestone.unwrap();
+        assert_eq!(
+            (
+                milestone.title.as_str(),
+                milestone.state,
+                milestone.open_issues,
+                milestone.closed_issues
+            ),
+            ("v1.0", IssueState::Open, 3, 2)
+        );
+        assert_eq!(milestone.pull_requests_query(NAME), QUERY);
+    }
+
+    #[test]
+    fn the_overview_shows_the_milestone_under_the_header() {
+        let mut app = selected(0);
+        assert_eq!(shown_pr(&app), Some(5));
+        let header = usize::from(row_of(&mut app, "Add a cursor to the viewer (#5)"));
+        let screen = app.screen(160, 48);
+        let below = screen.lines().nth(header + 1).unwrap();
+        assert!(
+            below.contains("│Milestone: v1.0 • open • due 2026-04-01 • 2 of 5 closed"),
+            "{screen}"
+        );
+        // Pull request 4 has none.
+        let mut app = selected(1);
+        assert_eq!(shown_pr(&app), Some(4));
+        assert!(!app.screen(160, 48).contains("Milestone:"));
+    }
+
+    #[test]
+    fn the_binding_is_hidden_without_a_milestone() {
+        let mut app = selected(0);
+        assert_eq!(
+            app.app_mut()
+                .binding_state(Owner::PrOverview, BindingId::PullRequestMilestone),
+            BindingState::Enabled
+        );
+        let mut app = selected(1);
+        assert_eq!(
+            app.app_mut()
+                .binding_state(Owner::PrOverview, BindingId::PullRequestMilestone),
+            BindingState::Hidden
+        );
+    }
+
+    #[test]
+    fn the_footer_shows_m_with_the_content_focused() {
+        let mut app = selected(0);
+        assert!(!footer(&mut app).contains("m Milestone"));
+        app.press(&["tab"]);
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        let line = footer(&mut app);
+        assert!(
+            line.starts_with(" ^m Merge PR  E Edit PR  R Add reaction  m Milestone  ^v Paste link"),
+            "{line}"
+        );
+    }
+
+    #[test]
+    fn m_searches_the_milestone_and_focus_comes_back() {
+        let mut app = selected(0);
+        app.press(&["tab", "m"]);
+        assert_eq!(app.app().modals(), [ModalKind::Search]);
+        assert!(app.effects().iter().any(|effect| matches!(
+            effect,
+            Effect::Github { request: GithubRequest::SearchIssues(query), .. } if query.text == QUERY
+        )));
+        settle(&mut app);
+        app.render(160, 48);
+        let dialog = dialog(&app);
+        assert_eq!(dialog.text(), QUERY);
+        assert!(dialog.scope_disabled());
+        assert_eq!(dialog.status_line(), "3 results · Scope from the query");
+        assert!(dialog.table_focused());
+        assert_eq!(searches(&app), [QUERY]);
+        app.press(&["escape"]);
+        assert!(app.app().modals().is_empty());
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        assert_eq!(shown_pr(&app), Some(5));
+    }
+
+    #[test]
+    fn m_without_a_milestone_does_nothing() {
+        let mut app = selected(1);
+        app.press(&["tab"]);
+        assert_eq!(focus(&app), FocusTarget::DetailsContent);
+        let before = app.effects().len();
+        app.press(&["m"]);
+        assert!(app.app().modals().is_empty());
+        assert_eq!(app.effects().len(), before);
+        assert!(searches(&app).is_empty());
+    }
+}

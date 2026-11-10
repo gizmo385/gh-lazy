@@ -147,8 +147,8 @@ mod tests {
     fn rows_come_in_group_order() {
         let rows = KeyRow::all(&IndexMap::new());
         // Python's 59 ids, the ten Rust-only diff ids, `main.refresh`, `search.open`, `search.save_query`,
-        // `issue.milestone` and the three compose keys.
-        assert_eq!(rows.len(), 76);
+        // `issue.milestone`, the three compose keys and `pull_request.milestone`.
+        assert_eq!(rows.len(), 77);
         assert_eq!(rows[0], (0, row(BindingId::AppQuit, "q")));
         assert_eq!(rows[3].1.id, BindingId::AppOpenHelp);
         assert_eq!(

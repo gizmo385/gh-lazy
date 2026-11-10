@@ -143,6 +143,9 @@ registry! {
     PullRequestEdit("pull_request.edit", "E", "edit_pull_request", "Edit PR").tooltip("Edit the selected pull request");
     PullRequestLookup("pull_request.lookup", "O", "lookup_pull_request", "Lookup Pull Request")
         .tooltip("Lookup a pull request in the current repository");
+    // Rust-only (decision pr-milestone): the PR Overview's jump to its milestone's pull requests in the Search modal.
+    PullRequestMilestone("pull_request.milestone", "m", "search_milestone", "Milestone")
+        .tooltip("Search the pull requests in this pull request's milestone");
     RepositoriesFavorite("repositories.favorite", "ctrl+f", "toggle_favorite_repo", "Toggle Favorite")
         .tooltip("Mark/unmark a repository as favorited, which are displayed at the top of the repos table");
     RepositoriesLookup("repositories.lookup", "O", "lookup_repository", "Lookup Repository");

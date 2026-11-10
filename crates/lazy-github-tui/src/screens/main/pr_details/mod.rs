@@ -32,12 +32,13 @@ pub(super) use diff::PrDiff;
 pub(super) use overview::OverviewStop;
 pub(super) use overview::{PrOverview, SectionKind};
 
-/// `PrOverviewTabPane.BINDINGS`: merge (#183), edit (#185) and add a reaction, in the footer while the Overview's
-/// content has focus.
+/// `PrOverviewTabPane.BINDINGS`: merge (#183), edit (#185) and add a reaction, then the Rust-only jump to the
+/// milestone's pull requests (#417), in the footer while the Overview's content has focus.
 pub const PR_OVERVIEW_BINDINGS: &[BindingId] = &[
     BindingId::PullRequestMerge,
     BindingId::PullRequestEdit,
     BindingId::ReactAdd,
+    BindingId::PullRequestMilestone,
 ];
 
 /// A pull request to show in the details pane.
@@ -383,9 +384,17 @@ impl DetailsBody for PullRequestDetails {
         self.conversation.reload(reply, cx);
     }
 
+    /// The milestone jump is hidden, and claims no key, while the pull request has no milestone.
     fn binding_state(&self, tab: usize, owner: Owner, id: BindingId) -> BindingState {
         match PrTab::at(tab) {
             PrTab::Diff => self.diff.binding_state(owner, id),
+            PrTab::Overview
+                if owner == Owner::PrOverview
+                    && id == BindingId::PullRequestMilestone
+                    && self.pr.pr.issue.milestone.is_none() =>
+            {
+                BindingState::Hidden
+            }
             PrTab::Overview | PrTab::Conversation => BindingState::Enabled,
         }
     }

@@ -70,6 +70,7 @@ pub const BINDING_GROUPS: &[BindingGroup] = {
                 B::PullRequestMerge,
                 B::PullRequestEdit,
                 B::PullRequestLookup,
+                B::PullRequestMilestone,
             ],
         },
         BindingGroup {
@@ -157,8 +158,9 @@ mod tests {
         }
         // Python's 59, the ten Rust-only diff ids (decisions diff-file-navigation and diff-inline-comments), `main.refresh` (decision
         // cache-ttl-defaults-and-refresh), `search.open` and `search.save_query` (decision search-issues-and-prs),
-        // `issue.milestone` (decision issue-milestone), and the three compose keys (decision compose-dialogs).
-        assert_eq!(grouped.len(), 76);
+        // `issue.milestone` (decision issue-milestone), the three compose keys (decision compose-dialogs), and
+        // `pull_request.milestone` (decision pr-milestone).
+        assert_eq!(grouped.len(), 77);
         assert!(grouped.iter().all(|id| !id.def().name.starts_with("textual.")));
     }
 }

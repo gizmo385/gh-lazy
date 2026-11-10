@@ -654,8 +654,8 @@ mod tests {
     fn the_lines_are_every_group_under_its_header_with_the_first_binding_highlighted() {
         let list = list();
         // Python's 59 ids, the ten Rust-only diff ids, `main.refresh`, `search.open`, `search.save_query`,
-        // `issue.milestone` and the three compose keys.
-        assert_eq!(list.lines.len(), 76 + BINDING_GROUPS.len());
+        // `issue.milestone`, the three compose keys and `pull_request.milestone`.
+        assert_eq!(list.lines.len(), 77 + BINDING_GROUPS.len());
         assert_eq!(list.lines[0], Line::Header(0));
         assert_eq!(list.lines[1], Line::Binding(0));
         assert_eq!(highlighted(&list), BindingId::AppQuit);

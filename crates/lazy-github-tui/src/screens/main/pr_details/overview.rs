@@ -40,7 +40,9 @@ use crate::screens::main::MainAction;
 use crate::theme::Theme;
 
 use super::super::details::{BodyRenderCx, SectionLayout};
-use super::super::overview_text::{HeaderStyles, OverviewMarkdown, append, mark, push_label, push_rule};
+use super::super::overview_text::{
+    HeaderStyles, OverviewMarkdown, append, mark, milestone_line, push_label, push_rule,
+};
 use super::PR_OVERVIEW_BINDINGS;
 
 /// A focused section title's bindings: Textual's `CollapsibleTitle`.
@@ -984,6 +986,9 @@ fn overview(
         TextRun::link(issue.user.login.as_str(), link, issue.user.html_url.as_str()),
     ];
     push_label(&mut out, &title, width);
+    if let Some(milestone) = &issue.milestone {
+        push_label(&mut out, &milestone_line(milestone, text, link, theme), width);
+    }
 
     let bold = text.add_modifier(Modifier::BOLD);
     let separator = || TextRun::new(" • ", text);

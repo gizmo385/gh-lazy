@@ -1,0 +1,139 @@
+version = 1
+description = "PR milestone: a milestoned pull request's Overview shows the milestone line under its title; with the content focused, m opens the Search modal on is:pr milestone:\"<title>\" repo:<owner>/<name> and runs it; escape returns to the Overview; a pull request without a milestone shows no line and no m (#417)"
+# Rust-only: Python has no milestone support (decision pr-milestone). The Details box's text and the modal's loose
+# text are checked with [expect].
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "pull-requests.overview-milestone",
+    "pull-requests.overview-milestone-search",
+    "keybindings.pull-request-milestone",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# pr-milestone: pr-details' pull request 5 in the open milestone v1.0 (due 2026-04-01, 2 of 5 closed); the search
+# for v1.0's pull requests answers 5, 4 and 2. pr-details and base the rest: 4 is closed, with no milestone.
+fixtures = ["pr-milestone", "pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { regex = '5  open +parity-friend', timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { focused = "[2] Pull Requests" }
+
+[[step]]
+keys = ["enter"]
+
+# The full pull request arrives after 1 s, then the reactions, checks and reviews titles fill in.
+[[step]]
+wait = { text = "Milestone: v1.0", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "PR Reviews", timeout_ms = 15000 }
+
+[[step]]
+wait = { text = "Status checks:", timeout_ms = 5000 }
+
+[[step]]
+wait = { text = "👍 2", timeout_ms = 5000 }
+
+[[step]]
+capture = "overview"
+
+# The Overview's content: `m Milestone` follows `R Add reaction` in the footer.
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { regex = '(?m)^ \^m Merge PR  E Edit PR  R Add reaction  m Milestone  ' }
+
+[[step]]
+capture = "overview-content"
+
+# `m` opens the Search modal on the milestone's query and searches it at once; the results table takes focus.
+[[step]]
+keys = ["m"]
+
+[[step]]
+wait = { text = "3 results", timeout_ms = 15000 }
+
+[[step]]
+wait = { log = { method = "GET", path = "/search/issues", query = { advanced_search = "true", page = "1", per_page = "50", q = 'is:pr milestone:"v1.0" repo:parity-bot/pr-details' } } }
+
+[[step]]
+capture = "results"
+
+# Escape from the results closes the modal, and focus is back on the Overview's content.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait = { gone = "Search issues and pull requests" }
+
+[[step]]
+capture = "closed"
+
+# Pull request 4 has no milestone: no line, and no `m` with its content focused.
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { focused = "[2] Pull Requests" }
+
+[[step]]
+keys = ["j", "enter"]
+
+[[step]]
+wait = { text = "Drop the legacy renderer (#4) by", timeout_ms = 15000 }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { regex = '(?m)^ \^m Merge PR  E Edit PR  R Add reaction  \^v' }
+
+[[step]]
+capture = "no-milestone"
+
+[expect.overview]
+contains = [
+    "Add a cursor to the viewer",
+    "Milestone: v1.0 • open • due 2026-04-01 • 2 of 5 closed",
+]
+not_contains = ["m Milestone"]
+
+[expect.overview-content]
+contains = ["Milestone: v1.0 • open • due 2026-04-01 • 2 of 5 closed", " R Add reaction  m Milestone "]
+
+[expect.results]
+contains = [
+    "Search issues and pull requests",
+    'is:pr milestone:"v1.0" repo:parity-bot/pr-details',
+    "3 results · Scope from the query",
+    " Repo ",
+    "#  Type  Status  Author",
+    "5  PR    open    parity-friend",
+    "4  PR    closed  parity-bot",
+    "2  PR    draft   parity-friend",
+]
+footer = ["⏎ Open", "/ Query", "q Close", "^s Save query"]
+
+[expect.closed]
+focused = ["[5] PR #5 Details"]
+contains = ["Milestone: v1.0 • open • due 2026-04-01 • 2 of 5 closed", " R Add reaction  m Milestone "]
+not_contains = ["Search issues and pull requests"]
+
+[expect.no-milestone]
+contains = ["Drop the legacy renderer (#4) by", " R Add reaction  ^v Paste link"]
+not_contains = ["Milestone:", "m Milestone"]

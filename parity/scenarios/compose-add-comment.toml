@@ -1,0 +1,197 @@
+version = 1
+description = "Compose sheet on the diff's Add comment (c on a line of the diff body): 9 rows empty with the line quoted, growing with a short body, at its cap with a long one (the body scrolls, its scrollbar shown only then), ctrl+t Preview, ctrl+o full screen and back, and ctrl+s adding the pending comment, which shows inline under its line (#423)"
+# Rust-only: the compose sheet is new behavior (decision compose-dialogs), and the line is reached the continuous
+# diff's way (decision diff-continuous-view). Checked by eye at both sizes. Nothing is written: the comment stays
+# pending until a review is submitted (diff-review covers that).
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "modals.compose-sheet",
+    "modals.compose-preview",
+    "diff-viewer.add-comment",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+fixtures = ["pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "parity-friend", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+[[step]]
+wait = { text = "README.md", timeout_ms = 15000 }
+
+# Into the body (README.md's header), then down to the hunk's fourth line, `+Run ...`.
+[[step]]
+keys = ["tab", "j", "j", "j", "j"]
+
+[[step]]
+wait = { text = "Line: 4/6" }
+
+[[step]]
+keys = ["c"]
+
+[[step]]
+wait = { text = "Write a review comment (markdown)" }
+
+[[step]]
+capture = "open"
+
+[[step]]
+type = "Mention the **arrow keys** too."
+
+[[step]]
+wait = { text = "Mention the **arrow keys** too." }
+
+[[step]]
+capture = "short"
+
+# Long enough to pass the cap at both sizes: the sheet stops growing and the body scrolls to the cursor at its end.
+[[step]]
+paste = """
+
+
+The README's Keys section should say what this line does in a little more detail. Here's what I'd add:
+
+- `j` / `k` move one line and stop at either end of the file; they never wrap around.
+- `G` jumps to the last line and `g` to the first.
+- `J` / `K` move by hunk, and stop at the first and the last hunk.
+- The arrow keys do the same as `j` and `k`, and page up and page down move by a screen.
+
+I checked each of these against the current build and they all behave as described, so this is only a docs change. If you want, I can open a follow-up for wrapping around at the ends, but I'd keep it behind a setting so the default stays the same as today.
+
+The help panel lists `j` as "Line down" but the footer says "Down". We should pick one; I'd go with the help panel's wording because it's more specific.
+
+Steps I ran:
+
+1. Open a file longer than the screen
+2. Press `G`
+3. Press `j`, then `k`, then `g`
+4. Press `J` and `K` on a file with three hunks
+
+Every one of them stopped where the docs will say it stops. The only surprise was `K` on the first hunk, which does nothing rather than wrapping to the last one, and that matches the rest.
+
+The screenshot in the README is from 0.5 and still shows the old title bar. It'd be worth refreshing it in the same PR.
+
+A few notes for whoever picks up the wrap-around follow-up:
+
+- keep the default as it is today
+- put the setting next to the other viewer settings
+- make `G` and `g` respect it too, so the keys stay consistent
+
+That's all from me on this line."""
+
+[[step]]
+wait = { text = "That's all from me on this line." }
+
+[[step]]
+capture = "long"
+
+[[step]]
+keys = ["ctrl+t"]
+
+[[step]]
+wait = { text = "^t Write" }
+
+[[step]]
+capture = "preview"
+
+[[step]]
+keys = ["ctrl+o"]
+
+[[step]]
+wait = { text = "^o Collapse" }
+
+[[step]]
+capture = "expanded"
+
+[[step]]
+keys = ["ctrl+o"]
+
+[[step]]
+wait = { text = "^o Expand" }
+
+# Back to the editor, and the paste undone (one undo batch): the text is the short body again.
+[[step]]
+keys = ["ctrl+t"]
+
+[[step]]
+wait = { text = "^t Preview" }
+
+[[step]]
+keys = ["ctrl+z"]
+
+[[step]]
+wait = { gone = "That's all from me on this line." }
+
+[[step]]
+keys = ["ctrl+s"]
+
+[[step]]
+wait = { text = "New comment added" }
+
+[[step]]
+wait = { gone = "^s Add Comment" }
+
+# The pending comment under its line, the body keeping focus and its cursor (#391).
+[[step]]
+capture = "pending-inline"
+
+[expect.open]
+contains = [
+    "Add Comment",
+    "▎ +Run `viewer FILE`, then press `j` and `k` to move.",
+    " Write   Preview ",
+    "Write a review comment (markdown)",
+]
+not_contains = ["Commenting on:"]
+footer = ["^s Add Comment", "shift+⏎ Add Comment", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.short]
+contains = ["Mention the **arrow keys** too."]
+not_contains = ["Write a review comment (markdown)"]
+
+[expect.long]
+contains = ["That's all from me on this line."]
+footer = ["^s Add Comment", "shift+⏎ Add Comment", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.preview]
+contains = ["Mention the arrow keys too."]
+not_contains = ["Mention the **arrow keys** too."]
+footer = ["^s Add Comment", "shift+⏎ Add Comment", "^t Write", "^o Expand", "esc Leave"]
+
+[expect.expanded]
+contains = ["Mention the arrow keys too."]
+footer = ["^s Add Comment", "shift+⏎ Add Comment", "^t Write", "^o Collapse", "esc Leave"]
+
+[expect.pending-inline]
+focused = ["[5] PR #5 Details"]
+contains = [
+    "New comment added",
+    "          ▎ Pending comment",
+    "          ▎ Mention the **arrow keys** too.",
+    "c Add Comment",
+]
+not_contains = ["^s Add Comment", "Traceback"]

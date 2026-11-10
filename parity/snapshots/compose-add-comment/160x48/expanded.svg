@@ -1,0 +1,212 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="960" viewBox="0 0 1600 960" xml:space="preserve">
+<title>compose-add-comment · expanded · 160x48</title>
+<style>
+text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans Mono', 'Liberation Mono', 'Noto Sans Mono', monospace; font-size: 16.67px; white-space: pre; }
+.s0 { fill: #fea62b; }
+.s1 { fill: #e0e0e0; }
+.s2 { fill: #a5a5a5; }
+.s3 { fill: #1e1e1e; }
+.s4 { fill: #004578; }
+.s5 { fill: #e0e0e0; font-weight: bold; }
+.s6 { fill: #57a5e2; }
+.s7 { fill: #f4bc6e; }
+.s8 { fill: #ffa62b; font-weight: bold; }
+</style>
+<rect width="1600" height="960" fill="#1e1e1e"/>
+<g shape-rendering="crispEdges">
+<rect x="100" y="80" width="90" height="20" fill="#e0e0e0"/>
+<rect x="50" y="180" width="10" height="20" fill="#2f281e"/>
+<rect x="90" y="180" width="10" height="20" fill="#2f281e"/>
+<rect x="50" y="200" width="10" height="20" fill="#2f281e"/>
+<rect x="340" y="200" width="10" height="20" fill="#2f281e"/>
+<rect x="50" y="220" width="10" height="20" fill="#2f281e"/>
+<rect x="90" y="220" width="10" height="20" fill="#2f281e"/>
+<rect x="350" y="240" width="10" height="20" fill="#2f281e"/>
+<rect x="410" y="240" width="10" height="20" fill="#2f281e"/>
+<rect x="240" y="340" width="10" height="20" fill="#2f281e"/>
+<rect x="130" y="440" width="10" height="20" fill="#2f281e"/>
+<rect x="130" y="460" width="10" height="20" fill="#2f281e"/>
+<rect x="210" y="460" width="10" height="20" fill="#2f281e"/>
+<rect x="290" y="460" width="10" height="20" fill="#2f281e"/>
+<rect x="130" y="480" width="10" height="20" fill="#2f281e"/>
+<rect x="190" y="480" width="10" height="20" fill="#2f281e"/>
+<rect x="850" y="520" width="10" height="20" fill="#2f281e"/>
+<rect x="100" y="700" width="10" height="20" fill="#2f281e"/>
+<rect x="160" y="700" width="10" height="20" fill="#2f281e"/>
+<rect x="0" y="940" width="1600" height="20" fill="#242f38"/>
+</g>
+<text class="s0" x="0" y="15" textLength="1600" lengthAdjust="spacingAndGlyphs">█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█</text>
+<text class="s0" x="0" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="35" textLength="1580" lengthAdjust="spacingAndGlyphs"> Add Comment                                                                                                                                                  </text>
+<text class="s0" x="1590" y="35" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s2" x="20" y="55" textLength="20" lengthAdjust="spacingAndGlyphs">▎ </text>
+<text class="s1" x="40" y="55" textLength="1550" lengthAdjust="spacingAndGlyphs">+Run `viewer FILE`, then press `j` and `k` to move.                                                                                                        </text>
+<text class="s0" x="1590" y="55" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="75" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="75" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s2" x="20" y="95" textLength="70" lengthAdjust="spacingAndGlyphs"> Write </text>
+<text class="s3" x="100" y="95" textLength="90" lengthAdjust="spacingAndGlyphs"> Preview </text>
+<text class="s4" x="200" y="95" textLength="1380" lengthAdjust="spacingAndGlyphs">──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
+<text class="s0" x="1590" y="95" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="115" textLength="140" lengthAdjust="spacingAndGlyphs">  Mention the </text>
+<text class="s5" x="150" y="115" textLength="100" lengthAdjust="spacingAndGlyphs">arrow keys</text>
+<text class="s1" x="250" y="115" textLength="1340" lengthAdjust="spacingAndGlyphs"> too.                                                                                                                                 </text>
+<text class="s0" x="1590" y="115" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="135" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="155" textLength="1580" lengthAdjust="spacingAndGlyphs">  The README&apos;s Keys section should say what this line does in a little more detail. Here&apos;s what I&apos;d add:                                                      </text>
+<text class="s0" x="1590" y="155" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="175" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s7" x="50" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="60" y="195" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s7" x="90" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">k</text>
+<text class="s1" x="100" y="195" textLength="1490" lengthAdjust="spacingAndGlyphs"> move one line and stop at either end of the file; they never wrap around.                                                                           </text>
+<text class="s0" x="1590" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="215" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s7" x="50" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">G</text>
+<text class="s1" x="60" y="215" textLength="280" lengthAdjust="spacingAndGlyphs"> jumps to the last line and </text>
+<text class="s7" x="340" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">g</text>
+<text class="s1" x="350" y="215" textLength="1240" lengthAdjust="spacingAndGlyphs"> to the first.                                                                                                              </text>
+<text class="s0" x="1590" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="235" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s7" x="50" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">J</text>
+<text class="s1" x="60" y="235" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s7" x="90" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">K</text>
+<text class="s1" x="100" y="235" textLength="1490" lengthAdjust="spacingAndGlyphs"> move by hunk, and stop at the first and the last hunk.                                                                                              </text>
+<text class="s0" x="1590" y="235" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="255" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="50" y="255" textLength="300" lengthAdjust="spacingAndGlyphs">The arrow keys do the same as </text>
+<text class="s7" x="350" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="360" y="255" textLength="50" lengthAdjust="spacingAndGlyphs"> and </text>
+<text class="s7" x="410" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">k</text>
+<text class="s1" x="420" y="255" textLength="1170" lengthAdjust="spacingAndGlyphs">, and page up and page down move by a screen.                                                                        </text>
+<text class="s0" x="1590" y="255" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="275" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="295" textLength="1580" lengthAdjust="spacingAndGlyphs">  I checked each of these against the current build and they all behave as described, so this is only a docs change. If you want, I can open a follow-up for  </text>
+<text class="s0" x="1590" y="295" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="315" textLength="1580" lengthAdjust="spacingAndGlyphs">  wrapping around at the ends, but I&apos;d keep it behind a setting so the default stays the same as today.                                                       </text>
+<text class="s0" x="1590" y="315" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="335" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="355" textLength="230" lengthAdjust="spacingAndGlyphs">  The help panel lists </text>
+<text class="s7" x="240" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="250" y="355" textLength="1340" lengthAdjust="spacingAndGlyphs"> as &quot;Line down&quot; but the footer says &quot;Down&quot;. We should pick one; I&apos;d go with the help panel&apos;s wording because it&apos;s more specific.      </text>
+<text class="s0" x="1590" y="355" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="375" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="395" textLength="1580" lengthAdjust="spacingAndGlyphs">  Steps I ran:                                                                                                                                                </text>
+<text class="s0" x="1590" y="395" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="415" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="435" textLength="40" lengthAdjust="spacingAndGlyphs"> 1. </text>
+<text class="s1" x="70" y="435" textLength="1520" lengthAdjust="spacingAndGlyphs">Open a file longer than the screen                                                                                                                      </text>
+<text class="s0" x="1590" y="435" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="455" textLength="40" lengthAdjust="spacingAndGlyphs"> 2. </text>
+<text class="s1" x="70" y="455" textLength="60" lengthAdjust="spacingAndGlyphs">Press </text>
+<text class="s7" x="130" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">G</text>
+<text class="s0" x="1590" y="455" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="475" textLength="40" lengthAdjust="spacingAndGlyphs"> 3. </text>
+<text class="s1" x="70" y="475" textLength="60" lengthAdjust="spacingAndGlyphs">Press </text>
+<text class="s7" x="130" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">j</text>
+<text class="s1" x="140" y="475" textLength="70" lengthAdjust="spacingAndGlyphs">, then </text>
+<text class="s7" x="210" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">k</text>
+<text class="s1" x="220" y="475" textLength="70" lengthAdjust="spacingAndGlyphs">, then </text>
+<text class="s7" x="290" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">g</text>
+<text class="s0" x="1590" y="475" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="495" textLength="40" lengthAdjust="spacingAndGlyphs"> 4. </text>
+<text class="s1" x="70" y="495" textLength="60" lengthAdjust="spacingAndGlyphs">Press </text>
+<text class="s7" x="130" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">J</text>
+<text class="s1" x="140" y="495" textLength="50" lengthAdjust="spacingAndGlyphs"> and </text>
+<text class="s7" x="190" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">K</text>
+<text class="s1" x="200" y="495" textLength="1390" lengthAdjust="spacingAndGlyphs"> on a file with three hunks                                                                                                                </text>
+<text class="s0" x="1590" y="495" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="515" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="535" textLength="840" lengthAdjust="spacingAndGlyphs">  Every one of them stopped where the docs will say it stops. The only surprise was </text>
+<text class="s7" x="850" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">K</text>
+<text class="s1" x="860" y="535" textLength="730" lengthAdjust="spacingAndGlyphs"> on the first hunk, which does nothing rather than wrapping to the last  </text>
+<text class="s0" x="1590" y="535" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="555" textLength="1580" lengthAdjust="spacingAndGlyphs">  one, and that matches the rest.                                                                                                                             </text>
+<text class="s0" x="1590" y="555" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="575" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="595" textLength="1580" lengthAdjust="spacingAndGlyphs">  The screenshot in the README is from 0.5 and still shows the old title bar. It&apos;d be worth refreshing it in the same PR.                                     </text>
+<text class="s0" x="1590" y="595" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="615" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="635" textLength="1580" lengthAdjust="spacingAndGlyphs">  A few notes for whoever picks up the wrap-around follow-up:                                                                                                 </text>
+<text class="s0" x="1590" y="635" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="655" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="675" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="50" y="675" textLength="1540" lengthAdjust="spacingAndGlyphs">keep the default as it is today                                                                                                                           </text>
+<text class="s0" x="1590" y="675" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="695" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="50" y="695" textLength="1540" lengthAdjust="spacingAndGlyphs">put the setting next to the other viewer settings                                                                                                         </text>
+<text class="s0" x="1590" y="695" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s6" x="30" y="715" textLength="20" lengthAdjust="spacingAndGlyphs">• </text>
+<text class="s1" x="50" y="715" textLength="50" lengthAdjust="spacingAndGlyphs">make </text>
+<text class="s7" x="100" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">G</text>
+<text class="s1" x="110" y="715" textLength="50" lengthAdjust="spacingAndGlyphs"> and </text>
+<text class="s7" x="160" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">g</text>
+<text class="s1" x="170" y="715" textLength="1420" lengthAdjust="spacingAndGlyphs"> respect it too, so the keys stay consistent                                                                                                  </text>
+<text class="s0" x="1590" y="715" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="735" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s1" x="10" y="755" textLength="1580" lengthAdjust="spacingAndGlyphs">  That&apos;s all from me on this line.                                                                                                                            </text>
+<text class="s0" x="1590" y="755" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="775" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="795" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="815" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="835" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="855" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="875" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="895" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="1590" y="915" textLength="10" lengthAdjust="spacingAndGlyphs">█</text>
+<text class="s0" x="0" y="935" textLength="1600" lengthAdjust="spacingAndGlyphs">█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█</text>
+<text class="s8" x="0" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^s </text>
+<text class="s1" x="40" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Add Comment </text>
+<text class="s8" x="160" y="955" textLength="90" lengthAdjust="spacingAndGlyphs"> shift+⏎ </text>
+<text class="s1" x="250" y="955" textLength="120" lengthAdjust="spacingAndGlyphs">Add Comment </text>
+<text class="s8" x="370" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^t </text>
+<text class="s1" x="410" y="955" textLength="60" lengthAdjust="spacingAndGlyphs">Write </text>
+<text class="s8" x="470" y="955" textLength="40" lengthAdjust="spacingAndGlyphs"> ^o </text>
+<text class="s1" x="510" y="955" textLength="90" lengthAdjust="spacingAndGlyphs">Collapse </text>
+<text class="s8" x="600" y="955" textLength="50" lengthAdjust="spacingAndGlyphs"> esc </text>
+<text class="s1" x="650" y="955" textLength="60" lengthAdjust="spacingAndGlyphs">Leave </text>
+</svg>

@@ -1,5 +1,5 @@
 version = 1
-description = "Diff review on the continuous diff (#388): c on a line of the body opens Add Comment, an empty comment is refused, the comment shows under its line (#391) with the body keeping focus and its cursor, a second one is added and removed with x, and the review posts the one left with the line's diff position"
+description = "Diff review on the continuous diff (#388): c on a line of the body opens Add Comment on the compose sheet (#423), an empty comment is refused, ctrl+s and shift+enter add one, the comment shows under its line (#391) with the body keeping focus and its cursor, a second one is added and removed with x, and the review posts the one left with the line's diff position"
 # Rust-only: the line is reached the new way, `tab` into the body and `j` down to it (decision
 # diff-continuous-view), which Python's keys can't follow. `pr-review` keeps the review form's steps both apps share.
 # shift+enter is sent as CSI 13;2 u.
@@ -57,9 +57,9 @@ wait = { text = "Line: 4/6" }
 keys = ["c"]
 
 [[step]]
-wait = { text = "Commenting on:" }
+wait = { text = "Write a review comment (markdown)" }
 
-# The dialog has no footer of its own: the dimmed screen below keeps its footer.
+# The compose sheet (#423): the line quoted under the heading, the body focused, and the sheet's own footer.
 [[step]]
 capture = "add-open"
 
@@ -76,19 +76,13 @@ capture = "add-empty"
 type = "Mention the arrow keys too."
 
 [[step]]
-keys = ["tab"]
-
-[[step]]
-wait = { focused = "Add Comment" }
-
-[[step]]
-keys = ["enter"]
+keys = ["ctrl+s"]
 
 [[step]]
 wait = { text = "New comment added" }
 
 [[step]]
-wait = { gone = "Commenting on:" }
+wait = { gone = "^s Add Comment" }
 
 # Focus is back on the body, its cursor on the same line, and the comment shows under it (decision
 # diff-inline-comments).
@@ -106,22 +100,16 @@ wait = { text = "Line: 5/6" }
 keys = ["c"]
 
 [[step]]
-wait = { text = "Commenting on:" }
+wait = { text = "Write a review comment (markdown)" }
 
 [[step]]
 type = "Drop this blank line."
 
 [[step]]
-keys = ["tab"]
+type = "\u001b[13;2u"
 
 [[step]]
-wait = { focused = "Add Comment" }
-
-[[step]]
-keys = ["enter"]
-
-[[step]]
-wait = { gone = "Commenting on:" }
+wait = { gone = "^s Add Comment" }
 
 [[step]]
 capture = "two-pending"
@@ -202,10 +190,18 @@ wait = { text = "Opened on" }
 capture = "submitted"
 
 [expect.add-open]
-contains = ["Add Comment", "Commenting on:", "+Run `viewer FILE`, then press `j` and `k` to move.", "Comment:", "Cancel"]
+contains = [
+    "Add Comment",
+    "▎ +Run `viewer FILE`, then press `j` and `k` to move.",
+    " Write   Preview ",
+    "Write a review comment (markdown)",
+]
+not_contains = ["Commenting on:", "Cancel"]
+footer = ["^s Add Comment", "shift+⏎ Add Comment", "^t Preview", "^o Expand", "esc Leave"]
 
 [expect.add-empty]
-contains = ["Comment cannot be empty!", "Commenting on:"]
+contains = ["Comment cannot be empty!", "Write a review comment (markdown)", "^s Add Comment"]
+not_contains = ["Commenting on:"]
 
 [expect.pending-inline]
 focused = ["[5] PR #5 Details"]
@@ -217,7 +213,7 @@ contains = [
     "README.md (+3 -1) · 1 comment",
     "j Line down  k Line up  c Add Comment",
 ]
-not_contains = ["Commenting on:", "Pending Comments:", "Traceback"]
+not_contains = ["Commenting on:", "^s Add Comment", "Pending Comments:", "Traceback"]
 
 [expect.two-pending]
 contains = [

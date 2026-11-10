@@ -1,0 +1,106 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current r█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█         │
+└─────────█ Add Comment                                                                  █─────────┘
+┌─ [1] Rep█ ▎ +Run `viewer FILE`, then press `j` and `k` to move.                        █─────────┐
+│ ★  Owner█                                                                              █         │
+│ ☆  parit█  Write   Preview  ────────────────────────────────────────────────────────── █━━━━━━━━━│
+│ ☆  parit█  Steps I ran:                                                                █▔▔▔▔▔▔▔▔▎│
+│ ☆  parit█                                                                              █)       ▎│
+│ ☆  parit█  1. Open a file longer than the screen                                       █▁▁▁▁▁▁▁▁▎│
+│         █  2. Press `G`                                                                █         │
+│         █  3. Press `j`, then `k`, then `g`                                            █         │
+│         █  4. Press `J` and `K` on a file with three hunks                             █         │
+│         █                                                                              █         │
+│         █  Every one of them stopped where the docs will say it stops. The only        █         │
+│         █  surprise was `K` on the first hunk, which does nothing rather than          █k` to m  │
+└─────────█  wrapping to the last one, and that matches the rest.                        █       ▇▇│
+┌─ [2] Pul█                                                                          ▄▄  █         │
+│ #  Statu█  The screenshot in the README is from 0.5 and still shows the old title      █         │
+│ 5  open █  bar. It'd be worth refreshing it in the same PR.                            █         │
+│ 4  close█                                                                              █         │
+│ 3  close█  A few notes for whoever picks up the wrap-around follow-up:                 █         │
+│ 2  open █                                                                              █         │
+│         █  - keep the default as it is today                                           █         │
+│         █  - put the setting next to the other viewer settings                         █         │
+│         █  - make `G` and `g` respect it too, so the keys stay consistent              █         │
+│         █                                                                              █ild.rs"  │
+│         █  That's all from me on this line.                                            █sets");  │
+│         █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█e: 4/6   │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Add Comment  shift+⏎ Add Comment  ^t Preview  ^o Expand  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abbbbbbbbbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbbbbbbbbba
+aaaaaaaaaac..............................................................................caaaaaaaaaa
+ddddddddddc.ee...........................................................................cffffffffff
+dghgggggggc..............................................................................cbbbbbbbbbf
+diiiiiiiiic.jjjjjjj.eeeeeeeee.kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk.clllllllllf
+dmmmmmmmmmc.n........................................................................oon.cppppppppqf
+dmmmmmmmmmc.n........................................................................oon.crmmmmmmmqf
+dmmmmmmmmmc.n........................................................................oon.cppppppppqf
+dbbbbbbbbbc.n........................................................................oon.csssssssttf
+dbbbbbbbbbc.n........................................................................oon.cuuuuuuuttf
+dbbbbbbbbbc.n........................................................................oon.cvvvvvvvttf
+dbbbbbbbbbc.n........................................................................oon.cvvvvvvvttf
+dbbbbbbbbbc.n........................................................................oon.cwwwwwwwttf
+dbbbbbbbbbc.n........................................................................oon.cxxyyyyyttf
+ddddddddddc.n........................................................................oon.czzzzzzzAAf
+ddddddddddc.n........................................................................BBn.czzzzzzzCCf
+dgggggggggc.n........................................................................DDn.csssssssCCf
+diiiiiiiiic.n........................................................................DDn.cuuuuuuuCCf
+dmmmmmmmmmc.n........................................................................DDn.czzzzzzzCCf
+dmmmmmmmmmc.n........................................................................DDn.czzzzzzzCCf
+dmmmmmmmmmc.n........................................................................DDn.czzzzzzzCCf
+dtttttttttc.n........................................................................DDn.csssssssCCf
+dbbbbbbbbbc.n........................................................................DDn.cuuuuuuuCCf
+dbbbbbbbbbc.n........................................................................DDn.cvvvvvvvCCf
+dbbbbbbbbbc.n........................................................................DDn.cEEEEEEECCf
+dbbbbbbbbbc.nFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFDDn.cHHHHHIICCf
+dbbbbbbbbbccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccJJJJJJJCCf
+ddddddddddddddddddddddddddddddddddddddddffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff
+KKKKLLLLLLLLLLLLKKKKKKKKKLLLLLLLLLLLLKKKKLLLLLLLLKKKKLLLLLLLKKKKKLLLLLLMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+--- legend
+. fg=#e0e0e0 bg=#1e1e1e
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#fea62b bg=#1e1e1e
+d fg=#365270 bg=#121212
+e fg=#a5a5a5 bg=#1e1e1e
+f fg=#2a5738 bg=#121212
+g fg=#646464 bg=#191d21 bold
+h fg=#476419 bg=#191d21 bold
+i fg=#646464 bg=#13212c
+j fg=#e0e0e0 bg=#1e1e1e inverse
+k fg=#004578 bg=#1e1e1e
+l fg=#1a1a1a bg=#121212
+m fg=#646464 bg=#161616
+n bg=#1e1e1e
+o fg=#e0e0e0 bg=#000000
+p fg=#141414 bg=#161616
+q fg=#141414 bg=#121212
+r fg=#383838 bg=#161616
+s fg=#656565 bg=#1a1a1a bold
+t fg=#0a1e2c bg=#161616 inverse
+u fg=#4c4c4c bg=#161616
+v fg=#646464 bg=#1a1a18
+w fg=#646464 bg=#220e0e
+x fg=#666239 bg=#0a320a
+y fg=#6e6e6b bg=#0a320a
+z fg=#646464 bg=#0e220e
+A fg=#0a1e2c bg=#0a0a0a inverse
+B fg=#003054 bg=#000000
+C fg=#646464 bg=#0a0a0a
+D fg=#003054 bg=#1e1e1e inverse
+E fg=#666239 bg=#1a1a18
+F fg=#e0e0e0 bg=#262626
+G fg=#121212 bg=#e0e0e0
+H fg=#666239 bg=#0e220e
+I fg=#6e6e6b bg=#0e220e
+J fg=#18130c bg=#704d1c
+K fg=#ffa62b bg=#242f38 bold
+L fg=#e0e0e0 bg=#242f38
+M bg=#242f38

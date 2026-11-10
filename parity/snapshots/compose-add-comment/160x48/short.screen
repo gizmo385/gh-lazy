@@ -1,0 +1,168 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot  pr-details   ✘                                ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│ ☆  parity-bot  hello-world  ✘                                ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
+│ ☆  parity-bot  lazy-demo    ✘                                ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                                              ││▼ 📄 README.md (+3 -1)                                                                        │
+│                                                              ││  Lines 3-7 (+3 -1) • A tiny pager.                                                           │
+│                                                              ││     3  │ ## Usage                                                                            │
+│                                                              ││     4  │                                                                                     │
+│                                                              ││     5  │ Run `viewer FILE`.                                                                  │
+│                                                              ││►    5  │ Run `viewer FILE`, then press `j` and `k` to move.                                  │
+│                                                              ││     6  │                                                                                     │
+│                                                              ││     7  │ The current line is marked with `>`.                                                │
+│                                                              ││▼ 📄 assets/app.css (+3)                                                                      │
+│                                                              ││  Lines 1-3 (+3)                                                                              │
+│                                       █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                                       │
+│                                       █ Add Comment                                                                  █                                       │
+│                                       █ ▎ +Run `viewer FILE`, then press `j` and `k` to move.                        █                                       │
+│                                       █                                                                              █                                       │
+│                                       █  Write   Preview  ────────────────────────────────────────────────────────── █                                       │
+└───────────────────────────────────────█  Mention the **arrow keys** too.                                             █                                       │
+┌─ [2] Pull Requests ───────────────────█                                                                              █");                                    │
+│ #  Status  Author         Title       █                                                                              █;                                      │
+│ 5  open    parity-friend  Add a cursor█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                                       │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││▶ 🗑️  docs/old.md (deleted)                                                                   │
+│ 3  closed  parity-bot     Release 0.2.0                      ││▼ 📄 src/viewer.rs (+5 -2) · 2 comments                                                       │
+│ 2  open    parity-friend  Try a faster parser                ││  Lines 1-8 (+2)                                                                              │
+│                                                              ││     1  │ use std::io;                                                                        │
+│                                                              ││     2  │ use std::fmt;                                                                     ▆▆│
+│                                                              ││     3  │                                                                                     │
+│                                                              ││     4  │ pub struct Viewer {                                                                 │
+│                                                              ││     5  │     lines: Vec<String>,                                                             │
+│                                                              ││     6● │     cursor: usize,                                                                  │
+│                                                              ││          ▶ parity-bot: Should the cursor wrap at the end?  · 1 reply                         │
+│                                                              ││     7  │ }                                                                                   │
+│                                                              ││     8  │                                                                                     │
+│                                                              ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
+│                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+│                                                              ││    22● │             println!("{line}");                                                     │
+│                                                              ││          ▶ parity-bot: This needs a test.                                                    │
+│                                                              ││ README.md                                                                        Line: 4/6   │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^s Add Comment  shift+⏎ Add Comment  ^t Preview  ^o Expand  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbb...........................................................................................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.gggggggg........gggggggggggg.................................................................d
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdiiiiiiiiiiijjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlkkoooooooooooooooooooooooooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkknd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
+c..............................................................cdpppqpppppppppppprrpsspppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppttd
+c..............................................................cduuuuuuuuuuuuuvvuwwuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuttd
+c..............................................................cdkkkkkkkkkkxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+c..............................................................cdkkkkkkkkkkyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+c..............................................................cdkkkkkkkkkkzzzzAAAAAAAAAAAAAzBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBttd
+c..............................................................cdkkkkkkkkkkCCCCDDDDDDDDDDDDDCCCCCCCCCCCCCDDDCCCCCDDDCCCCCCCCCEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEttd
+c..............................................................cdkkkkkkkkkkFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFttd
+c..............................................................cdkkkkkkkkkkGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGHHHGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFttd
+c..............................................................cdpppqppppppppppppppppprrpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppttd
+c..............................................................cduuuuuuuuuuuuuvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuttd
+c.......................................IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFttd
+c.......................................IJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJIFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFttd
+c.......................................IJKKJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJIFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFttd
+c.......................................IJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJIpppppppppppppppppppppppppppppppppppppttd
+c.......................................IJLLLLLLLJKKKKKKKKKJMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMJIuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuttd
+ccccccccccccccccccccccccccccccccccccccccIJNOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOPOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOONJIyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+ccccccccccccccccccccccccccccccccccccccccIJNJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJNJIQRRyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeIJNJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJNJIGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFttd
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdpppqppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppttd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdpppqpppppppppppppppprrpsspppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppttd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcduuuuuuuuuuuuuvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuttd
+c..............................................................cdkkkkkkkkkkSSSRRRRRRRRRyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+c..............................................................cdkkkkkkkkkkTTTGGGGGGGGGGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFUUd
+c..............................................................cdkkkkkkkkkkyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyVVd
+c..............................................................cdkkkkkkkkkkSSSRSSSSSSRWWWWWWRRyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyVVd
+c..............................................................cdkkkkkkkkkkRRRRRRRRRRRRRRRRRRRRRRRyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyVVd
+c..............................................................cdkkkkkkXkkkGGGGGGGGGGGGTTTTTGFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFVVd
+c..............................................................cdkkkkkkkkkkYYZZZZZZZZZZYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY00000000000YYYYYYYYYYYYYYYYYYYYYYYVVd
+c..............................................................cdkkkkkkkkkkRyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyVVd
+c..............................................................cdkkkkkkkkkkyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyVVd
+c..............................................................cduuuuuuuuuuuuuuuvvuwwuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuVVd
+c..............................................................cdkkkkkkkkkkRRRRSSSRSSRWWWWWWR1RRRRRRRRRRRRRRRRRRRRRRRRRyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyVVd
+c..............................................................cdkkkkkkkkkkzzzzzzzz222zzzzzz33z3zzzzzzzzzzzzBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBVVd
+c..............................................................cdkkkkkkXkkkzzzzzzzzzzzzzzzzzzzzzA222222AzzBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBVVd
+c..............................................................cdkkkkkkkkkkYYZZZZZZZZZZYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYVVd
+c..............................................................cd44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444VVd
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+5555666666666666555555555666666666666555566666666555566666665555566666677777777777777777777777777777777777777777777777777777777777777777777777777777777777777777
+--- legend
+. fg=#646464 bg=#121212
+a fg=#0a263a bg=#121212
+b fg=#50701d bg=#121212
+c fg=#365270 bg=#121212
+d fg=#2a5738 bg=#121212
+e fg=#646464 bg=#191d21 bold
+f fg=#476419 bg=#191d21 bold
+g fg=#3b3b3b bg=#121212
+h fg=#646464 bg=#13212c
+i fg=#1a1a1a bg=#121212
+j fg=#0b3a5f bg=#121212
+k fg=#646464 bg=#161616
+l fg=#141414 bg=#121212 inverse
+m fg=#141414 bg=#161616
+n fg=#141414 bg=#121212
+o fg=#383838 bg=#161616
+p fg=#656565 bg=#1a1a1a bold
+q default
+r fg=#476419 bg=#1a1a1a bold
+s fg=#6c0a30 bg=#1a1a1a bold
+t fg=#0a1e2c bg=#161616 inverse
+u fg=#4c4c4c bg=#161616
+v fg=#476419 bg=#161616
+w fg=#6c0a30 bg=#161616
+x fg=#46443a bg=#1a1a18
+y fg=#646464 bg=#1a1a18
+z fg=#6e6e6b bg=#220e0e
+A fg=#666239 bg=#220e0e
+B fg=#646464 bg=#220e0e
+C fg=#6e6e6b bg=#0a320a
+D fg=#666239 bg=#0a320a
+E fg=#646464 bg=#0a320a
+F fg=#646464 bg=#0e220e
+G fg=#6e6e6b bg=#0e220e
+H fg=#666239 bg=#0e220e
+I fg=#fea62b bg=#1e1e1e
+J fg=#e0e0e0 bg=#1e1e1e
+K fg=#a5a5a5 bg=#1e1e1e
+L fg=#e0e0e0 bg=#1e1e1e inverse
+M fg=#004578 bg=#1e1e1e
+N bg=#1e1e1e
+O fg=#e0e0e0 bg=#262626
+P fg=#121212 bg=#e0e0e0
+Q fg=#666239 bg=#1a1a18
+R fg=#6e6e6b bg=#1a1a18
+S fg=#33616a bg=#1a1a18
+T fg=#33616a bg=#0e220e
+U fg=#0a1e2c bg=#0a0a0a inverse
+V fg=#646464 bg=#0a0a0a
+W fg=#4d651d bg=#1a1a18
+X fg=#704d1c bg=#161616
+Y fg=#656566 bg=#191d21
+Z fg=#656566 bg=#191d21 bold
+0 fg=#4d4f50 bg=#191d21
+1 fg=#702641 bg=#1a1a18
+2 fg=#33616a bg=#220e0e
+3 fg=#702641 bg=#220e0e
+4 fg=#18130c bg=#704d1c
+5 fg=#ffa62b bg=#242f38 bold
+6 fg=#e0e0e0 bg=#242f38
+7 bg=#242f38
+--- cells
+9 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","R","E","A","D","M","E",".","m","d"," ","(","+","3"," ","-","1",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+17 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","a","s","s","e","t","s","/","a","p","p",".","c","s","s"," ","(","+","3",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+28 ["│"," ","4"," "," ","c","l","o","s","e","d"," "," ","p","a","r","i","t","y","-","b","o","t"," "," "," "," "," ","D","r","o","p"," ","t","h","e"," ","l","e","g","a","c","y"," ","r","e","n","d","e","r","e","r"," "," "," "," "," "," "," "," "," "," "," ","│","│","▶"," ","🗑️",""," "," ","d","o","c","s","/","o","l","d",".","m","d"," ","(","d","e","l","e","t","e","d",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+29 ["│"," ","3"," "," ","c","l","o","s","e","d"," "," ","p","a","r","i","t","y","-","b","o","t"," "," "," "," "," ","R","e","l","e","a","s","e"," ","0",".","2",".","0"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," ","·"," ","2"," ","c","o","m","m","e","n","t","s"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

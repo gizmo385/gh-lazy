@@ -1,0 +1,79 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█
+█ Add Comment                                                                                      █
+█ ▎ +Run `viewer FILE`, then press `j` and `k` to move.                                            █
+█                                                                                                  █
+█  Write   Preview  ────────────────────────────────────────────────────────────────────────────── █
+█  Mention the arrow keys too.                                                                     █
+█                                                                                                  █
+█  The README's Keys section should say what this line does in a little more detail. Here's        █
+█  what I'd add:                                                                                   █
+█                                                                                                  █
+█  • j / k move one line and stop at either end of the file; they never wrap around.               █
+█  • G jumps to the last line and g to the first.                                                  █
+█  • J / K move by hunk, and stop at the first and the last hunk.                                  █
+█  • The arrow keys do the same as j and k, and page up and page down move by a screen.            █
+█                                                                                                  █
+█  I checked each of these against the current build and they all behave as described, so this     █
+█  is only a docs change. If you want, I can open a follow-up for wrapping around at the ends,     █
+█  but I'd keep it behind a setting so the default stays the same as today.                        █
+█                                                                                                  █
+█  The help panel lists j as "Line down" but the footer says "Down". We should pick one; I'd go    █
+█  with the help panel's wording because it's more specific.                                       █
+█                                                                                                  █
+█  Steps I ran:                                                                                    █
+█                                                                                                  █
+█   1. Open a file longer than the screen                                                          █
+█   2. Press G                                                                                     █
+█   3. Press j, then k, then g                                                                     █
+█   4. Press J and K on a file with three hunks                                                    █
+█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█
+ ^s Add Comment  shift+⏎ Add Comment  ^t Write  ^o Collapse  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..................................................................................................a
+a.bb...............................................................................................a
+a..................................................................................................a
+a.bbbbbbb.ccccccccc.dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd.a
+a..............eeeeeeeeee......................................................................ff..a
+a..............................................................................................ff..a
+a..............................................................................................ff..a
+a..............................................................................................ff..a
+a..............................................................................................ff..a
+a..ggh...h.....................................................................................ff..a
+a..ggh............................h............................................................ff..a
+a..ggh...h.....................................................................................ff..a
+a..gg..............................h.....h.....................................................ff..a
+a..............................................................................................ff..a
+a..............................................................................................ff..a
+a..............................................................................................ff..a
+a..............................................................................................ff..a
+a..............................................................................................ff..a
+a.......................h......................................................................ii..a
+a..............................................................................................ii..a
+a..............................................................................................ii..a
+a..............................................................................................ii..a
+a..............................................................................................ii..a
+a..gggg........................................................................................ii..a
+a..gggg......h.................................................................................ii..a
+a..gggg......h.......h.......h.................................................................ii..a
+a..gggg......h.....h...........................................................................ii..a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+jjjjkkkkkkkkkkkkjjjjjjjjjkkkkkkkkkkkkjjjjkkkkkkjjjjkkkkkkkkkjjjjjkkkkkklllllllllllllllllllllllllllll
+--- legend
+. fg=#e0e0e0 bg=#1e1e1e
+a fg=#fea62b bg=#1e1e1e
+b fg=#a5a5a5 bg=#1e1e1e
+c fg=#e0e0e0 bg=#1e1e1e inverse
+d fg=#004578 bg=#1e1e1e
+e fg=#e0e0e0 bg=#1e1e1e bold
+f fg=#003054 bg=#1e1e1e inverse
+g fg=#57a5e2 bg=#1e1e1e
+h fg=#f4bc6e bg=#2f281e
+i fg=#e0e0e0 bg=#000000
+j fg=#ffa62b bg=#242f38 bold
+k fg=#e0e0e0 bg=#242f38
+l bg=#242f38

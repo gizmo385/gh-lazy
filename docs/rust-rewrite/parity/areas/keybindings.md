@@ -16,7 +16,7 @@ Override values may be comma-separated lists (`"q, escape"`, with or without spa
 | `keybindings.app-open-help` | `app.open_help` | `?` | Keybindings | app | M1 | parity | #76, #108, #158 | Toggles the help panel (`main-layout.help-panel`). TERM: shifted character; override may be saved as `question_mark`. |
 | `keybindings.conversation-comment-new` | `conversation.comment.new` | `n` | New Comment | PR Conversation, Issue Comments | M3 | parity | #182, #260, #261 | |
 | `keybindings.conversation-review-reply` | `conversation.review.reply` | `r` | Reply to Review | review block | M3 | parity | #182, #261 | Same key as `conversation.comment.reply`; the innermost focused block wins. Unit-tested (`r_on_a_review_replies_with_an_issue_comment`, the comment's `r` winning in `r_on_a_review_comment_replies_in_its_thread`); scenario `pr-comment` sends the comment's `r`, and `pr-review-reply` the review's. |
-| `keybindings.conversation-comment-reply` | `conversation.comment.reply` | `r` | Reply to Comment | comment block | M3 | parity | #182, #260, #261 | |
+| `keybindings.conversation-comment-reply` | `conversation.comment.reply` | `r` | Reply to Comment | comment block | M3 | parity | #182, #260, #261, #418 | On a review comment, posts to its thread's first comment, also for a reply to a reply (Py bug B182, unit-tested by `r_on_a_reply_in_a_review_thread_posts_to_the_thread_root`). |
 | `keybindings.issue-new` | `issue.new` | `I` | New Issue | selections pane | M3 | parity | #181, #258 | |
 | `keybindings.issue-edit` | `issue.edit` | `E` | Edit Issue | issues table, Issue Overview | M3 | parity | #181, #259 | |
 | `keybindings.issue-lookup` | `issue.lookup` | `O` | Lookup Issue | issues table | M2 | parity | #247 | |

@@ -593,6 +593,30 @@ fn r_on_a_review_comment_replies_in_its_thread() {
 }
 
 #[test]
+fn r_on_a_reply_in_a_review_thread_posts_to_the_thread_root() {
+    // GitHub doesn't take replies to replies (#418, Py bug B182): the reply quotes 9002 but goes to its root, 9001.
+    let mut app = conversation_on(writing_gh());
+    let c9002 = block(&app, CommentRef::Review(9002));
+    tab_to(&mut app, ConversationStop::Comment(c9002, CommentStop::Block));
+    app.press(&["r"]);
+    assert!(dialog_open(&app));
+    assert!(
+        app.screen(160, 48)
+            .contains("Replying to comment from parity-friend at Mon Feb  2 11:00:00 2026")
+    );
+    post_yes(&mut app);
+    assert_eq!(
+        writes(&app),
+        [GithubRequest::ReplyToReviewComment {
+            repo: Box::new(fixture_pr(5).pr.issue.repo),
+            pr_number: 5,
+            comment_id: 9001,
+            body: "Yes".into(),
+        }]
+    );
+}
+
+#[test]
 fn r_on_an_issue_comment_posts_an_issue_comment() {
     let mut app = conversation_on(writing_gh());
     let first = comments(5)[0].id;

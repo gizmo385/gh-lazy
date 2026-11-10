@@ -565,22 +565,24 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s1" x="30" y="955" textLength="100" lengthAdjust="spacingAndGlyphs">Line down </text>
 <text class="s31" x="130" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> k </text>
 <text class="s1" x="160" y="955" textLength="80" lengthAdjust="spacingAndGlyphs">Line up </text>
-<text class="s31" x="240" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> J </text>
-<text class="s1" x="270" y="955" textLength="100" lengthAdjust="spacingAndGlyphs">Next Hunk </text>
-<text class="s31" x="370" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> K </text>
-<text class="s1" x="400" y="955" textLength="140" lengthAdjust="spacingAndGlyphs">Previous Hunk </text>
-<text class="s31" x="540" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ] </text>
-<text class="s1" x="570" y="955" textLength="100" lengthAdjust="spacingAndGlyphs">Next File </text>
-<text class="s31" x="670" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> [ </text>
-<text class="s1" x="700" y="955" textLength="140" lengthAdjust="spacingAndGlyphs">Previous File </text>
-<text class="s31" x="840" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ⏎ </text>
-<text class="s1" x="870" y="955" textLength="70" lengthAdjust="spacingAndGlyphs">Expand </text>
-<text class="s31" x="940" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> z </text>
-<text class="s1" x="970" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Fold Files </text>
-<text class="s31" x="1080" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> n </text>
-<text class="s1" x="1110" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Next Comment </text>
-<text class="s31" x="1240" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> N </text>
-<text class="s1" x="1270" y="955" textLength="170" lengthAdjust="spacingAndGlyphs">Previous Comment </text>
-<text class="s31" x="1440" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
-<text class="s1" x="1470" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Filter Files </text>
+<text class="s31" x="240" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> r </text>
+<text class="s1" x="270" y="955" textLength="60" lengthAdjust="spacingAndGlyphs">Reply </text>
+<text class="s31" x="330" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> J </text>
+<text class="s1" x="360" y="955" textLength="100" lengthAdjust="spacingAndGlyphs">Next Hunk </text>
+<text class="s31" x="460" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> K </text>
+<text class="s1" x="490" y="955" textLength="140" lengthAdjust="spacingAndGlyphs">Previous Hunk </text>
+<text class="s31" x="630" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ] </text>
+<text class="s1" x="660" y="955" textLength="100" lengthAdjust="spacingAndGlyphs">Next File </text>
+<text class="s31" x="760" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> [ </text>
+<text class="s1" x="790" y="955" textLength="140" lengthAdjust="spacingAndGlyphs">Previous File </text>
+<text class="s31" x="930" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> ⏎ </text>
+<text class="s1" x="960" y="955" textLength="70" lengthAdjust="spacingAndGlyphs">Expand </text>
+<text class="s31" x="1030" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> z </text>
+<text class="s1" x="1060" y="955" textLength="110" lengthAdjust="spacingAndGlyphs">Fold Files </text>
+<text class="s31" x="1170" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> n </text>
+<text class="s1" x="1200" y="955" textLength="130" lengthAdjust="spacingAndGlyphs">Next Comment </text>
+<text class="s31" x="1330" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> N </text>
+<text class="s1" x="1360" y="955" textLength="170" lengthAdjust="spacingAndGlyphs">Previous Comment </text>
+<text class="s31" x="1530" y="955" textLength="30" lengthAdjust="spacingAndGlyphs"> / </text>
+<text class="s1" x="1560" y="955" textLength="40" lengthAdjust="spacingAndGlyphs">Filt</text>
 </svg>

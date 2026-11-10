@@ -31,7 +31,7 @@ cursor 0 0 hidden
 │                                      ││          ▎ Rename this to line_count.                    │
 │                                      ││ src/viewer.rs                              Comment 3/3   │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
- j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z F
+ j Line down  k Line up  r Reply  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Coll
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 a..............bbbbbbbbbbbbbbbbbbbbb...............................................................a
@@ -62,7 +62,7 @@ c......................................cdkkkkkkkkkkUUVVVVVVVVVVVVVVVVVVVVVVVVVVV
 c......................................cdkkkkkkkkkkUUWWWWWWWWWWWWWWWXXXXXXXXXXWIIIIIIIIIIIIIIIIIIttd
 c......................................cdYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYttd
 ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-ZZZWWWWWWWWWWZZZWWWWWWWWZZZWWWWWWWWWWZZZWWWWWWWWWWWWWWZZZWWWWWWWWWWZZZWWWWWWWWWWWWWWZZZWWWWWWWWWZZZW
+ZZZWWWWWWWWWWZZZWWWWWWWWZZZWWWWWWZZZWWWWWWWWWWZZZWWWWWWWWWWWWWWZZZWWWWWWWWWWZZZWWWWWWWWWWWWWWZZZWWWW
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212

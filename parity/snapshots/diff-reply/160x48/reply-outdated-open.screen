@@ -1,0 +1,166 @@
+lazy-github-screen 1
+size 160x48
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                                                                                           │
+└──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────────────────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────────────────────────────────────────┐
+│ ★  Owner       Name         Private                          ││ Overview  Diff  Conversation                                                                 │
+│ ☆  parity-bot  pr-details   ✘                                ││━━━━━━━━━━╸━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘                                ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
+│ ☆  parity-bot  hello-world  ✘                                ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
+│ ☆  parity-bot  lazy-demo    ✘                                ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
+│                                                              ││     3  │     println!("cargo:rerun-if-changed=assets");                                      │
+│                                                              ││     4  │ }                                                                                   │
+│                                                              ││▶ 🗑️  docs/old.md (deleted)                                                                   │
+│                                                              ││▼ 📄 src/viewer.rs (+5 -2) · 3 comments                                                       │
+│                                                              ││  Lines 1-8 (+2)                                                                              │
+│                                                              ││     1  │ use std::io;                                                                        │
+│                                                              ││     2  │ use std::fmt;                                                                       │
+│                                                              ││     3  │                                                                                     │
+│                                                              ││     4  │ pub struct Viewer {                                                                 │
+│                                                              ││     5  │     lines: Vec<String>,                                                           ▂▂│
+│                             █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+│                             █ Replying to comment from parity-bot at Tue Feb  3 09:30:00 2026                                  █eplies                       │
+│                             █ ▎ Rename this to line_count.                                                                     █                             │
+│                             █                                                                                                  █                             │
+│                             █  Write   Preview  ────────────────────────────────────────────────────────────────────────────── █                             │
+└─────────────────────────────█  Write a reply (markdown)                                                                        █                             │
+┌─ [2] Pull Requests ─────────█                                                                                                  █                             │
+│ #  Status  Author         Ti█                                                                                                  █                             │
+│ 5  open    parity-friend  Ad█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│ 4  closed  parity-bot     Drop the legacy renderer           ││     8  │                                                                                     │
+│ 3  closed  parity-bot     Release 0.2.0                      ││  Lines 22-28 (+3 -2) • impl Viewer {                                                         │
+│ 2  open    parity-friend  Try a faster parser                ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
+│                                                              ││    21  │         for line in &self.lines {                                                   │
+│                                                              ││    22● │             println!("{line}");                                                     │
+│                                                              ││          ▶ parity-bot: This needs a test.                                                    │
+│                                                              ││    23  │         for (i, line) in self.lines.iter().enumerate() {                            │
+│                                                              ││    24  │             let marker = if i == self.cursor { ">" } else { " " };                  │
+│                                                              ││    25  │             println!("{marker} {line}");                                            │
+│                                                              ││    26  │         }                                                                           │
+│                                                              ││    27  │         Ok(())                                                                      │
+│                                                              ││    28  │     }                                                                               │
+│                                                              ││  Outdated comments (1)                                                                       │
+│                                                              ││►         ▶ Line 12 (outdated) · parity-bot: Rename this to `line_count`.                     │
+│                                                              ││ src/viewer.rs                                                                  Comment 3/3   │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││Review Status:                                                                                │
+└──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
+ ^s Post  shift+⏎ Post  ^t Preview  ^o Expand  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbb...........................................................................................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd.gggggggg........gggggggggggg.................................................................d
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdiiiiiiiiiiijjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlkkoooooooooooooooooooooooooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkknd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
+c..............................................................cdkkkkkkkkkkpppppppppppppqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqpprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssd
+c..............................................................cdkkkkkkkkkktuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussd
+c..............................................................cdvvvwvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvssd
+c..............................................................cdvvvwvvvvvvvvvvvvvvvvxxvyyvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvssd
+c..............................................................cdzzzzzzzzzzzzzAAzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzssd
+c..............................................................cdkkkkkkkkkkBBBtttttttttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussd
+c..............................................................cdkkkkkkkkkkCCCpppppppppprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssd
+c..............................................................cdkkkkkkkkkkuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussd
+c..............................................................cdkkkkkkkkkkBBBtBBBBBBtDDDDDDttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussd
+c..............................................................cdkkkkkkkkkktttttttttttttttttttttttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuEEd
+c.............................FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFrrrrrrrrrrrrrrrrrrrrrrrrrrrGGd
+c.............................FHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFIIIIIIJJJJJJJJJJJJJJJJJJJJJGGd
+c.............................FHKKHHHHHHHHHHHHHHHLLLLLLLLLLHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFJJJJJJJJJJJJJJJJJJJJJJJJJJJGGd
+c.............................FHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHFJJJJJJJJJJJJJJJJJJJJJJJJJJJGGd
+c.............................FHMMMMMMMHKKKKKKKKKHNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNHFJJJJJJJJJJJJJJJJJJJJJJJJJJJGGd
+ccccccccccccccccccccccccccccccFHOPQQQQQQQQQQQQQQQQQQQQQQQRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRROHFJJJJJJJJJJJJJJJJJJJJJJJJJJJGGd
+ccccccccccccccccccccccccccccccFHOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOHFJJJJJJJJJJJJJJJJJJJJJJJJJJJGGd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeFHOSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSOHFJJJJJJJJJJJJJJJJJJJJJJJJJJJGGd
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFuuuuuuuuuuuuuuuuuuuuuuuuuuuGGd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuGGd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdzzzzzzzzzzzzzzzAAzTTzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzGGd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkttttBBBtBBtDDDDDDtUtttttttttttttttttttttttttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuGGd
+c..............................................................cdkkkkkkkkkkVVVVVVVVWWWVVVVVVXXVXVVVVVVVVVVVVYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYGGd
+c..............................................................cdkkkkkkZkkkVVVVVVVVVVVVVVVVVVVVV0WWWWWW0VVYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYGGd
+c..............................................................cdkkkkkkkkkkJJ1111111111JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJGGd
+c..............................................................cdkkkkkkkkkkppppppppCCCppppppppppp22pppppppppppppppppppppppppppppppprrrrrrrrrrrrrrrrrrrrrrrrrrGGd
+c..............................................................cdkkkkkkkkkkppppppppppppCCCpppppppp2pCCppp22pppppppppppppppqqqpppCCCCpppqqqppprrrrrrrrrrrrrrrrGGd
+c..............................................................cdkkkkkkkkkkpppppppppppppppppppppqCCCCCCCCqCCCCCCqpprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrGGd
+c..............................................................cdkkkkkkkkkktttttttttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuGGd
+c..............................................................cdkkkkkkkkkkttttttttttttttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuGGd
+c..............................................................cdkkkkkkkkkktttttuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuussd
+c..............................................................cdzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzssd
+c..............................................................cdkkkkkkkkkk333333333333333333333333333333333333333333333333333333333333333JJJJJJJJJJJJJJJJJJJssd
+c..............................................................cd44444444444444444444444444444444444444444444444444444444444444444444444444444444444444444444ssd
+c..............................................................cd............................................................................................ssd
+c..............................................................cd............................................................................................ssd
+c..............................................................cd............................................................................................ssd
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+5555666665555555556666655556666666655556666666555556666667777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777777
+--- legend
+. fg=#646464 bg=#121212
+a fg=#0a263a bg=#121212
+b fg=#50701d bg=#121212
+c fg=#365270 bg=#121212
+d fg=#2a5738 bg=#121212
+e fg=#646464 bg=#191d21 bold
+f fg=#476419 bg=#191d21 bold
+g fg=#3b3b3b bg=#121212
+h fg=#646464 bg=#13212c
+i fg=#1a1a1a bg=#121212
+j fg=#0b3a5f bg=#121212
+k fg=#646464 bg=#161616
+l fg=#141414 bg=#121212 inverse
+m fg=#141414 bg=#161616
+n fg=#141414 bg=#121212
+o fg=#383838 bg=#161616
+p fg=#6e6e6b bg=#0e220e
+q fg=#666239 bg=#0e220e
+r fg=#646464 bg=#0e220e
+s fg=#646464 bg=#0a0a0a
+t fg=#6e6e6b bg=#1a1a18
+u fg=#646464 bg=#1a1a18
+v fg=#656565 bg=#1a1a1a bold
+w default
+x fg=#476419 bg=#1a1a1a bold
+y fg=#6c0a30 bg=#1a1a1a bold
+z fg=#4c4c4c bg=#161616
+A fg=#476419 bg=#161616
+B fg=#33616a bg=#1a1a18
+C fg=#33616a bg=#0e220e
+D fg=#4d651d bg=#1a1a18
+E fg=#0a1e2c bg=#0a0a0a
+F fg=#121212 bg=#4f4f4f
+G fg=#0a1e2c bg=#161616 inverse
+H fg=#e0e0e0 bg=#4f4f4f
+I fg=#4d4f50 bg=#191d21
+J fg=#656566 bg=#191d21
+K fg=#b8b8b8 bg=#4f4f4f
+L fg=#f6be71 bg=#5c554b
+M fg=#e0e0e0 bg=#4f4f4f inverse
+N fg=#004578 bg=#4f4f4f
+O bg=#1e1e1e
+P fg=#737373 bg=#e0e0e0
+Q fg=#737373 bg=#262626
+R fg=#e0e0e0 bg=#262626
+S fg=#e0e0e0 bg=#1e1e1e
+T fg=#6c0a30 bg=#161616
+U fg=#702641 bg=#1a1a18
+V fg=#6e6e6b bg=#220e0e
+W fg=#33616a bg=#220e0e
+X fg=#702641 bg=#220e0e
+Y fg=#646464 bg=#220e0e
+Z fg=#704d1c bg=#161616
+0 fg=#666239 bg=#220e0e
+1 fg=#656566 bg=#191d21 bold
+2 fg=#702641 bg=#0e220e
+3 fg=#63696e bg=#0b3a5f bold
+4 fg=#18130c bg=#704d1c
+5 fg=#ffa62b bg=#242f38 bold
+6 fg=#e0e0e0 bg=#242f38
+7 bg=#242f38
+--- cells
+11 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▶"," ","🗑️",""," "," ","d","o","c","s","/","o","l","d",".","m","d"," ","(","d","e","l","e","t","e","d",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+12 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," ","·"," ","3"," ","c","o","m","m","e","n","t","s"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

@@ -1,0 +1,29 @@
+GET /repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/check-runs?page=1&per_page=100
+GET /repos/parity-bot/pr-details/commits/c0ffee5555555555555555555555555555555555/status?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/5/comments
+GET /repos/parity-bot/pr-details/issues/5/reactions
+GET /repos/parity-bot/pr-details/issues/comments/7001/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues/comments/7002/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/issues?page=1&per_page=30&state=all
+GET /repos/parity-bot/pr-details/issues?page=2&per_page=30&state=all
+GET /repos/parity-bot/pr-details/pulls/5
+GET /repos/parity-bot/pr-details/pulls/5 accept=diff
+GET /repos/parity-bot/pr-details/pulls/5/reviews
+GET /repos/parity-bot/pr-details/pulls/5/reviews/501/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/502/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/503/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/504/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/505/comments
+GET /repos/parity-bot/pr-details/pulls/5/reviews/508/comments
+GET /repos/parity-bot/pr-details/pulls/comments/9001/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9002/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9003/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9004/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9005/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls/comments/9006/reactions?page=1&per_page=100
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=1&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/pulls?direction=desc&page=2&per_page=30&sort=created&state=all
+GET /repos/parity-bot/pr-details/readme accept=raw
+GET /user
+GET /user/repos?direction=asc&page=1&per_page=50&sort=full_name&type=all
+POST /repos/parity-bot/pr-details/pulls/5/comments/9001/replies {"body":"Agreed. I'll say so in the README."}

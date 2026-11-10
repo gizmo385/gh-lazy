@@ -360,16 +360,16 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s1" x="30" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Line down </text>
 <text class="s31" x="130" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> k </text>
 <text class="s1" x="160" y="595" textLength="80" lengthAdjust="spacingAndGlyphs">Line up </text>
-<text class="s31" x="240" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> J </text>
-<text class="s1" x="270" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Next Hunk </text>
-<text class="s31" x="370" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> K </text>
-<text class="s1" x="400" y="595" textLength="140" lengthAdjust="spacingAndGlyphs">Previous Hunk </text>
-<text class="s31" x="540" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> ] </text>
-<text class="s1" x="570" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Next File </text>
-<text class="s31" x="670" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> [ </text>
-<text class="s1" x="700" y="595" textLength="140" lengthAdjust="spacingAndGlyphs">Previous File </text>
-<text class="s31" x="840" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> ⏎ </text>
-<text class="s1" x="870" y="595" textLength="70" lengthAdjust="spacingAndGlyphs">Expand </text>
-<text class="s31" x="940" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> z </text>
-<text class="s1" x="970" y="595" textLength="30" lengthAdjust="spacingAndGlyphs">Fol</text>
+<text class="s31" x="240" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> r </text>
+<text class="s1" x="270" y="595" textLength="60" lengthAdjust="spacingAndGlyphs">Reply </text>
+<text class="s31" x="330" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> J </text>
+<text class="s1" x="360" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Next Hunk </text>
+<text class="s31" x="460" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> K </text>
+<text class="s1" x="490" y="595" textLength="140" lengthAdjust="spacingAndGlyphs">Previous Hunk </text>
+<text class="s31" x="630" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> ] </text>
+<text class="s1" x="660" y="595" textLength="100" lengthAdjust="spacingAndGlyphs">Next File </text>
+<text class="s31" x="760" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> [ </text>
+<text class="s1" x="790" y="595" textLength="140" lengthAdjust="spacingAndGlyphs">Previous File </text>
+<text class="s31" x="930" y="595" textLength="30" lengthAdjust="spacingAndGlyphs"> ⏎ </text>
+<text class="s1" x="960" y="595" textLength="40" lengthAdjust="spacingAndGlyphs">Expa</text>
 </svg>

@@ -49,7 +49,7 @@ cursor 0 0 hidden
 │                                                              ││    25  │             println!("{marker} {line}");                                            │
 │                                                              ││ src/viewer.rs                                                                  Comment 2/3   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Expand  z Fold Files  n Next Comment  N Previous Comment  / Filter Files
+ j Line down  k Line up  r Reply  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Expand  z Fold Files  n Next Comment  N Previous Comment  / Filt
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 a..............bbbbbbbbbbbbbbbbbbbbb...........................................................................................................................a
@@ -98,7 +98,7 @@ c..............................................................cdkkkkkkkkkkppppp
 c..............................................................cdkkkkkkkkkkpppppppppppppppppppppqzzzzzzzzqzzzzzzqpprrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrssd
 c..............................................................cdYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYssd
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-ZZZNNNNNNNNNNZZZNNNNNNNNZZZNNNNNNNNNNZZZNNNNNNNNNNNNNNZZZNNNNNNNNNNZZZNNNNNNNNNNNNNNZZZNNNNNNNZZZNNNNNNNNNNNZZZNNNNNNNNNNNNNZZZNNNNNNNNNNNNNNNNNZZZNNNNNNNNNNNNN
+ZZZNNNNNNNNNNZZZNNNNNNNNZZZNNNNNNZZZNNNNNNNNNNZZZNNNNNNNNNNNNNNZZZNNNNNNNNNNZZZNNNNNNNNNNNNNNZZZNNNNNNNZZZNNNNNNNNNNNZZZNNNNNNNNNNNNNZZZNNNNNNNNNNNNNNNNNZZZNNNN
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212

@@ -31,7 +31,7 @@ cursor 0 0 hidden
 │                                      ││    25  │             println!("{marker} {line}");        │
 │                                      ││ src/viewer.rs                              Comment 2/3   │
 └──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
- j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Expand  z Fol
+ j Line down  k Line up  r Reply  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Expa
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 a..............bbbbbbbbbbbbbbbbbbbbb...............................................................a
@@ -62,7 +62,7 @@ c......................................cdkkkkkkkkkkxxxxxxxxxxxxyyyxxxxxxxxUxyyxx
 c......................................cdkkkkkkkkkkxxxxxxxxxxxxxxxxxxxxxVyyyyyyyyVyyyyyyVxxzzzzzzttd
 c......................................cdWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWttd
 ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-XXXEEEEEEEEEEXXXEEEEEEEEXXXEEEEEEEEEEXXXEEEEEEEEEEEEEEXXXEEEEEEEEEEXXXEEEEEEEEEEEEEEXXXEEEEEEEXXXEEE
+XXXEEEEEEEEEEXXXEEEEEEEEXXXEEEEEEXXXEEEEEEEEEEXXXEEEEEEEEEEEEEEXXXEEEEEEEEEEXXXEEEEEEEEEEEEEEXXXEEEE
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212

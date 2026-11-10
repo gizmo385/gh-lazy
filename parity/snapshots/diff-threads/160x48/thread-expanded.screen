@@ -49,7 +49,7 @@ cursor 0 0 hidden
 │                                                              ││     8  │                                                                                     │
 │                                                              ││ src/viewer.rs                                                                  Comment 1/3   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z Fold Files  n Next Comment  N Previous Comment  / Filter File
+ j Line down  k Line up  r Reply  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z Fold Files  n Next Comment  N Previous Comment  / Fi
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 a..............bbbbbbbbbbbbbbbbbbbbb...........................................................................................................................a
@@ -98,7 +98,7 @@ c..............................................................cdkkkkkkkkkkKAAAA
 c..............................................................cdkkkkkkkkkkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOOd
 c..............................................................cdVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVOOd
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-WWWUUUUUUUUUUWWWUUUUUUUUWWWUUUUUUUUUUWWWUUUUUUUUUUUUUUWWWUUUUUUUUUUWWWUUUUUUUUUUUUUUWWWUUUUUUUUUWWWUUUUUUUUUUUWWWUUUUUUUUUUUUUWWWUUUUUUUUUUUUUUUUUWWWUUUUUUUUUUU
+WWWUUUUUUUUUUWWWUUUUUUUUWWWUUUUUUWWWUUUUUUUUUUWWWUUUUUUUUUUUUUUWWWUUUUUUUUUUWWWUUUUUUUUUUUUUUWWWUUUUUUUUUWWWUUUUUUUUUUUWWWUUUUUUUUUUUUUWWWUUUUUUUUUUUUUUUUUWWWUU
 --- legend
 . fg=#e0e0e0 bg=#121212
 a fg=#004578 bg=#121212

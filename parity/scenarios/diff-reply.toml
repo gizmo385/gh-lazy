@@ -1,0 +1,152 @@
+version = 1
+description = "Diff tab thread reply (#385): r on parity-friend's reply in thread 9001 opens New comment quoting it, ctrl+s posts to the thread's root 9001, the thread stays expanded with the reply last and the cursor kept; r on the outdated thread quotes its root"
+# Rust-only: Python can't reply from the Diff tab, which shows no review comments (decision diff-inline-comments,
+# #385 D1-D3 a). The captures check the cursor through the position row under the body (`<path>  Comment n/m` on a
+# thread), waited on with a regex. Checked by eye at 160x48 and 100x30.
+gate = true
+apps = ["rust"]
+parity_rows = ["diff-viewer.thread-reply", "keybindings.diff-reply-to-thread"]
+sizes = [[160, 48]]
+
+[env]
+# pr-diff-reply over pr-diff-comments: POST .../pulls/5/comments/9001/replies answers 9006 for "Agreed. I'll say so in
+# the README.", and the reviews listed after it hold the reply (review 508).
+fixtures = ["pr-diff-reply", "pr-diff-comments", "pr-details", "base"]
+config_overrides = { appearance = { show_issues = false, show_workflows = false } }
+
+[[step]]
+wait = { text = "pr-details", timeout_ms = 15000 }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "parity-friend", timeout_ms = 15000 }
+
+[[step]]
+keys = ["2"]
+
+[[step]]
+wait = { text = "O Lookup Pull Request" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "Opened on", timeout_ms = 15000 }
+
+[[step]]
+keys = ["right"]
+
+# The threads come with the Conversation's reviews, after the diff.
+[[step]]
+wait = { text = "README.md (+3 -1) · 1 comment", timeout_ms = 15000 }
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { text = "j Line down" }
+
+# n twice: README.md's file comment, then thread 9001 under src/viewer.rs's `+    cursor: usize,`; enter expands it.
+[[step]]
+keys = ["n", "n"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Comment 1/3" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { text = "No, it stops at the last line." }
+
+# Down to parity-friend's reply: the root's author and body rows, then the reply's author and body rows.
+[[step]]
+keys = ["j", "j", "j", "j"]
+
+[[step]]
+capture = "thread-focused"
+
+[[step]]
+keys = ["r"]
+
+[[step]]
+wait = { text = "Replying to comment from parity-friend" }
+
+[[step]]
+capture = "reply-open"
+
+[[step]]
+type = "Agreed. I'll say so in the README."
+
+[[step]]
+wait = { text = "Agreed. I'll say so in the README." }
+
+[[step]]
+keys = ["ctrl+s"]
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/pr-details/pulls/5/comments/9001/replies"
+wait.log.body.body = "Agreed. I'll say so in the README."
+
+# The Conversation reloads, and with it the threads: the reply shows last in its thread.
+[[step]]
+wait = { text = "· 2 replies", timeout_ms = 15000 }
+
+[[step]]
+capture = "replied"
+
+# n twice: the thread on the removed line, then the outdated one; r quotes its root.
+[[step]]
+keys = ["n", "n"]
+
+[[step]]
+wait = { regex = "src/viewer\\.rs +Comment 3/3" }
+
+[[step]]
+keys = ["r"]
+
+[[step]]
+wait = { text = "Replying to comment from parity-bot" }
+
+[[step]]
+capture = "reply-outdated-open"
+
+# escape leaves the body, q closes the sheet.
+[[step]]
+keys = ["escape", "q"]
+
+[[step]]
+wait = { gone = "Replying to comment from" }
+
+[expect.thread-focused]
+focused = ["[5] PR #5 Details"]
+contains = ["▎   No, it stops at the last line.", "Comment 1/3", "k Line up  r Reply  J Next Hunk"]
+not_contains = ["c Add Comment"]
+
+[expect.reply-open]
+contains = [
+    "Replying to comment from parity-friend at Mon Feb  2 11:00:00 2026",
+    "No, it stops at the last line.",
+    "Write a reply (markdown)",
+    " Write   Preview ",
+]
+footer = ["^s Post", "shift+⏎ Post", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.replied]
+focused = ["[5] PR #5 Details"]
+# The header counts threads (#390): a reply adds none.
+contains = [
+    "▼ parity-bot: Should the cursor wrap at the end?  · 2 replies",
+    "src/viewer.rs (+5 -2) · 3 comments",
+    "▎   Agreed. I'll say so in the README.",
+    "Comment 1/3",
+    "k Line up  r Reply  J Next Hunk",
+]
+not_contains = ["Replying to comment from", "Traceback"]
+
+[expect.reply-outdated-open]
+contains = ["Replying to comment from parity-bot", "Rename this to"]
+footer = ["^s Post", "shift+⏎ Post", "^t Preview", "^o Expand", "esc Leave"]

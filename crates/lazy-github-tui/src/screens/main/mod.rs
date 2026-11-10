@@ -407,8 +407,9 @@ pub enum MainAction {
     /// The palette's "Search: <query>": the Search modal over the last session with `search.saved_queries[index]` as
     /// its text, searched at once (#395).
     RunSavedSearch(usize),
-    /// `issue.milestone` on the Issue Overview: the Search modal over the last session with the issues of the shown
-    /// issue's milestone as its text, searched at once (#410). Nothing without a milestone.
+    /// `issue.milestone` on the Issue Overview, or `pull_request.milestone` on the PR Overview: the Search modal over
+    /// the last session with the issues (#410) or pull requests (#417) of the shown item's milestone as its text,
+    /// searched at once. Nothing without a milestone.
     SearchMilestone,
     /// The Search modal closed: its session is kept for the next open, and a hit chosen there opens in its repo
     /// ([`MainAction::OpenInRepo`]).
@@ -1475,6 +1476,9 @@ impl MainScreen {
                 Some(Action::Main(MainAction::EditIssue(EditOrigin::Overview)))
             }
             Owner::IssueOverview if id == BindingId::IssueMilestone => Some(Action::Main(MainAction::SearchMilestone)),
+            Owner::PrOverview if id == BindingId::PullRequestMilestone => {
+                Some(Action::Main(MainAction::SearchMilestone))
+            }
             Owner::PrOverview
             | Owner::IssueOverview
             | Owner::IssueComments
@@ -1549,7 +1553,9 @@ impl MainScreen {
     pub fn link_binding_state(&self, owner: Owner, id: BindingId, cx: &Cx<'_>) -> BindingState {
         match owner {
             Owner::Screen(ScreenKind::Main) => self.binding_state(id, cx),
-            Owner::DiffViewer | Owner::DiffBody | Owner::IssueOverview => self.details.binding_state(owner, id),
+            Owner::DiffViewer | Owner::DiffBody | Owner::IssueOverview | Owner::PrOverview => {
+                self.details.binding_state(owner, id)
+            }
             _ => BindingState::Enabled,
         }
     }
@@ -1952,17 +1958,25 @@ impl MainScreen {
         self.run_search(&query, cx);
     }
 
-    /// `MainAction::SearchMilestone`: the shown issue's milestone, searched in the issue's own repo. Nothing when no
-    /// issue is shown or it has no milestone (the binding is hidden then).
+    /// `MainAction::SearchMilestone`: the shown issue's milestone, searched for issues, or the shown pull request's,
+    /// searched for pull requests, in the item's own repo. Nothing when neither is shown or it has no milestone (the
+    /// binding is hidden then).
     fn search_milestone(&mut self, cx: &mut Cx<'_>) {
-        let Some(issue) = self.details.issue().map(issue_details::IssueDetails::issue) else {
-            return;
+        let query = if let Some(issue) = self.details.issue().map(issue_details::IssueDetails::issue) {
+            issue
+                .milestone
+                .as_ref()
+                .map(|milestone| milestone.issues_query(&issue.repo.full_name))
+        } else if let Some(pr) = self.details.pull_request().map(|details| &details.pr().pr.issue) {
+            pr.milestone
+                .as_ref()
+                .map(|milestone| milestone.pull_requests_query(&pr.repo.full_name))
+        } else {
+            None
         };
-        let Some(milestone) = &issue.milestone else {
-            return;
-        };
-        let query = milestone.search_query(&issue.repo.full_name);
-        self.run_search(&query, cx);
+        if let Some(query) = query {
+            self.run_search(&query, cx);
+        }
     }
 
     /// The modal over the last session (or a new one), its text replaced by `query` and searched at once.

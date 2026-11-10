@@ -1,6 +1,7 @@
 //! The layout the Overview tabs share (Repo, pull request and issue): header lines at the left edge, a rule, and a
 //! markdown body below, laid out as one [`Rendered`] that scrolls as one.
 
+use lazy_github_core::models::{IssueState, Milestone};
 use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
@@ -108,6 +109,36 @@ pub(super) fn push_rule(out: &mut Rendered, width: u16, theme: &Theme) {
     out.lines
         .push(Line::from(Span::styled("─".repeat(usize::from(width)), rule)));
     out.lines.push(Line::default());
+}
+
+/// The Issue and PR Overviews' milestone line (#410, #417): `Milestone: <title> • <state> • due <date> • <closed> of <total> closed`, the due date and counts left out when
+/// GitHub has none.
+pub(super) fn milestone_line(milestone: &Milestone, text: Style, link: Style, theme: &Theme) -> Vec<TextRun> {
+    const SEPARATOR: &str = " • ";
+    let state = match milestone.state {
+        IssueState::Open => mark(theme, theme.roles().marks.positive),
+        IssueState::Closed => mark(theme, theme.roles().marks.merged),
+    };
+    let mut runs = vec![
+        TextRun::new("Milestone: ", text),
+        TextRun::link(milestone.title.as_str(), link, milestone.html_url.as_str()),
+        TextRun::new(SEPARATOR, text),
+        TextRun::new(milestone.state.as_str(), state),
+    ];
+    if let Some(due_on) = milestone.due_on {
+        // `Timestamp::strftime` formats in UTC, the day GitHub stores.
+        runs.push(TextRun::new(SEPARATOR, text));
+        runs.push(TextRun::new(format!("due {}", due_on.strftime("%Y-%m-%d")), text));
+    }
+    let total = milestone.open_issues + milestone.closed_issues;
+    if total > 0 {
+        runs.push(TextRun::new(SEPARATOR, text));
+        runs.push(TextRun::new(
+            format!("{} of {total} closed", milestone.closed_issues),
+            text,
+        ));
+    }
+    runs
 }
 
 #[cfg(test)]

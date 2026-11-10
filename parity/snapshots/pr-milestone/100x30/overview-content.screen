@@ -1,0 +1,95 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/pr-details                                                               │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] PR #5 Details ──────────────────────────────────────┐
+│ ★  Owner       Name         Private  ││ Overview  Diff  Conversation                             │
+│ ☆  parity-bot  pr-details   ✘        ││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles     ✘        ││Open Add a cursor to the viewer (#5) by parity-friend     │
+│ ☆  parity-bot  hello-world  ✘        ││Milestone: v1.0 • open • due 2026-04-01 • 2 of 5 closed   │
+│ ☆  parity-bot  lazy-demo    ✘        ││3 commits • 5 files changed • +12 • -6 •                  │
+│                                      ││parity-friend:cursor → parity-bot:main                    │
+│                                      ││                                                          │
+│                                      ││Opened on Sun Feb  1 08:30:00 2026                        │
+│                                      ││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│                                      ││  ▶ 👍 2 | 🎉 1 | 👀 4                                    │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+┌─ [2] Pull Requests ──────────────────┐│  ▶ Status checks: ✘ Failed                               │
+│ #  Status  Author         Title      ││                                                          │
+│ 5  open    parity-friend  Add a curso││▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔  │
+│ 4  closed  parity-bot     Drop the le││  ▶ PR Reviews: ✘ Changes Requested                       │
+│ 3  closed  parity-bot     Release 0.2││                                                          │
+│ 2  open    parity-friend  Try a faste││                                                          │
+│                          ▊           ││────────────────────────────────────────────────────────  │
+│                                      ││                                                          │
+│                                      ││  Adds a cursor to the viewer, as discussed in #3.        │
+│                                      ││                                                        ▅▅│
+│                                      ││  • j and k move it                                       │
+│                                      ││  • the current line is marked with >                     │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^m Merge PR  E Edit PR  R Add reaction  m Milestone  ^v Paste link  f Follow link  F Follow link (b
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbb...............................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+cefeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecd...........gggg..gggggggggggg.............................d
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdijjjjjjjjiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiid
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdbbbb.llllllllllllllllllllllllll.mmmm....mmmmmmmmmmmmm...nnd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd...........mmmm...bbbb..................................nnd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd..............................bbb...oo..................nnd
+c......................................cdllllllllllllllllllll...lllllllllllllll..................nnd
+c......................................cd........................................................nnd
+c......................................cd........................................................nnd
+c......................................cdppppppppppppppppppppppppppppppppppppppppppppppppppppppppnnd
+c......................................cdkkkkkqkkkkkkqkkkkkkqkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkknnd
+c......................................cdkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkknnd
+ccccccccccccccccccccccccccccccccccccccccdppppppppppppppppppppppppppppppppppppppppppppppppppppppppnnd
+ccccccccccccccccccccccccccccccccccccccccdkkkkkkkkkkkkkkkkkkkrrrrrrrrkkkkkkkkkkkkkkkkkkkkkkkkkkkkknnd
+ceeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeecdkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkknnd
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdppppppppppppppppppppppppppppppppppppppppppppppppppppppppnnd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkkkkkkkrrrrrrrrrrrrrrrrrrrkkkkkkkkkkkkkkkkkkkkknnd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkknnd
+ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcd........................................................nnd
+csssssssssssssssssssssssssstuuuuuuuuuuucdaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaannd
+c......................................cd........................................................nnd
+c......................................cd...............................................mm.......nnd
+c......................................cd........................................................vvd
+c......................................cd..wwx.....x.............................................uud
+c......................................cd..ww................................x...................uud
+ccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+yyyyzzzzzzzzzyyyzzzzzzzzyyyzzzzzzzzzzzzzyyyzzzzzzzzzzyyyyzzzzzzzzzzzyyyzzzzzzzzzzzzyyyzzzzzzzzzzzzzz
+--- legend
+. fg=#e0e0e0 bg=#121212
+a fg=#004578 bg=#121212
+b fg=#adff2f bg=#121212
+c fg=#6db2ff bg=#121212
+d fg=#4ebf71 bg=#121212
+e fg=#e0e0e0 bg=#242f38 bold
+f fg=#98e024 bg=#242f38 bold
+g fg=#797979 bg=#121212
+h fg=#e0e0e0 bg=#153854
+i fg=#262626 bg=#121212
+j fg=#0178d4 bg=#121212
+k fg=#e0e0e0 bg=#1e1e1e
+l fg=#e0e0e0 bg=#121212 bold
+m fg=#e0e0e0 bg=#121212 underline
+n fg=#003054 bg=#121212 inverse
+o fg=#ff0000 bg=#121212
+p fg=#121212 bg=#1e1e1e
+q default
+r fg=#ff0000 bg=#1e1e1e
+s fg=#003054 bg=#1e1e1e inverse
+t fg=#003054 bg=#000000
+u fg=#e0e0e0 bg=#000000
+v fg=#003054 bg=#000000 inverse
+w fg=#57a5e2 bg=#121212
+x fg=#f4bb6e bg=#241d13
+y fg=#ffa62b bg=#242f38 bold
+z fg=#e0e0e0 bg=#242f38
+--- cells
+13 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│"," "," ","▶"," ","👍",""," ","2"," ","|"," ","🎉",""," ","1"," ","|"," ","👀",""," ","4"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

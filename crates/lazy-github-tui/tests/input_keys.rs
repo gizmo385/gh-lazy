@@ -2,8 +2,10 @@
 //! sequences on a headless Textual `Input` and dumps the value, cursor, selection, in-app clipboard and inline
 //! suggestion after each key to `fixtures/input_keys.json`, and this replays them on `TextInput`, keeping the clipboard
 //! as `App` does.
-
-mod common;
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by `crates/lazy-github-tui/tests/fixtures/generate_input_keys.py`,
+//! removed at cutover (#398; `git log --diff-filter=D -- crates/lazy-github-tui/tests/fixtures/generate_input_keys.py`
+//! finds its last version). Edit by hand when the Rust behavior changes on purpose.
 
 use lazy_github_tui::components::text_input::{INPUT_BINDINGS, InputOutcome, TextInput};
 use lazy_github_tui::keymap::{KeySpec, Keymap};
@@ -93,18 +95,4 @@ fn the_golden_presses_every_input_key() {
             assert!(pressed.contains(&spec), "{} ({token}) is never pressed", id.def().name);
         }
     }
-}
-
-/// Regenerates `input_keys.json` with Textual and checks the committed copy matches (the golden manifest is
-/// `parity/goldens/text-input-keys.toml`).
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn input_keys_golden_is_fresh() {
-    let home = tempfile::tempdir().unwrap();
-    common::assert_goldens_fresh(
-        "crates/lazy-github-tui/tests/fixtures/generate_input_keys.py",
-        &["crates/lazy-github-tui/tests/fixtures/input_keys.json"],
-        home.path(),
-        "uv run python crates/lazy-github-tui/tests/fixtures/generate_input_keys.py",
-    );
 }

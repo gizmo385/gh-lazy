@@ -2,6 +2,10 @@
 //! Rust differs on purpose.
 //!
 //! These point `HOME` at a temp dir, which Windows doesn't use for its config folder, so they only run elsewhere.
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by `crates/lazy-github/tests/fixtures/cli/generate.py`, removed at
+//! cutover (#398; `git log --diff-filter=D -- crates/lazy-github/tests/fixtures/cli/generate.py` finds its last
+//! version). Edit by hand when the Rust behavior changes on purpose.
 #![cfg(not(windows))]
 
 use std::path::{Path, PathBuf};
@@ -995,49 +999,4 @@ fn check_config_fix_stops_at_end_of_input() {
     assert_eq!(text(&output.stderr), "Aborted!\n");
     assert_eq!(std::fs::read_to_string(home.config_file()).unwrap(), BROKEN_CONFIG);
     assert!(!backup(&home).exists());
-}
-
-/// Regenerates `python-cli.json` with the Python app and checks the committed copy matches.
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn cli_goldens_are_fresh() {
-    let generator = "crates/lazy-github/tests/fixtures/cli/generate.py";
-    let golden = "crates/lazy-github/tests/fixtures/cli/python-cli.json";
-    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
-    let out = TempHome::new("fresh");
-    // `uv run` finds (and syncs) the project's interpreter, so uv's cache and Python installs are the usual ones.
-    let found = std::process::Command::new("uv")
-        .args(["run", "--frozen", "python", "-c", "import sys; print(sys.executable)"])
-        .current_dir(&root)
-        .output()
-        .expect("uv is on PATH");
-    assert!(found.status.success(), "uv run failed:\n{}", text(&found.stderr));
-    let python = String::from_utf8(found.stdout).unwrap();
-    let run = std::process::Command::new(python.trim())
-        .arg(generator)
-        .arg("--out")
-        .arg(&out.0)
-        .current_dir(&root)
-        .output()
-        .unwrap();
-    assert!(
-        run.status.success(),
-        "{generator} failed:\n{}{}",
-        text(&run.stdout),
-        text(&run.stderr)
-    );
-    let committed = std::fs::read_to_string(root.join(golden)).unwrap();
-    let fresh = std::fs::read_to_string(out.0.join("python-cli.json")).unwrap();
-    if committed != fresh {
-        let diff = similar::TextDiff::from_lines(&committed, &fresh)
-            .unified_diff()
-            .header(golden, "regenerated")
-            .to_string();
-        let diff: Vec<&str> = diff.lines().take(40).collect();
-        panic!(
-            "{golden} is stale; the Python app now writes:\n{}\n\n\
-             Regenerate it from the repository root with:\n    uv run python {generator}",
-            diff.join("\n")
-        );
-    }
 }

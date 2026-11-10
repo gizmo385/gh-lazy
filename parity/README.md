@@ -750,8 +750,8 @@ cargo xtask parity --validate              # check every scenario file, run noth
   usual, not as drift.
 - **Python live where its inputs changed (CI).** `--live-python-since REV` compares `REV` with the working tree
   (`git diff --name-only --no-renames REV`, plus untracked files that aren't ignored). If any changed path is under
-  the Python app or harness inputs, the Python-backed tests, `.github/workflows/rust.yaml`, a `generator`, `golden`
-  or `test` path of a [golden manifest](#manifest-format-v1), or a `vt100`/`portable-pty` version in `Cargo.lock`
+  the Python app or harness inputs, the Python-backed tests, `.github/workflows/rust.yaml`, or a
+  `vt100`/`portable-pty` version in `Cargo.lock`
   changed, every selected scenario runs Python live, as with `--live-python`. Otherwise only the selected scenarios
   whose `parity/references/<name>/` changed run it live, as with `--live-python=a,b`, and the rest read their
   references; references of a scenario that's deleted, not selected or doesn't run Python are ignored. The run
@@ -1559,7 +1559,7 @@ plan ([Running scenarios](#running-scenarios) has the rules):
 
 | Plan | When | What runs |
 | --- | --- | --- |
-| `live-python=all` | The PR changes the Python app (`lazy_github/`, `pyproject.toml`, `uv.lock`), the capture harness, a pinned crate version, a Python-backed test (`xtask/tests/python_app.rs`, `xtask/tests/structural_check.rs`, `crates/fake-gh/tests/python_client.rs`), a file a [golden manifest](#manifest-format-v1) names, or the workflow. That's a merge of `main`, a harness change or a golden change. | Python 3.13 and `uv sync --frozen`, every scenario with Python live (checked for drift, so the re-recorded references are checked on the CI machine), and the `#[ignore]`d Python-backed tests, `cargo test -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`, which include the [stale-golden checks](#the-staleness-test). |
+| `live-python=all` | The PR changes the Python app (`lazy_github/`, `pyproject.toml`, `uv.lock`), the capture harness, a pinned crate version, a Python-backed test (`xtask/tests/python_app.rs`, `xtask/tests/structural_check.rs`, `crates/fake-gh/tests/python_client.rs`), or the workflow. That's a merge of `main` or a harness change. | Python 3.13 and `uv sync --frozen`, every scenario with Python live (checked for drift, so the re-recorded references are checked on the CI machine), and the `#[ignore]`d Python-backed tests, `cargo test -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`. |
 | `live-python=a,b` | The PR re-recorded the references of `a` and `b`, and nothing above changed. | Python and `uv sync`; `a` and `b` run Python live, which checks that the developer's recording reproduces on Linux with Python 3.13. The rest read their references. No Python-backed tests. |
 | `live-python=none` | Anything else: most feature PRs. | No `setup-uv`, no `uv sync`, no Python process. Rust runs against the references. |
 
@@ -1911,12 +1911,16 @@ the same screens is the parity run's job.
   (also ignored) rebinds `main.repos.focus` to `9` in a copy of `startup` and checks that `[expect]` fails with a
   `titles` mismatch naming `[9] Repositories` and exit code 1.
 
-## Python goldens
+## Goldens
 
 Some parity rows are about data, not screens: binding ids and their defaults, config defaults, labels, key spellings,
-parsing and file formats. For those, a script imports the Python app and dumps what it has (a **golden**, committed
-next to the Rust test), and a plain Rust test compares the Rust side with it in `cargo test`. A manifest in
-`parity/goldens/<name>.toml`, parallel to `parity/scenarios/`, links the golden to the parity matrix.
+parsing and file formats. For those, a **golden** is a JSON dump from the Python app (lazy-github 0.6.6), committed
+next to the Rust test that reads it, and a plain Rust test compares the Rust side with it in `cargo test`. A manifest
+in `parity/goldens/<name>.toml`, parallel to `parity/scenarios/`, links the golden to the parity matrix.
+
+The goldens are frozen test vectors. The Python scripts that dumped them were removed before the cutover (#398), since
+they can't run once `lazy_github/` is gone; each golden test's module docs name its generator, and
+`git log --diff-filter=D -- <generator path>` finds the generator's last version.
 
 ### Golden or scenario
 
@@ -1925,26 +1929,22 @@ once, and doesn't need a screen. Use a scenario for anything that needs a screen
 what's drawn, where focus goes, what a key does. A row can be named by both, when the golden checks its data and a
 scenario its effect.
 
-### Manifest format (v1)
+### Manifest format (v2)
 
 ```toml
-version = 1
+version = 2
 description = "Binding registry: every id's default keys, action, label, tooltip, show and key_display"
-generator = "crates/lazy-github-tui/tests/fixtures/generate_bindings.py"
 golden = ["crates/lazy-github-tui/tests/fixtures/bindings.json"]
 test = "crates/lazy-github-tui/tests/registry.rs"
-fresh_test = "bindings_goldens_are_fresh"
 parity_rows = ["keybindings.all-ids"]
 ```
 
 | Key | Meaning |
 | --- | --- |
-| `version` | Always `1`. |
+| `version` | Always `2`. Version 1 also had `generator` and `fresh_test`, removed with the generators (#398). |
 | `description` | What the golden holds, in one line. |
-| `generator` | The Python script that writes the golden. It takes `--out DIR` (default: its own directory). |
-| `golden` | The files the generator writes, all of them. |
+| `golden` | The golden files, all of them. |
 | `test` | The Rust test file that compares the Rust side with the golden in plain `cargo test`. |
-| `fresh_test` | The `#[ignore]`d `#[test]` fn in `test` that regenerates the golden and compares it ([below](#the-staleness-test)). |
 | `parity_rows` | The row ids the golden covers. |
 
 Paths are relative to the repository root. Unknown keys are an error, so a typo like `parity_row` can't silently cover
@@ -1953,48 +1953,21 @@ column and note of the row, together with any scenario that also names it. A fea
 check for a row adds the id in that PR.
 
 `cargo xtask parity-matrix` (and `cargo test --workspace`, through `xtask/tests/parity_matrix.rs`) reports a manifest
-that doesn't parse, has an unknown key or a `version` other than 1, a `parity_rows` entry that isn't a row id, a
-`generator`, `golden` or `test` file that doesn't exist, a `test` file with no `#[test]` that isn't `#[ignore]`d, and
-a `fresh_test` that isn't an `#[ignore]`d `#[test]` fn in `test`. The `#[test]` and `#[ignore]` detection is a line
+that doesn't parse, has an unknown key (including version 1's `generator` and `fresh_test`) or a `version` other than
+2, a `parity_rows` entry that isn't a row id, a `golden` or `test` file that doesn't exist, and a `test` file with no
+`#[test]` that isn't `#[ignore]`d. The `#[test]` and `#[ignore]` detection is a line
 scan: a line `#[test]` starts an attribute block that ends at the next `fn ` or `async fn ` line, and the fn is ignored
 if a line in the block starts with `#[ignore`. Write the golden tests as plain `#[test]` fns, one attribute per line.
 
 The coverage table after the status table counts each area's rows named by a scenario only, a golden only, both, or
 neither; `cargo xtask parity-matrix --uncovered` lists the neither rows (except intentional diffs).
 
-### Regenerating a golden
+### Editing a golden
 
-The Python app is frozen on `rust-main`, so a golden changes only when its generator does (for example, when a
-feature adds a field to the dump). Run the generator from the repository root with the `HOME` its docstring names, so
-the user's own config doesn't leak in, e.g.:
-
-```sh
-HOME=$(mktemp -d) uv run python crates/lazy-github-tui/tests/fixtures/generate_bindings.py
-HOME=/home/lazy uv run python crates/lazy-github-core/tests/fixtures/config/generate.py
-```
-
-Commit the generator change and the regenerated golden together. Run with no arguments, a generator must leave
-`git status` clean.
-
-### The staleness test
-
-Each manifest's `fresh_test`, `#[ignore = "needs uv and the Python app"]` in its `test` file, runs the generator with
-`--out <tempdir>` from the repository root, with the `HOME` its docstring names, and compares every `golden` file byte
-for byte. On a mismatch it fails with the first 40 lines of a unified diff and the regenerate command. (It asks
-`uv run --frozen python` for the project's interpreter under the real `HOME`, so uv's cache is the usual one, then runs
-the generator with that interpreter and the test's `HOME`.) The config generator also checks that the hand-written
-config fixtures load in Python; its non-zero exit fails the test.
-
-CI runs these in the "Python-backed integration tests" step,
-`cargo test --locked -p fake-gh -p xtask -p lazy-github-tui -p lazy-github-core -- --ignored`, on every PR whose
-[parity plan](#ci) is `live-python=all`. A change to the Python app or to any `generator`, `golden` or `test` file a
-manifest names makes it `all` (the plan reads the manifests). So every `#[ignore]`d
-test in `lazy-github-tui` and `lazy-github-core` must be safe to run there. Locally:
-
-```sh
-cargo test -p lazy-github-tui -p lazy-github-core -- --ignored
-```
+A golden changes by hand, like any test vector: when the Rust behavior changes on purpose (an `intentional diff` that
+a test's allow-list used to carry, say), edit the golden in the same PR and say why in the PR. Keep the JSON
+formatting the file already has, so the diff shows only the change.
 
 The parity reviewer moves a row in a golden's `parity_rows` to `parity` when the manifest's `test` passes in
-`cargo test` and its `fresh_test` passed in the PR's CI run, with the exceptions in
+`cargo test`, with the exceptions in
 [Editing the matrix](../docs/rust-rewrite/parity/README.md#editing-the-matrix).

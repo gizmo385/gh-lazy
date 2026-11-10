@@ -1,9 +1,10 @@
 //! The markdown renderer links, normalizes and emphasizes text as markdown-it-py's `gfm-like` preset does under
-//! Textual: `fixtures/generate_linkify.py` dumps the inline tokens markdown-it makes of each case in
-//! `fixtures/linkify_corpus.toml` to `fixtures/linkify.json`, and this lays each case out and compares, character by
+//! Textual: `fixtures/generate_linkify.py` dumped the inline tokens markdown-it makes of each case (its `source`) to `fixtures/linkify.json`, and this lays each case out and compares, character by
 //! character, the text, whether it's in italics, and where it links to.
-
-mod common;
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by `crates/lazy-github-tui/tests/fixtures/generate_linkify.py`,
+//! removed at cutover (#398; `git log --diff-filter=D -- crates/lazy-github-tui/tests/fixtures/generate_linkify.py`
+//! finds its last version). Edit by hand when the Rust behavior changes on purpose.
 
 use lazy_github_tui::components::markdown::Markdown;
 use lazy_github_tui::theme::Theme;
@@ -171,18 +172,4 @@ fn the_golden_has_every_case() {
     let cases = cases();
     assert!(cases.len() > 100, "{} cases", cases.len());
     assert!(cases.iter().all(|case| !case.blocks.is_empty()));
-}
-
-/// Regenerates `linkify.json` with markdown-it-py and checks the committed copy matches (the golden manifest is
-/// `parity/goldens/linkify.toml`).
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn linkify_golden_is_fresh() {
-    let home = tempfile::tempdir().unwrap();
-    common::assert_goldens_fresh(
-        "crates/lazy-github-tui/tests/fixtures/generate_linkify.py",
-        &["crates/lazy-github-tui/tests/fixtures/linkify.json"],
-        home.path(),
-        "uv run python crates/lazy-github-tui/tests/fixtures/generate_linkify.py",
-    );
 }

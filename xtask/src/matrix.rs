@@ -112,8 +112,9 @@ impl Covered {
     }
 }
 
-/// A `parity/goldens/<name>.toml` manifest: a Python-dumped golden, the Rust test that checks it, and the rows it
-/// covers.
+/// A `parity/goldens/<name>.toml` manifest (version 2): a golden frozen from the Python app, the Rust test that checks
+/// it, and the rows it covers. Version 1 also named the generator and its `#[ignore]`d freshness test, both removed
+/// with the generators (#398).
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct GoldenManifest {
@@ -121,10 +122,8 @@ struct GoldenManifest {
     // Only people read it; it is required so every manifest says what it checks.
     #[expect(dead_code, reason = "read by people, not by the check")]
     description: String,
-    generator: PathBuf,
     golden: Vec<PathBuf>,
     test: PathBuf,
-    fresh_test: String,
     parity_rows: Vec<String>,
 }
 
@@ -791,7 +790,13 @@ fn key_line(text: &str, key: &str) -> usize {
         .map_or(0, |i| i + 1)
 }
 
-/// Checks every golden manifest: it parses, its paths exist, its `test` and `fresh_test` are set up as
+/// The keys version 1 manifests had and version 2 drops.
+/// How to move a version 1 manifest to version 2.
+const VERSION_1_HINT: &str = "version 2 drops `generator` and `fresh_test` with the Python generators (#398)";
+
+const REMOVED_GOLDEN_KEYS: [&str; 2] = ["generator", "fresh_test"];
+
+/// Checks every golden manifest: it parses, its paths exist, its `test` runs in plain `cargo test` as
 /// `parity/README.md` says, and its `parity_rows` are row ids.
 fn check_goldens(repo: &Path, ids: &BTreeSet<String>, m: &mut Matrix) {
     for (file, path) in toml_files(repo, GOLDENS_DIR) {
@@ -808,24 +813,33 @@ fn check_goldens(repo: &Path, ids: &BTreeSet<String>, m: &mut Matrix) {
                 let line = e.span().map_or(0, |s| {
                     text.get(..s.start).map_or(0, |before| before.matches('\n').count() + 1)
                 });
-                m.problems.push(problem(&file, line, e.message().trim_end().to_owned()));
+                let mut message = e.message().trim_end().to_owned();
+                if REMOVED_GOLDEN_KEYS
+                    .iter()
+                    .any(|key| message.starts_with(&format!("unknown field `{key}`")))
+                {
+                    message.push_str("; ");
+                    message.push_str(VERSION_1_HINT);
+                }
+                m.problems.push(problem(&file, line, message));
                 continue;
             }
         };
-        if manifest.version != 1 {
+        if manifest.version != 2 {
             m.problems.push(problem(
                 &file,
                 key_line(&text, "version"),
-                format!("version {} isn't supported (only 1 is)", manifest.version),
+                format!(
+                    "version {} isn't supported (only 2 is); {VERSION_1_HINT}",
+                    manifest.version
+                ),
             ));
         }
         let rows = manifest.parity_rows.iter().map(String::as_str);
         for row in check_parity_rows(&file, &text, rows, ids, &mut m.problems) {
             m.coverage.entry(row.to_owned()).or_default().goldens.push(file.clone());
         }
-        let paths = [("generator", &manifest.generator), ("test", &manifest.test)]
-            .into_iter()
-            .chain(manifest.golden.iter().map(|g| ("golden", g)));
+        let paths = std::iter::once(("test", &manifest.test)).chain(manifest.golden.iter().map(|g| ("golden", g)));
         for (key, rel) in paths {
             if !repo.join(rel).is_file() {
                 m.problems.push(problem(
@@ -844,6 +858,10 @@ fn check_goldens(repo: &Path, ids: &BTreeSet<String>, m: &mut Matrix) {
 
 /// A `#[test]` fn that [`test_fns`] found.
 struct TestFn {
+    #[cfg_attr(
+        not(test),
+        expect(dead_code, reason = "the unit tests check which fn the scan found")
+    )]
     name: String,
     ignored: bool,
 }
@@ -872,7 +890,7 @@ fn test_fns(source: &str) -> Vec<TestFn> {
     fns
 }
 
-/// The manifest's `test` file has a comparison that runs in plain `cargo test`, and its `fresh_test`, `#[ignore]`d.
+/// The manifest's `test` file has a comparison that runs in plain `cargo test`.
 fn check_golden_test(file: &Path, text: &str, manifest: &GoldenManifest, source: &str, problems: &mut Vec<Problem>) {
     let fns = test_fns(source);
     let test_file = manifest.test.display();
@@ -882,23 +900,6 @@ fn check_golden_test(file: &Path, text: &str, manifest: &GoldenManifest, source:
             key_line(text, "test"),
             format!("{test_file} has no #[test] that isn't #[ignore]d, so plain `cargo test` doesn't check the golden"),
         ));
-    }
-    let fresh = &manifest.fresh_test;
-    match fns.iter().find(|f| f.name == *fresh) {
-        None => problems.push(problem(
-            file,
-            key_line(text, "fresh_test"),
-            format!("fresh_test `{fresh}` isn't a #[test] fn in {test_file}"),
-        )),
-        Some(f) if !f.ignored => problems.push(problem(
-            file,
-            key_line(text, "fresh_test"),
-            format!(
-                "fresh_test `{fresh}` in {test_file} isn't #[ignore]d; it needs Python, so it must only run with \
-                 --ignored"
-            ),
-        )),
-        Some(_) => {}
     }
 }
 

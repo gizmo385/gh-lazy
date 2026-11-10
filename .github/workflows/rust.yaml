@@ -60,8 +60,8 @@ jobs:
     # Python's side comes from the recorded references in parity/references/ unless the PR changed something Python
     # depends on. xtask decides the plan from the same path lists that decide whether a reference is fresh
     # (parity/README.md, "CI"):
-    #   live-python=all   the Python app, the capture harness, a Python-backed test, a golden's files or this
-    #                     workflow changed: every scenario runs Python live, then the Python-backed tests run;
+    #   live-python=all   the Python app, the capture harness, a Python-backed test or this workflow changed:
+    #                     every scenario runs Python live, then the Python-backed tests run;
     #   live-python=a,b   only these scenarios' references changed: they run Python live, which checks that the
     #                     recording reproduces here;
     #   live-python=none  no uv and no Python: Rust runs against the references.

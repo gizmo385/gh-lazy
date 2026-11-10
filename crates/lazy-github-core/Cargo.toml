@@ -43,8 +43,6 @@ insta = { workspace = true }
 # Arbitrary text for the never-panics tests (#327).
 proptest = { workspace = true }
 rstest = { workspace = true }
-# The diff `config_goldens_are_fresh` prints for a stale golden.
-similar = { workspace = true }
 # Throwaway git repos for the `GitCli` tests.
 tempfile = { workspace = true }
 tokio = { workspace = true, features = ["rt"] }

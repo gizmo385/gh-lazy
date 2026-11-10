@@ -2,8 +2,10 @@
 //! `fixtures/generate_editor_keys.py` plays cases on headless Textual editors and dumps the text, the selection, the
 //! scroll and the in-app clipboard after each key or paste to `fixtures/editor_keys.json`, and this replays them on
 //! `TextEditor` drawn at the same size, keeping the clipboard as `App` does.
-
-mod common;
+//!
+//! Frozen from the Python app (lazy-github 0.6.6) by `crates/lazy-github-tui/tests/fixtures/generate_editor_keys.py`,
+//! removed at cutover (#398; `git log --diff-filter=D -- crates/lazy-github-tui/tests/fixtures/generate_editor_keys.py`
+//! finds its last version). Edit by hand when the Rust behavior changes on purpose.
 
 use lazy_github_tui::components::text_editor::{EditorOutcome, EditorVariant, Location, TextEditor};
 use lazy_github_tui::keymap::{KeySpec, Keymap};
@@ -103,19 +105,5 @@ fn the_editor_matches_textual_key_by_key() {
         "{} case(s) differ:\n{}",
         failures.len(),
         failures.join("\n")
-    );
-}
-
-/// Regenerates `editor_keys.json` with Textual and checks the committed copy matches (the golden manifest is
-/// `parity/goldens/text-editor-keys.toml`).
-#[test]
-#[ignore = "needs uv and the Python app"]
-fn editor_keys_golden_is_fresh() {
-    let home = tempfile::tempdir().unwrap();
-    common::assert_goldens_fresh(
-        "crates/lazy-github-tui/tests/fixtures/generate_editor_keys.py",
-        &["crates/lazy-github-tui/tests/fixtures/editor_keys.json"],
-        home.path(),
-        "uv run python crates/lazy-github-tui/tests/fixtures/generate_editor_keys.py",
     );
 }

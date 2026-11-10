@@ -36,22 +36,23 @@ use ratatui::widgets::{Clear, Widget as _};
 use super::highlight::HunkCode;
 use super::pending::PendingLayout;
 use super::review::{DiffLineRef, PendingComment};
-use super::threads::{Place, ThreadStyles, ThreadView};
+use super::threads::{Place, ThreadReply, ThreadStyles, ThreadView};
 use crate::components::link_map::ScreenLink;
 use crate::components::scrollbar::{self, Axis, ScrollbarColors, ScrollbarState};
 use crate::display;
 use crate::keymap::BindingId;
 use crate::theme::{Paint, Rgb, Theme};
 
-/// The body's chain link, in footer order: `j Line down  k Line up  c Add Comment  J Next Hunk  K Previous Hunk  ]
-/// Next File  [ Previous File  enter Fold  z Fold Files  n Next Comment  N Previous Comment  x Remove Comment  / Filter
-/// Files`, then the hidden keys: `g` and `G`, and the
-/// scroll keys, of which `down` and `up` move the cursor as `j` and `k` do. Add Comment and Filter Files are the Diff
-/// tab's to act on, so [`DiffBody::handle`] passes on them.
+/// The body's chain link, in footer order: `j Line down  k Line up  c Add Comment  r Reply  J Next Hunk  K Previous
+/// Hunk  ] Next File  [ Previous File  enter Fold  z Fold Files  n Next Comment  N Previous Comment  x Remove Comment
+/// / Filter Files`, then the hidden keys: `g` and `G`, and the scroll keys, of which `down` and `up` move the cursor as
+/// `j` and `k` do. Add Comment, Reply and Filter Files are the Diff tab's to act on, so [`DiffBody::handle`] passes on
+/// them. Add Comment shows only on a diff line and Reply only on a thread's rows, so they share a footer slot.
 pub const DIFF_BODY_BINDINGS: &[BindingId] = &[
     BindingId::DiffCursorDown,
     BindingId::DiffCursorUp,
     BindingId::DiffAddComment,
+    BindingId::DiffReplyToThread,
     BindingId::DiffNextHunk,
     BindingId::DiffPreviousHunk,
     BindingId::DiffNextFile,
@@ -758,6 +759,33 @@ impl DiffBody {
     /// The first comment's id of thread `t`.
     pub fn thread_root(&self, t: usize) -> Option<u64> {
         self.threads.get(t).map(ThreadView::root_id)
+    }
+
+    /// What `r` replies to: on any row of a review thread, the comment under the cursor and the thread's first
+    /// comment. `None` on every other row.
+    pub fn reply_target(&self) -> Option<ThreadReply> {
+        let Some(Cursor::Thread { thread, row, .. }) = self.cursor else {
+            return None;
+        };
+        let view = self.threads.get(thread)?;
+        let quoted = view.thread.comments.get(view.comment_at(row, self.thread_width()))?;
+        Some(ThreadReply {
+            root: view.root_id(),
+            quoted: quoted.clone(),
+        })
+    }
+
+    /// Expands the thread whose first comment is `root`, if it's shown, as after a reply to it, so the reply shows
+    /// once the threads are set again. The cursor stays on its row. Without such a thread, it's still remembered as
+    /// expanded, for when it shows.
+    pub fn expand_root(&mut self, root: u64) {
+        match self.threads.iter().position(|view| view.root_id() == root) {
+            Some(t) if !self.is_expanded(t) => self.set_expanded(&[t], true),
+            Some(_) => {}
+            None => {
+                self.expanded.insert(root);
+            }
+        }
     }
 
     /// The links the last draw put on screen, in expanded threads' bodies.

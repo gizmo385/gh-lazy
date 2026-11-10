@@ -33,6 +33,7 @@ use ratatui::text::{Line, Span};
 pub use body::{Cursor, CursorPosition, DIFF_BODY_BINDINGS, DiffBody, Row};
 pub use highlight::code_spans;
 pub use review::{DiffLineRef, MissingStatus, PendingComment, line_text};
+pub use threads::ThreadReply;
 
 use review::{FormFocus, FormPlaced, ReviewForm};
 
@@ -421,6 +422,21 @@ impl DiffView {
         self.with_body(|body| body.add_pending(comment));
     }
 
+    /// What Reply (`diff.reply_to_thread`) answers with the body focused: the comment under the cursor and its
+    /// thread's first comment ([`DiffBody::reply_target`]). `None` off a thread's rows.
+    pub fn reply_target(&self) -> Option<ThreadReply> {
+        if self.stop != DiffStop::Body {
+            return None;
+        }
+        self.body.reply_target()
+    }
+
+    /// A reply was posted to the thread whose first comment is `root`: the thread expands, so the reply shows once
+    /// the threads are set again ([`DiffBody::expand_root`]).
+    pub fn expand_root(&mut self, root: u64) {
+        self.with_body(|body| body.expand_root(root));
+    }
+
     /// A `textual.scroll.*` binding the focused stop doesn't take (the body takes them all, moving its cursor): up,
     /// down and the page keys scroll the view, and left and right pan the body's code.
     pub fn scroll(&mut self, scroll: Scroll) {
@@ -583,10 +599,10 @@ impl DiffView {
     }
 
     /// How the footer and help panel show a binding of [`Self::chain`]: Add Comment is hidden while the cursor isn't
-    /// on a diff line; `enter` reads Fold on a file header, Expand or Collapse on a review thread or a line with
-    /// threads, and is hidden elsewhere; Next and Previous Comment are hidden without threads or pending comments;
-    /// Remove Comment shows only on a pending comment; and Fold Files reads Unfold Files once every shown file is
-    /// folded.
+    /// on a diff line, and Reply while it isn't on a review thread's row; `enter` reads Fold on a file header, Expand
+    /// or Collapse on a review thread or a line with threads, and is hidden elsewhere; Next and Previous Comment are
+    /// hidden without threads or pending comments; Remove Comment shows only on a pending comment; and Fold Files
+    /// reads Unfold Files once every shown file is folded.
     pub fn binding_state(&self, owner: Owner, id: BindingId) -> BindingState {
         if owner != Owner::DiffBody {
             return BindingState::Enabled;
@@ -594,6 +610,7 @@ impl DiffView {
         let on_header = matches!(self.body.cursor(), Some(Cursor::File(_)));
         match id {
             BindingId::DiffAddComment if self.body.cursor_line().is_none() => BindingState::Hidden,
+            BindingId::DiffReplyToThread if self.body.reply_target().is_none() => BindingState::Hidden,
             BindingId::DiffToggle if !on_header => match self.body.toggle_expands() {
                 Some(true) => BindingState::Relabeled("Expand"),
                 Some(false) => BindingState::Relabeled("Collapse"),
@@ -611,11 +628,12 @@ impl DiffView {
     }
 
     /// A binding matched at one of [`Self::chain`]'s links. `None` lets the key fall through. Add Comment
-    /// (`diff.add_comment`) isn't the viewer's: it opens a dialog, which the Diff tab does.
+    /// (`diff.add_comment`) and Reply (`diff.reply_to_thread`) aren't the viewer's: they open a dialog, which the Diff
+    /// tab does.
     pub fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
         match (owner, id) {
             (Owner::DiffBody | Owner::DiffViewer, BindingId::DiffFilterFiles) => self.focus(DiffStop::Filter),
-            (Owner::DiffBody, BindingId::DiffAddComment) => return None,
+            (Owner::DiffBody, BindingId::DiffAddComment | BindingId::DiffReplyToThread) => return None,
             (Owner::DiffBody, _) => {
                 if !self.with_body(|body| body.handle(id)) {
                     return None;

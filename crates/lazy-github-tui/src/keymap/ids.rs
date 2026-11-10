@@ -186,6 +186,9 @@ registry! {
     // Rust-only (decision diff-inline-comments): removes the pending comment under the cursor. Hidden by the body on
     // every other row.
     DiffRemoveComment("diff.remove_comment", "x", "remove_comment", "Remove Comment");
+    // Rust-only (decision diff-inline-comments): replies to the review thread under the cursor, posting to its first
+    // comment. Hidden by the body on every row but a thread's.
+    DiffReplyToThread("diff.reply_to_thread", "r", "reply_to_thread", "Reply");
     // Shown, and active only while `notifications.enabled` (Py bug B7: Python decides `show` once at import). The
     // component that declares it hides it through `Component::binding_state`.
     NotificationsOpen("notifications.open", "ctrl+n", "view_notifications", "Notifications")

@@ -49,4 +49,4 @@ expression: screen
 │                                                              ││    22  │     pub fn render(&self) -> io::Result<()> {                                        │
 │                                                              ││ README.md                                                                      Comment 1/1   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z Fold Files  n Next Comment  N Previous Comment  / Filter File
+ j Line down  k Line up  r Reply  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z Fold Files  n Next Comment  N Previous Comment  / Fi

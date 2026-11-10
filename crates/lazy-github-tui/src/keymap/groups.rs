@@ -108,6 +108,7 @@ pub const BINDING_GROUPS: &[BindingGroup] = {
                 B::DiffNextComment,
                 B::DiffPreviousComment,
                 B::DiffRemoveComment,
+                B::DiffReplyToThread,
             ],
         },
         BindingGroup {
@@ -154,10 +155,10 @@ mod tests {
             let expected = usize::from(id.config_id().is_some());
             assert_eq!(count, expected, "{} is in {count} groups", id.def().name);
         }
-        // Python's 59, the nine Rust-only diff ids (decisions diff-file-navigation and diff-inline-comments), `main.refresh` (decision
+        // Python's 59, the ten Rust-only diff ids (decisions diff-file-navigation and diff-inline-comments), `main.refresh` (decision
         // cache-ttl-defaults-and-refresh), `search.open` and `search.save_query` (decision search-issues-and-prs),
         // `issue.milestone` (decision issue-milestone), and the three compose keys (decision compose-dialogs).
-        assert_eq!(grouped.len(), 75);
+        assert_eq!(grouped.len(), 76);
         assert!(grouped.iter().all(|id| !id.def().name.starts_with("textual.")));
     }
 }

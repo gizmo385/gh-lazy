@@ -6,6 +6,7 @@
 //! replies indented two more cells, all behind a bar. Those comment rows depend on the width, so they're laid out on
 //! demand and cached by width and theme.
 
+use lazy_github_core::models::ReviewComment;
 use lazy_github_core::references;
 use lazy_github_core::review_anchor::{DiffThread, OriginalLine};
 use ratatui::style::{Modifier, Style};
@@ -24,6 +25,16 @@ pub(super) const BAR_WIDTH: u16 = 2;
 const REPLY_INDENT: u16 = 2;
 /// The narrowest a comment's body is laid out, so a thread measured before the body's first draw has a height.
 pub(super) const MIN_BODY_WIDTH: u16 = 10;
+
+/// What `r` (`diff.reply_to_thread`) answers on a thread's row: the comment quoted, and the thread's first comment,
+/// which the reply is posted to (GitHub doesn't take replies to replies).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ThreadReply {
+    /// The thread's first comment's id.
+    pub root: u64,
+    /// The comment under the cursor: the first one on the summary row or an outdated thread's original line.
+    pub quoted: ReviewComment,
+}
 
 /// Where a thread shows in its file.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -52,7 +63,17 @@ pub struct ThreadView {
     authors: Vec<String>,
     bodies: Vec<Markdown>,
     /// The comment rows laid out at a width in a theme.
-    layout: Option<(u16, Theme, Rendered)>,
+    layout: Option<Laid>,
+}
+
+/// A thread's comment rows laid out at a width in a theme.
+#[derive(Debug, Clone)]
+struct Laid {
+    width: u16,
+    theme: Theme,
+    rendered: Rendered,
+    /// Each comment's first row (its author line) among `rendered`'s lines.
+    starts: Vec<usize>,
 }
 
 impl ThreadView {
@@ -91,31 +112,58 @@ impl ThreadView {
             return 1;
         }
         let comments = match &self.layout {
-            Some((w, _, rendered)) if *w == width => rendered.lines.len(),
+            Some(laid) if laid.width == width => laid.rendered.lines.len(),
             // Wrapping doesn't depend on the colors: the default theme measures as well as the one drawn with.
             _ => self.comment_rows(width, &Theme::default()).lines.len(),
         };
-        1 + usize::from(self.original.is_some()) + comments
+        self.first_comment_row() + comments
+    }
+
+    /// The thread's row of its first comment's author line, when expanded: after the summary and any original line.
+    fn first_comment_row(&self) -> usize {
+        1 + usize::from(self.original.is_some())
+    }
+
+    /// Which comment (an index into the thread's comments) row `row` of the thread belongs to, its comments laid out
+    /// `width` cells wide: the first for the summary row, an outdated thread's original line and every row of a
+    /// collapsed thread, else the comment whose author line or body holds the row.
+    pub fn comment_at(&self, row: usize, width: u16) -> usize {
+        let Some(row) = row.checked_sub(self.first_comment_row()).filter(|_| self.expanded) else {
+            return 0;
+        };
+        let at = |starts: &[usize]| starts.partition_point(|&start| start <= row).saturating_sub(1);
+        match &self.layout {
+            Some(laid) if laid.width == width => at(&laid.starts),
+            // Not drawn at this width yet: wrapping doesn't depend on the colors, as in `rows`.
+            _ => at(&self.lay_out(width, &Theme::default()).1),
+        }
     }
 
     /// The comment rows laid out `width` cells wide in `theme`: per comment, its author line and its body, behind
     /// the bar. Link columns count from the code column.
     pub fn comment_rows(&mut self, width: u16, theme: &Theme) -> &Rendered {
-        let fresh = matches!(&self.layout, Some((w, t, _)) if *w == width && t == theme);
+        let fresh = matches!(&self.layout, Some(laid) if laid.width == width && laid.theme == *theme);
         if !fresh {
-            let rendered = self.lay_out(width, theme);
-            self.layout = Some((width, *theme, rendered));
+            let (rendered, starts) = self.lay_out(width, theme);
+            self.layout = Some(Laid {
+                width,
+                theme: *theme,
+                rendered,
+                starts,
+            });
         }
         match &self.layout {
-            Some((_, _, rendered)) => rendered,
+            Some(laid) => &laid.rendered,
             // Set just above.
             None => unreachable!("the layout was just made"),
         }
     }
 
-    fn lay_out(&self, width: u16, theme: &Theme) -> Rendered {
+    /// The comment rows, and each comment's first row among them.
+    fn lay_out(&self, width: u16, theme: &Theme) -> (Rendered, Vec<usize>) {
         let styles = ThreadStyles::new(theme);
         let mut out = Rendered::default();
+        let mut starts = Vec::with_capacity(self.authors.len());
         for (index, (author, body)) in self.authors.iter().zip(&self.bodies).enumerate() {
             let indent = if index == 0 { 0 } else { REPLY_INDENT };
             let left = BAR_WIDTH + indent;
@@ -137,6 +185,7 @@ impl ThreadView {
                 ..span
             }));
             let first = out.lines.len();
+            starts.push(first);
             for line in inside.lines {
                 let mut spans = vec![Span::styled(BAR, styles.bar)];
                 if indent > 0 {
@@ -154,7 +203,7 @@ impl ThreadView {
                 target: span.target,
             }));
         }
-        out
+        (out, starts)
     }
 
     /// The summary row's text after the code column: `▶ <label><author>: <first line>  · N replies`, cut to `width`

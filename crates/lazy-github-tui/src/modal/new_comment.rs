@@ -1,7 +1,7 @@
-//! The New comment dialog (`conversation.comment.new`, and `conversation.comment.reply` or
-//! `conversation.review.reply` on a comment or review), on the compose sheet (decision compose-dialogs): a heading, the
-//! replied-to text quoted when replying, then the body under its `Write  Preview` tabs. It posts the comment itself and
-//! closes with it. Python's `NewCommentModal` around a `NewCommentContainer`, whose fixed 100 x 50 layout with a live
+//! The New comment dialog (`conversation.comment.new`, `conversation.comment.reply` or `conversation.review.reply`
+//! on a comment or review, and `diff.reply_to_thread` on a review thread in the diff), on the compose sheet (decision
+//! compose-dialogs): a heading, the replied-to text quoted when replying, then the body under its `Write  Preview`
+//! tabs. It posts the comment itself and closes with it. Python's `NewCommentModal` around a `NewCommentContainer`, whose fixed 100 x 50 layout with a live
 //! preview the sheet replaces.
 
 use crossterm::event::{KeyEvent, MouseEvent};
@@ -48,6 +48,9 @@ pub enum ReplyTarget {
     /// A reply to a review: posted as a new issue comment (Py bug B18 keeps that). A review that wasn't submitted
     /// is answered like a new comment.
     Review(Box<Review>),
+    /// A reply from the diff to a review thread (#385): quotes `quoted`, any comment of the thread, and posts through
+    /// the review-reply endpoint to the thread's first comment `root`, since GitHub doesn't take replies to replies.
+    Thread { quoted: Box<ReviewComment>, root: u64 },
 }
 
 impl ReplyTarget {
@@ -56,7 +59,9 @@ impl ReplyTarget {
         match self {
             ReplyTarget::None => None,
             ReplyTarget::IssueComment(comment) => Some(comment_heading(comment)),
-            ReplyTarget::ReviewComment(reply) => Some(comment_heading(&reply.comment)),
+            ReplyTarget::ReviewComment(reply) | ReplyTarget::Thread { quoted: reply, .. } => {
+                Some(comment_heading(&reply.comment))
+            }
             ReplyTarget::Review(review) => review.submitted_at.map(|at| {
                 let line = format!(
                     "Replying to comment from {} at {}",
@@ -226,6 +231,12 @@ impl NewCommentDialog {
                 repo,
                 pr_number: self.number,
                 comment_id: reply.comment.id,
+                body,
+            },
+            ReplyTarget::Thread { root, .. } => GithubRequest::ReplyToReviewComment {
+                repo,
+                pr_number: self.number,
+                comment_id: *root,
                 body,
             },
             ReplyTarget::None | ReplyTarget::IssueComment(_) | ReplyTarget::Review(_) => {

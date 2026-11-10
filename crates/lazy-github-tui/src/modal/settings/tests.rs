@@ -1527,9 +1527,9 @@ fn written(config: &Config) -> Vec<(&str, &str)> {
 fn the_list_is_every_rebindable_binding_in_group_order_with_the_first_highlighted() {
     let (app, _) = on_list(&config());
     let ids: Vec<&str> = key_list(&app).rows().iter().map(|row| row.config_id).collect();
-    // Python's 59 ids, the nine Rust-only diff ids, `main.refresh`, `search.open`, `search.save_query`,
+    // Python's 59 ids, the ten Rust-only diff ids, `main.refresh`, `search.open`, `search.save_query`,
     // `issue.milestone` and the three compose keys.
-    assert_eq!(ids.len(), 75);
+    assert_eq!(ids.len(), 76);
     assert_eq!(
         &ids[..4],
         [

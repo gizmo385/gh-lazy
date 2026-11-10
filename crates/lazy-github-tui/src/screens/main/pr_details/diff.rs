@@ -1,7 +1,8 @@
 //! A pull request's Diff tab: Python's `PrDiffTabPane`. The diff is fetched with the pull request, whatever tab is
 //! active; until it arrives the tab shows the loading overlay, then the diff viewer, or one line saying why there's
 //! no diff. `c` on a line of the diff body opens Add Comment, whose comment joins the viewer's pending comments, shown
-//! under its line; `x` on one removes it, which is the viewer's own.
+//! under its line; `x` on one removes it, which is the viewer's own. `r` on a review thread's row opens New comment to
+//! reply to the thread (#385), which the Conversation then reloads.
 //!
 //! Once the diff is in, the tab asks for the current user, to show the Submit review form the viewer may use (the
 //! author's, or a reviewer's), and submits the review from it.
@@ -28,12 +29,12 @@ use tokio::time::Instant;
 use crate::action::Action;
 use crate::component::{BindingState, ChainLink, Cx, Owner};
 use crate::components::command_log::Wheel;
-use crate::components::diff_view::{DiffStop, DiffView, MissingStatus, PendingComment, ViewMouse};
+use crate::components::diff_view::{DiffStop, DiffView, MissingStatus, PendingComment, ThreadReply, ViewMouse};
 use crate::components::info::Scroll;
 use crate::components::loading;
 use crate::effect::{Effect, GithubRequest, GithubResponse, RequestId};
 use crate::keymap::{BindingId, KeyChord, Keymap};
-use crate::modal::AddCommentDialog;
+use crate::modal::{AddCommentDialog, NewCommentDialog, ReplyTarget};
 use crate::theme::Theme;
 use crate::toast::Toast;
 
@@ -298,16 +299,20 @@ impl PrDiff {
             .map_or(BindingState::Enabled, |view| view.binding_state(owner, id))
     }
 
-    /// Add Comment and the review's submit make requests or open a dialog, which needs the context: they run in
+    /// Add Comment, Reply and the review's submit make requests or open a dialog, which needs the context: they run in
     /// [`Self::command`]. The viewer takes everything else.
     pub(super) fn on_binding(&mut self, owner: Owner, id: BindingId) -> Option<Action> {
         let view = self.view_mut()?;
         let command = match (owner, id) {
-            // On a header or a `file was removed` row the binding is hidden and does nothing.
+            // Add Comment off a diff line (a header, a `file was removed` row) and Reply off a thread's rows are hidden
+            // and do nothing.
             (Owner::DiffBody, BindingId::DiffAddComment) if view.comment_target().is_none() => {
                 return Some(Action::Consumed);
             }
-            (Owner::DiffBody, BindingId::DiffAddComment) => true,
+            (Owner::DiffBody, BindingId::DiffReplyToThread) if view.reply_target().is_none() => {
+                return Some(Action::Consumed);
+            }
+            (Owner::DiffBody, BindingId::DiffAddComment | BindingId::DiffReplyToThread) => true,
             (Owner::DetailsButton, BindingId::TextualButtonPress) => view.stop() == DiffStop::ReviewSubmit,
             _ => false,
         };
@@ -318,10 +323,12 @@ impl PrDiff {
     }
 
     /// Python's `action_add_comment` and `on_trigger_add_comment` (Add Comment for the body's cursor line,
-    /// whose comment comes back as [`MainAction::DiffCommentAdded`]), and `on_trigger_review_submission`.
+    /// whose comment comes back as [`MainAction::DiffCommentAdded`]), Reply to the cursor's review thread, and
+    /// `on_trigger_review_submission`.
     pub(super) fn command(&mut self, owner: Owner, id: BindingId, cx: &mut Cx<'_>) {
         match (owner, id) {
             (Owner::DiffBody, BindingId::DiffAddComment) => self.add_comment_dialog(cx),
+            (Owner::DiffBody, BindingId::DiffReplyToThread) => self.reply_dialog(cx),
             (Owner::DetailsButton, BindingId::TextualButtonPress) => self.submit_review(cx),
             _ => {}
         }
@@ -340,6 +347,36 @@ impl PrDiff {
                 })))
             })
         });
+    }
+
+    /// New comment quoting the comment under the cursor, posting to its thread's first comment. A posted reply closes
+    /// it as the Conversation's replies do ([`MainAction::CommentClosed`]), which reloads the Conversation and with it
+    /// the threads; closing without posting changes nothing.
+    fn reply_dialog(&self, cx: &mut Cx<'_>) {
+        let Some(ThreadReply { root, quoted }) = self.view().and_then(DiffView::reply_target) else {
+            return;
+        };
+        let target = ReplyTarget::Thread {
+            quoted: Box::new(quoted),
+            root,
+        };
+        let dialog = NewCommentDialog::new(self.pr.pr.issue.repo.clone(), self.pr.number(), target);
+        cx.open_dialog(dialog, |posted| {
+            posted.map_or(Action::Consumed, |posted| {
+                Action::Main(MainAction::CommentClosed {
+                    posted: Some(posted),
+                    reply: true,
+                })
+            })
+        });
+    }
+
+    /// A reply was posted in the thread whose first comment is `root` (from here or the Conversation): the thread
+    /// expands, so the reply shows once the reload's threads arrive.
+    pub(super) fn reply_posted(&mut self, root: u64) {
+        if let Some(view) = self.view_mut() {
+            view.expand_root(root);
+        }
     }
 
     /// Sends the review with every pending comment, on the pull request's head commit, with the button disabled until

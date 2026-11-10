@@ -1011,3 +1011,107 @@ fn hunk_keys_from_a_thread_go_by_its_place() {
     press(&mut body, BindingId::DiffPreviousFile, 1);
     assert_eq!(body.cursor(), Some(Cursor::File(VIEWER)));
 }
+
+// Replying to a thread (#385).
+
+/// The root id and the quoted comment's id `r` would reply with.
+fn reply(body: &DiffBody) -> Option<(u64, u64)> {
+    body.reply_target()
+        .map(|target| (target.root, target.quoted.comment.id))
+}
+
+#[allow(clippy::unnecessary_wraps)]
+fn on_viewer_thread(thread: usize, row: usize) -> Option<Cursor> {
+    Some(Cursor::Thread {
+        file: VIEWER,
+        thread,
+        row,
+    })
+}
+
+#[test]
+fn the_reply_quotes_the_comment_under_the_cursor_and_goes_to_the_root() {
+    let mut body = threaded();
+    let _ = draw(&mut body, 100, 40, true);
+    // Collapsed: the root.
+    body.cursor = on_viewer_thread(0, 0);
+    assert_eq!(reply(&body), Some((100, 100)));
+    // Expanded: the summary and the root's author and body rows quote the root, the reply's rows the reply.
+    press(&mut body, BindingId::DiffToggle, 1);
+    for (row, quoted) in [(0, 100), (1, 100), (2, 100), (3, 101), (4, 101)] {
+        body.cursor = on_viewer_thread(0, row);
+        assert_eq!(reply(&body), Some((100, quoted)), "row {row}");
+    }
+    // An outdated thread, expanded: its summary and the line it was written on quote the root.
+    body.cursor = on_viewer_thread(1, 0);
+    press(&mut body, BindingId::DiffToggle, 1);
+    assert!(body.threads[1].original.is_some());
+    for row in 0..3 {
+        body.cursor = on_viewer_thread(1, row);
+        assert_eq!(reply(&body), Some((200, 200)), "row {row}");
+    }
+    // A comment on the whole file.
+    body.cursor = on_viewer_thread(2, 0);
+    assert_eq!(reply(&body), Some((300, 300)));
+}
+
+#[test]
+fn the_reply_quotes_by_the_wrapped_rows_at_the_drawn_width() {
+    let mut body = threaded();
+    body.cursor = on_viewer_thread(0, 0);
+    press(&mut body, BindingId::DiffToggle, 1);
+    // Narrow, each body wraps: the reply's author line comes later.
+    let _ = draw(&mut body, 24, 40, true);
+    let width = body.thread_width();
+    let rows = body.threads[0].rows(width);
+    assert!(rows > 5, "{rows} rows");
+    body.cursor = on_viewer_thread(0, rows - 1);
+    assert_eq!(reply(&body), Some((100, 101)));
+    body.cursor = on_viewer_thread(0, 3);
+    assert_eq!(reply(&body), Some((100, 100)));
+}
+
+#[test]
+fn nothing_to_reply_to_off_a_thread() {
+    let mut body = threaded();
+    // A line with a thread under it, a header, `file was removed` and a pending comment.
+    body.cursor = line(VIEWER, 0, 5);
+    assert_eq!(reply(&body), None);
+    body.cursor = Some(Cursor::File(VIEWER));
+    assert_eq!(reply(&body), None);
+    body.set_folded(OLD, false);
+    body.cursor = Some(Cursor::Removed(OLD));
+    assert_eq!(reply(&body), None);
+    let file = body.file(VIEWER).unwrap();
+    let comment = PendingComment::on(&file.path, &file.hunks[0], at(VIEWER, 0, 5)).unwrap();
+    body.add_pending(comment);
+    body.cursor = Some(Cursor::Pending {
+        file: VIEWER,
+        index: 0,
+        row: 0,
+    });
+    assert_eq!(reply(&body), None);
+}
+
+#[test]
+fn expand_root_expands_the_thread_and_keeps_the_cursor() {
+    let mut body = threaded();
+    let _ = draw(&mut body, 100, 40, true);
+    body.cursor = on_viewer_thread(0, 0);
+    let before = body.rows();
+    body.expand_root(100);
+    assert!(body.is_expanded(0));
+    assert_eq!(body.rows(), before + 4);
+    assert_eq!(body.cursor(), on_viewer_thread(0, 0));
+    // Already expanded: nothing changes.
+    body.expand_root(100);
+    assert!(body.is_expanded(0));
+    assert_eq!(body.rows(), before + 4);
+    // A thread not shown yet is expanded once it is.
+    body.expand_root(500);
+    body.set_threads(
+        vec![thread(500, "src/viewer.rs", Some(6), Some(6), 0)],
+        "parity-bot/pr-details",
+    );
+    assert!(body.is_expanded(0));
+}

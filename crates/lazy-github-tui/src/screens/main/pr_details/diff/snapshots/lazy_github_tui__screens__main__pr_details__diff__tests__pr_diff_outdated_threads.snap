@@ -49,4 +49,4 @@ expression: screen
 │                                                              ││          ▎ Rename this to line_count.                                                        │
 │                                                              ││ src/viewer.rs                                                                  Comment 3/3   │
 └──────────────────────────────────────────────────────────────┘└──────────────────────────────────────────────────────────────────────────────────────────────┘
- j Line down  k Line up  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z Fold Files  n Next Comment  N Previous Comment  / Filter File
+ j Line down  k Line up  r Reply  J Next Hunk  K Previous Hunk  ] Next File  [ Previous File  ⏎ Collapse  z Fold Files  n Next Comment  N Previous Comment  / Fi

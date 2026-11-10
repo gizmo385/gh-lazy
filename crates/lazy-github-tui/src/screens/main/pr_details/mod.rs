@@ -371,9 +371,15 @@ impl DetailsBody for PullRequestDetails {
         self.diff.captured_mouse(mouse)
     }
 
-    /// The Conversation's openers send this only when it should reload: after `n` either way, after a posted reply.
-    /// After a reply, focus stays on what was replied to.
-    fn comment_closed(&mut self, _posted: Option<PostedComment>, reply: bool, cx: &mut Cx<'_>) {
+    /// The Conversation's openers, and the Diff's Reply, send this only when it should reload: after `n` either way,
+    /// after a posted reply. After a reply, focus stays on what was replied to, and the thread a review reply went to
+    /// expands in the diff, so the reply shows there once the reload's reviews arrive.
+    fn comment_closed(&mut self, posted: Option<PostedComment>, reply: bool, cx: &mut Cx<'_>) {
+        if let Some(PostedComment::Review(comment)) = &posted
+            && let Some(root) = comment.in_reply_to_id
+        {
+            self.diff.reply_posted(root);
+        }
         self.conversation.reload(reply, cx);
     }
 

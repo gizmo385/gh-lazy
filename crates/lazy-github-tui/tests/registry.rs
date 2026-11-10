@@ -33,6 +33,7 @@ const RUST_ONLY_IDS: &[&str] = &[
     "diff.next_comment",
     "diff.previous_comment",
     "diff.remove_comment",
+    "diff.reply_to_thread",
     "main.refresh",
     // Decision issue-milestone.
     "issue.milestone",

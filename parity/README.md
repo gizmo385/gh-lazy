@@ -376,6 +376,11 @@ Repo-scoped fixtures in `base` are recorded from the public `gizmo385/gh-lazy` r
   removed `    pub fn len(&self) -> usize {`, old line 12, no longer in the diff) and the file-level 9005 on README.md
   (both positions `null`, `diff_hunk: ""`, with a link). Plus 9004's and 9005's reactions (`[]`). Listed before
   `pr-details` and `base`, for the Rust-only `diff-threads` scenario. Hand-written.
+- `pr-diff-reply/`: a reply to review thread 9001 from the Diff tab (#385). `POST .../pulls/5/comments/9001/replies`
+  with body `Agreed. I'll say so in the README.` answers 201 with comment 9006 by parity-bot (`in_reply_to_id: 9001`,
+  in review 508); after that POST, `GET .../pulls/5/reviews` is `pr-details`' reviews plus 508 (`COMMENTED`, empty
+  body), whose `GET .../reviews/508/comments` is `[9006]`, plus 9006's reactions (`[]`). Listed before
+  `pr-diff-comments`, `pr-details` and `base`, for the Rust-only `diff-reply` scenario. Hand-written.
 - `prs-70/`: the repo `parity-bot/lazy-fixture`, added to base's `GET /user/repos` page, with 70 pull requests over
   `GET /repos/parity-bot/lazy-fixture/issues` pages of 30 (`state=all`, as `list_issues` sends them: 30, 30, 10, then
   an empty page 4), plus its README and empty workflows and runs. Listed before `base`, for the `table-lazy-load`

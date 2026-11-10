@@ -2025,3 +2025,291 @@ fn the_form_counts_the_pending_comments_and_the_review_sends_the_one_left() {
     let screen = app.screen(160, 48);
     assert!(!screen.contains("will be sent with the review"), "{screen}");
 }
+
+// Replying to a thread from its rows (#385).
+
+/// The reply `diff-reply` posts in thread 9001.
+const REPLY: &str = "Agreed. I'll say so in the README.";
+
+/// The `pr-diff-reply` overlay's file at `path`.
+fn reply_overlay(path: &str) -> Value {
+    let path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../parity/fixtures/pr-diff-reply/repos/parity-bot/pr-details/pulls/5")
+        .join(path);
+    serde_json::from_str(&std::fs::read_to_string(&path).unwrap()).unwrap()
+}
+
+/// What `POST .../comments/9001/replies` answers: 9006, replying to 9001.
+fn posted_reply() -> lazy_github_core::models::ReviewComment {
+    serde_json::from_value(reply_overlay("comments/9001/replies/POST.json")["response"]["body"].clone()).unwrap()
+}
+
+/// [`thread_reviews`] once the reply is in: review 508 holds it.
+fn replied_reviews() -> Vec<Review> {
+    let mut reviews = thread_reviews();
+    let listed = reply_overlay("reviews/GET.json");
+    let mut review: Review =
+        serde_json::from_value(listed["response"]["body"].as_array().unwrap().last().unwrap().clone()).unwrap();
+    assert_eq!(review.id, 508);
+    review.comments = vec![posted_reply()];
+    reviews.push(review);
+    reviews
+}
+
+/// PR 5's Diff tab with its threads, where [`REPLY`] posts and the reviews then hold it; the tab strip focused.
+fn reply_tab() -> TestApp {
+    diff_tab_with(
+        config(),
+        threads_gh().with_review_reply(REPLY, Ok(posted_reply())),
+        &["enter"],
+    )
+}
+
+/// The body focused on parity-friend's reply 9002 in thread 9001, expanded: its body row. Drawn first, as the app
+/// draws before each key: a thread's rows wrap at the drawn width.
+fn on_the_reply(app: &mut TestApp) {
+    app.render(160, 48);
+    app.press(&["tab", "n", "n", "enter", "j", "j", "j", "j"]);
+    assert_eq!(cursor(app), on_thread(VIEWER, T_9001, 4));
+}
+
+/// The replies posted, as (comment replied to, body).
+fn replies(app: &TestApp) -> Vec<(u64, String)> {
+    app.gh()
+        .calls()
+        .into_iter()
+        .filter_map(|call| match call {
+            GithubCall::ReplyToReviewComment { comment_id, body, .. } => Some((comment_id, body)),
+            _ => None,
+        })
+        .collect()
+}
+
+fn review_reloads(app: &TestApp) -> usize {
+    app.gh()
+        .calls()
+        .iter()
+        .filter(|call| matches!(call, GithubCall::PullRequestReviews { .. }))
+        .count()
+}
+
+/// Posts `text` in the open reply dialog.
+fn post(app: &mut TestApp, text: &str) {
+    app.send(Event::Paste(text.into()));
+    app.press(&["ctrl+s"]);
+    settle(app);
+}
+
+const QUOTING_9002: &str = "Replying to comment from parity-friend at Mon Feb  2 11:00:00 2026";
+
+#[test]
+fn r_shows_on_every_thread_row_in_place_of_add_comment() {
+    let mut app = reply_tab();
+    app.press(&["tab", "n", "n"]);
+    for _ in 0..5 {
+        let footer = footer(&mut app);
+        assert!(footer.contains("k Line up  r Reply  J Next Hunk"), "{footer}");
+        assert!(!footer.contains("c Add Comment"), "{footer}");
+        let key = if view(&app).body().is_expanded(T_9001) {
+            "j"
+        } else {
+            "enter"
+        };
+        app.press(&[key]);
+    }
+    // The outdated thread, collapsed then expanded (its line row), and the file comment.
+    app.press(&["g", "n", "n", "n", "n"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9004, 0));
+    assert!(footer(&mut app).contains("r Reply"), "{}", footer(&mut app));
+    app.press(&["enter", "j"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9004, 1));
+    assert!(footer(&mut app).contains("r Reply"), "{}", footer(&mut app));
+    app.press(&["g", "n"]);
+    assert_eq!(cursor(&app), on_thread(README, T_9005, 0));
+    assert!(footer(&mut app).contains("r Reply"), "{}", footer(&mut app));
+}
+
+#[test]
+fn r_is_hidden_and_does_nothing_off_a_thread() {
+    let mut app = reply_tab();
+    // A file header, then the line thread 9001 is under.
+    app.press(&["tab"]);
+    assert_eq!(cursor(&app), Some(Cursor::File(README)));
+    for keys in [&[][..], &["J", "J", "J", "J", "j", "j", "j", "j", "j"][..]] {
+        app.press(keys);
+        let footer = footer(&mut app);
+        assert!(!footer.contains("r Reply"), "{footer}");
+        app.press(&["r"]);
+        assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+    }
+    assert_eq!(cursor(&app), on_line(VIEWER, 0, 5));
+    // A pending comment.
+    add(&mut app, "Should this wrap?");
+    app.press(&["j", "j"]);
+    assert!(
+        matches!(cursor(&app), Some(Cursor::Pending { .. })),
+        "{:?}",
+        cursor(&app)
+    );
+    assert!(!footer(&mut app).contains("r Reply"), "{}", footer(&mut app));
+    app.press(&["r"]);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+}
+
+#[test]
+fn r_isn_t_on_the_filter_s_chain() {
+    let mut app = reply_tab();
+    app.press(&["tab", "n", "n", "/"]);
+    assert_eq!(stop(&app), DiffStop::Filter);
+    app.press(&["r"]);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+    assert_eq!(view(&app).filter_text(), "r");
+}
+
+#[test]
+fn r_on_a_reply_opens_new_comment_quoting_it() {
+    let mut app = reply_tab();
+    on_the_reply(&mut app);
+    app.press(&["r"]);
+    assert_eq!(modals(&app), [ModalKind::NewComment]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains(QUOTING_9002), "{screen}");
+    assert!(screen.contains("No, it stops at the last line."), "{screen}");
+    // On the root's rows, the root.
+    app.press(&["escape", "escape"]);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+    app.press(&["k", "k"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 2));
+    app.press(&["r"]);
+    let screen = app.screen(160, 48);
+    assert!(
+        screen.contains("Replying to comment from parity-bot at Mon Feb  2 10:00:00 2026"),
+        "{screen}"
+    );
+}
+
+#[test]
+fn a_reply_quoting_a_reply_posts_to_the_root_and_shows_in_place() {
+    let mut app = reply_tab();
+    on_the_reply(&mut app);
+    app.press(&["r"]);
+    let _ = app
+        .gh()
+        .clone()
+        .with_pull_request_reviews(NAME, 5, Ok(replied_reviews()));
+    let reloads = review_reloads(&app);
+    post(&mut app, REPLY);
+    assert_eq!(replies(&app), [(9001, REPLY.to_owned())]);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+    assert_eq!(review_reloads(&app), reloads + 1);
+    assert_eq!((focus(&app), stop(&app)), (FocusTarget::DetailsContent, DiffStop::Body));
+    // The reply is last in its thread, the cursor still on the reply it quoted.
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 4));
+    assert!(view(&app).body().is_expanded(T_9001));
+    let screen = app.screen(160, 48);
+    for text in [
+        "▼ parity-bot: Should the cursor wrap at the end?  · 2 replies",
+        // The header counts threads (#390), and a reply adds none.
+        "src/viewer.rs (+5 -2) · 3 comments",
+        REPLY,
+    ] {
+        assert!(screen.contains(text), "{text}: {screen}");
+    }
+    assert!(
+        find(&screen, REPLY).1 > find(&screen, "No, it stops at the last line.").1,
+        "{screen}"
+    );
+    assert!(toasts(&app).is_empty(), "{:?}", toasts(&app));
+}
+
+#[test]
+fn a_reply_from_a_collapsed_summary_expands_the_thread() {
+    let mut app = reply_tab();
+    app.press(&["tab", "n", "n", "r"]);
+    assert!(app.screen(160, 48).contains("Replying to comment from parity-bot"));
+    let _ = app
+        .gh()
+        .clone()
+        .with_pull_request_reviews(NAME, 5, Ok(replied_reviews()));
+    post(&mut app, REPLY);
+    assert_eq!(replies(&app), [(9001, REPLY.to_owned())]);
+    assert!(view(&app).body().is_expanded(T_9001));
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+    assert!(app.screen(160, 48).contains(REPLY));
+}
+
+#[test]
+fn a_refused_reply_keeps_the_dialog_and_the_diff() {
+    let mut app = reply_tab();
+    app.press(&["tab", "n", "n", "r"]);
+    let reloads = review_reloads(&app);
+    post(&mut app, "Not this one.");
+    assert_eq!(replies(&app), [(9001, "Not this one.".to_owned())]);
+    assert_eq!(modals(&app), [ModalKind::NewComment]);
+    assert_eq!(toasts(&app), ["Could not post the comment"]);
+    assert_eq!(review_reloads(&app), reloads);
+    assert!(!view(&app).body().is_expanded(T_9001));
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 0));
+}
+
+#[test]
+fn closing_the_reply_reloads_nothing() {
+    let mut app = reply_tab();
+    on_the_reply(&mut app);
+    app.press(&["r"]);
+    let reloads = review_reloads(&app);
+    app.press(&["escape", "escape"]);
+    settle(&mut app);
+    assert!(modals(&app).is_empty(), "{:?}", modals(&app));
+    assert_eq!(review_reloads(&app), reloads);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9001, 4));
+    assert_eq!((focus(&app), stop(&app)), (FocusTarget::DetailsContent, DiffStop::Body));
+}
+
+#[test]
+fn an_outdated_thread_takes_a_reply_to_its_root() {
+    let mut app = reply_tab();
+    app.press(&["tab", "n", "n", "n", "n"]);
+    assert_eq!(cursor(&app), on_thread(VIEWER, T_9004, 0));
+    app.press(&["r"]);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("Replying to comment from parity-bot"), "{screen}");
+    assert!(screen.contains("Rename this to"), "{screen}");
+    post(&mut app, REPLY);
+    assert_eq!(replies(&app), [(9004, REPLY.to_owned())]);
+}
+
+#[test]
+fn pr_diff_reply_footer_160x48() {
+    let mut app = reply_tab();
+    on_the_reply(&mut app);
+    let screen = app.screen(160, 48);
+    assert!(screen.lines().last().unwrap().contains("r Reply"), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_reply_dialog_160x48() {
+    let mut app = reply_tab();
+    on_the_reply(&mut app);
+    app.press(&["r"]);
+    app.send(Event::Paste(REPLY.into()));
+    let screen = app.screen(160, 48);
+    assert!(screen.contains(QUOTING_9002), "{screen}");
+    insta::assert_snapshot!(screen);
+}
+
+#[test]
+fn pr_diff_thread_replied_160x48() {
+    let mut app = reply_tab();
+    on_the_reply(&mut app);
+    app.press(&["r"]);
+    let _ = app
+        .gh()
+        .clone()
+        .with_pull_request_reviews(NAME, 5, Ok(replied_reviews()));
+    post(&mut app, REPLY);
+    let screen = app.screen(160, 48);
+    assert!(screen.contains("· 2 replies"), "{screen}");
+    insta::assert_snapshot!(screen);
+}

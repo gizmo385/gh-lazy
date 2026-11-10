@@ -1,5 +1,10 @@
 version = 1
 description = "Edit issue modal (E) from the Issues table: the prefilled title, Status select and description; a new title, Closed picked in the select, Save, and the updated row replacing the old one; then E on the Issue Overview, closed with escape"
+# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# (Python's 100 x 30 modal with labels above tall fields and Save / Cancel buttons, Rust's content-sized sheet with
+# one-row fields, the title focused at open and footer keys), and [expect] checks the text both show. The sheet's own
+# texts (its heading, `^s Save`, `Saving…`) are checked by the Rust-only compose-issue scenario. The write is compared
+# as before.
 gate = true
 parity_rows = [
     "modals.edit-issue",
@@ -43,32 +48,40 @@ keys = ["E"]
 
 # Not "Status": the Issues table's header has it too. The dialog's footer is drawn once the dialog is.
 [[step]]
-wait.text = "shift+⏎ Submit"
+wait.regex = 'shift\+⏎ (Submit|Save)'
 
 [[step]]
 capture = "open"
-checks = ["titles", "focus", "footer"]
+checks = []
 
-# The title input selects its text when it gets focus, so typing replaces it.
+# A click past the title's end focuses Python's input with the cursor at its end (Rust's title has focus already),
+# and ctrl+u deletes everything to its left in both.
 [[step]]
-keys = ["tab"]
+click = { text = "Crash when the config file is empty", offset = [40, 0] }
 
-# Python moves focus a tick after a tab (Py bug B121): each key for the new focus waits for it to show.
 [[step]]
-wait = { focused = "Title" }
+keys = ["ctrl+u"]
+
+[[step]]
+wait.gone = "Crash when the config file is empty"
 
 [[step]]
 type = "Crash when the config file is blank"
 
 [[step]]
-capture = "title-typed"
-checks = ["titles", "focus", "footer"]
+wait.text = "Crash when the config file is blank"
 
+[[step]]
+capture = "title-typed"
+checks = []
+
+# Status, whose closed select types nothing, so the footer offers `q`: Python's `q Close`, Rust's `q Leave`. Python
+# moves focus a tick after a tab (Py bug B121): the next key waits for it.
 [[step]]
 keys = ["tab"]
 
 [[step]]
-wait = { focused = "Status" }
+wait.regex = 'q (Close|Leave)'
 
 [[step]]
 keys = ["enter"]
@@ -78,32 +91,35 @@ wait.text = "Closed"
 
 [[step]]
 capture = "status-open"
-checks = ["titles", "focus", "footer"]
+checks = []
 
 [[step]]
 keys = ["down", "enter"]
 
 [[step]]
+wait.gone = "Dismiss menu"
+
+[[step]]
 capture = "status-closed"
-checks = ["titles", "focus", "footer"]
+checks = []
 
-# The description, then Save.
+# Rust's compose sheet has no Save button (decision compose-dialogs): the click lands on Python's button and on Rust's
+# footer `^s Save`, the first "Save" on each screen. (Python's shift+enter saves too, but its 1 s "Updating issue
+# #12..." toast never draws while the binding's action awaits the request.) Python never shows "Saving..." (Py bug
+# B69): [expect] checks only the progress toast.
 [[step]]
-keys = ["tab", "tab"]
+click = { text = "Save" }
 
+# Park the pointer off the footer, which Rust would otherwise draw hovered once the dialog closes.
 [[step]]
-wait = { focused = "Save" }
+move = { at = [100, 1] }
 
-[[step]]
-keys = ["enter"]
-
-# Python never shows "Saving..." (Py bug B69): [expect] checks only the progress toast.
 [[step]]
 wait.text = "Updating issue #12..."
 
 [[step]]
 capture = "saving"
-checks = ["titles", "focus"]
+checks = []
 
 [[step]]
 wait.log.method = "PATCH"
@@ -144,14 +160,16 @@ keys = ["E"]
 
 # Not "Status": the Issues table's header has it too. The dialog's footer is drawn once the dialog is.
 [[step]]
-wait.text = "shift+⏎ Submit"
+wait.regex = 'shift\+⏎ (Submit|Save)'
 
 [[step]]
 capture = "from-overview"
-checks = ["titles", "focus", "footer"]
+checks = []
 
+# escape closes Python's modal. In Rust's sheet the first escape leaves the title and the second closes; in Python the
+# second reaches the main screen, where escape only clears a text selection.
 [[step]]
-keys = ["escape"]
+keys = ["escape", "escape"]
 
 [[step]]
 wait.gone = "Description"
@@ -161,21 +179,18 @@ capture = "overview-closed"
 checks = ["titles", "focus"]
 
 [expect.open]
-contains = ["Title", "Crash when the config file is empty", "Status", "Open", "Description", "## Steps to reproduce", "Save", "Cancel"]
-footer = ["q Close", "shift+⏎ Submit"]
+contains = ["Title", "Crash when the config file is empty", "Status", "Open", "Description", "## Steps to reproduce"]
 
 [expect.title-typed]
 contains = ["Crash when the config file is blank"]
 not_contains = ["Crash when the config file is empty"]
-footer = ["esc Close", "shift+⏎ Submit"]
 
 [expect.status-open]
-contains = ["Select", "Open", "Closed"]
-footer = ["esc Dismiss menu", "shift+⏎ Submit"]
+contains = ["Select", "Open", "Closed", "esc Dismiss menu"]
 
 [expect.status-closed]
 contains = ["Closed"]
-footer = ["q Close", "shift+⏎ Submit"]
+not_contains = ["Dismiss menu"]
 
 [expect.saving]
 contains = ["Updating issue #12..."]
@@ -183,11 +198,10 @@ contains = ["Updating issue #12..."]
 [expect.updated]
 focused = ["[3] Issues"]
 contains = ["12  closed  parity-friend  Crash when the config file is blan", "Successfully updated issue #12"]
-not_contains = ["Saving...", "Traceback"]
+not_contains = ["Saving", "Traceback"]
 
 [expect.from-overview]
-contains = ["Closed without a body", "Status", "Closed", "Save"]
-footer = ["q Close", "shift+⏎ Submit"]
+contains = ["Closed without a body", "Status", "Closed", "Description"]
 
 [expect.overview-closed]
 focused = ["[5] Issue #11 Details"]

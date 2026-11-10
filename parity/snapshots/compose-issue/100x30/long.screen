@@ -1,0 +1,99 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│C█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█ │
+└─█ New issue · parity-bot/issue-fixture                                                         █─┘
+┌─█                                                                                              █─┐
+│ █ Title   Title                                                                                █ │
+│ █                                                                                              █━│
+│ █ Description  Write   Preview  ────────────────────────────────────────────────────────────── █ │
+│ █  32  32. Step 32: what I did, what happened, and what should have happened instead           █ │
+└─█  33  33. Step 33: what I did, what happened, and what should have happened instead           █─│
+┌─█  34  34. Step 34: what I did, what happened, and what should have happened instead           █ │
+│ █  35  35. Step 35: what I did, what happened, and what should have happened instead           █ │
+│ █  36  36. Step 36: what I did, what happened, and what should have happened instead           █ │
+│ █  37  37. Step 37: what I did, what happened, and what should have happened instead           █ │
+│ █  38  38. Step 38: what I did, what happened, and what should have happened instead           █ │
+└─█  39  39. Step 39: what I did, what happened, and what should have happened instead           █ │
+┌─█  40  40. Step 40: what I did, what happened, and what should have happened instead           █ │
+│ █  41  41. Step 41: what I did, what happened, and what should have happened instead           █ │
+│ █  42  42. Step 42: what I did, what happened, and what should have happened instead           █ │
+│ █  43  43. Step 43: what I did, what happened, and what should have happened instead           █ │
+│ █  44  44. Step 44: what I did, what happened, and what should have happened instead       ▇▇  █ │
+│ █  45  45. Step 45: what I did, what happened, and what should have happened instead           █ │
+│ █  46  46. Step 46: what I did, what happened, and what should have happened instead           █ │
+│ █  47  47. Step 47: what I did, what happened, and what should have happened instead           █ │
+│ █  48  48. Step 48: what I did, what happened, and what should have happened instead           █ │
+│ █  49  49. Step 49: what I did, what happened, and what should have happened instead           █ │
+└─█  50  50. Step 50: what I did, what happened, and what should have happened instead           █ │
+┌─█  51                                                                                          █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Save  shift+⏎ Save  ^t Preview  ^o Expand  esc Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+abccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccba
+aacddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcaa
+eecddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcee
+efcdgggggddhiiiiihhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhdcbe
+ejcddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcke
+elcdmmmmmmmmmmmdnnnnnnndgggggggggdoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooodcbe
+epcdqrrrr....................................................................................ssqdcbe
+eecdqrrrr....................................................................................ssqdcae
+eecdqrrrr....................................................................................ssqdcbe
+efcdqrrrr....................................................................................ssqdcbe
+ejcdqrrrr....................................................................................ssqdcbe
+epcdqrrrr....................................................................................ssqdcbe
+ebcdqrrrr....................................................................................ssqdcbe
+eecdqrrrr....................................................................................ssqdcbe
+ttcdqrrrr....................................................................................ssqdcbe
+tucdqrrrr....................................................................................ssqdcbe
+tvcdqrrrr....................................................................................ssqdcbe
+twcdqrrrr....................................................................................ssqdcbe
+twcdqrrrr....................................................................................xxqdcbe
+twcdqrrrr....................................................................................yyqdcbe
+twcdqrrrr....................................................................................yyqdcbe
+tzcdqrrrr....................................................................................yyqdcbe
+tbcdqrrrr....................................................................................yyqdcbe
+tbcdqrrrr....................................................................................yyqdcbe
+ttcdqrrrr....................................................................................yyqdcbe
+eecdqAAAABCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCyyqdcbe
+epccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccbe
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+DDDDEEEEEDDDDDDDDDEEEEEDDDDEEEEEEEEDDDDEEEEEEEDDDDDEEEEEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+--- legend
+. fg=#f8f8f2 bg=#272822
+a fg=#0a263a bg=#121212
+b fg=#646464 bg=#121212
+c fg=#121212 bg=#4f4f4f
+d fg=#e0e0e0 bg=#4f4f4f
+e fg=#365270 bg=#121212
+f fg=#646464 bg=#191d21 bold
+g fg=#b8b8b8 bg=#4f4f4f
+h fg=#e0e0e0 bg=#1e1e1e
+i fg=#737373 bg=#1e1e1e
+j fg=#646464 bg=#13212c
+k fg=#1a1a1a bg=#121212
+l fg=#646464 bg=#161616
+m fg=#ffc473 bg=#4f4f4f
+n fg=#e0e0e0 bg=#4f4f4f inverse
+o fg=#004578 bg=#4f4f4f
+p fg=#0a1e2c bg=#161616 inverse
+q bg=#272822
+r fg=#90908a bg=#272822
+s fg=#f8f8f2 bg=#000000
+t fg=#2a5738 bg=#121212
+u fg=#646464 bg=#1c2024 bold
+v fg=#63696e bg=#0b3a5f bold
+w fg=#646464 bg=#1a1a1a
+x fg=#003054 bg=#000000
+y fg=#003054 bg=#272822 inverse
+z fg=#0a1e2c bg=#1a1a1a inverse
+A fg=#c2c2bf bg=#3e3d32
+B fg=#272822 bg=#f8f8f0
+C fg=#f8f8f2 bg=#3e3d32
+D fg=#ffa62b bg=#242f38 bold
+E fg=#e0e0e0 bg=#242f38
+F bg=#242f38

@@ -2,6 +2,9 @@ version = 1
 description = "Open Bug Report (command palette): gizmo385/gh-lazy becomes the current repo and loads, and New issue opens with the bug-report template and the debug info in its description; then cancelled"
 # The template's library lines differ on purpose (decision debug-info-versions), so [expect] checks only the lines
 # both apps write. Captures ignore the Details box, whose tab underline Python sometimes draws zero-width (#209).
+# Rust draws New issue as the compose sheet (decision compose-dialogs): the open capture compares nothing across apps
+# and [expect] checks the text both show. The template is longer than the sheet may be, so Rust's sheet takes the
+# screen less the footer and a margin row, and covers the end of the header's "Current repo: gizmo385/gh-lazy".
 gate = true
 parity_rows = [
     "command-palette.open-bug-report",
@@ -38,19 +41,19 @@ keys = ["enter"]
 wait = { text = "Description" }
 
 [[step]]
-wait = { text = "Current repo: gizmo385/gh-lazy" }
+wait = { text = "Current repo: gizmo385/gh-la" }
 
 [[step]]
 wait = { text = "[4] Workflows (empty)" }
 
-# The modal's scroll area has focus, as when New issue opens with I.
 [[step]]
 capture = "open"
-checks = ["titles", "focus", "footer"]
-ignore = { boxes = ["Details"] }
+checks = []
 
+# escape closes Python's modal. In Rust's sheet the first escape leaves the title and the second closes; in Python the
+# second reaches the main screen, where escape only clears a text selection.
 [[step]]
-keys = ["escape"]
+keys = ["escape", "escape"]
 
 [[step]]
 wait = { gone = "Description" }
@@ -62,7 +65,7 @@ ignore = { boxes = ["Details"] }
 
 [expect.open]
 contains = [
-    "Current repo: gizmo385/gh-lazy",
+    "Current repo: gizmo385/gh-la",
     "Title",
     "Description",
     "**Describe the bug**",
@@ -73,10 +76,7 @@ contains = [
     "# Library Versions",
     "- LazyGithub Version: ",
     "# LazyGithub Config",
-    "Save",
-    "Cancel",
 ]
-footer = ["shift+⏎ Submit", "q Close"]
 
 [expect.cancelled]
 not_contains = ["Description", "Traceback"]

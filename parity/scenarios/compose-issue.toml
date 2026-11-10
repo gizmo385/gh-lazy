@@ -1,0 +1,304 @@
+version = 1
+description = "Compose sheet on New issue (I) and Edit issue (E): 12 rows empty with the title focused, a short body, ctrl+t Preview, ctrl+o full screen and back, escape leaving a field (q Close), ctrl+s saving the same write as Python's Save with Saving… in the heading, a long pasted body at the cap (the body scrolls, its scrollbar shown only then), an empty title refused, and Edit issue with its body, its one-row Status select open over the rows below, and escape closing the list before leaving the field (#421)"
+# Rust-only: the compose sheet is new behavior (decision compose-dialogs). Checked by eye at both sizes.
+gate = true
+apps = ["rust"]
+parity_rows = [
+    "modals.compose-sheet",
+    "modals.compose-preview",
+    "modals.compose-expand",
+    "modals.new-issue",
+    "modals.edit-issue",
+    "modals.issue-dialogs-small-terminal",
+    "keybindings.compose-submit",
+    "keybindings.compose-toggle-preview",
+    "keybindings.compose-expand",
+]
+sizes = [[160, 48], [100, 30]]
+
+[env]
+# The issue-new scenario's: issue-write answers POST .../issues for "Parity title" and "First line\nSecond line",
+# after 1 s.
+fixtures = ["issue-write", "issue-details", "base"]
+# Short toasts, gone before the captures after the ones that raise them.
+toast_timeout_ms = 1500
+
+[[step]]
+wait.text = "issue-fixture"
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait.text = "Issues with bodies and comments."
+wait.timeout_ms = 15000
+
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["I"]
+
+[[step]]
+wait.text = "Describe the issue (markdown)"
+
+[[step]]
+capture = "open"
+
+# An empty title is refused: the title is drawn in the error color and keeps focus.
+[[step]]
+keys = ["ctrl+s"]
+
+[[step]]
+wait.text = "Must have a non-empty issue title!"
+
+[[step]]
+capture = "empty-title"
+
+[[step]]
+type = "Parity title"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+type = "First line"
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+type = "Second line"
+
+[[step]]
+wait.text = "Second line"
+
+[[step]]
+capture = "short"
+
+[[step]]
+keys = ["ctrl+t"]
+
+[[step]]
+wait.text = "^t Write"
+
+[[step]]
+capture = "preview"
+
+[[step]]
+keys = ["ctrl+t", "ctrl+o"]
+
+[[step]]
+wait.text = "^o Collapse"
+
+[[step]]
+capture = "expanded"
+
+[[step]]
+keys = ["ctrl+o", "escape"]
+
+[[step]]
+wait.text = "q Close"
+
+[[step]]
+capture = "sheet"
+
+[[step]]
+keys = ["ctrl+s"]
+
+[[step]]
+wait.text = "Saving…"
+
+[[step]]
+capture = "saving"
+
+[[step]]
+wait.log.method = "POST"
+wait.log.path = "/repos/parity-bot/issue-fixture/issues"
+wait.log.body.title = "Parity title"
+wait.log.body.body = "First line\nSecond line"
+
+[[step]]
+wait.text = "Parity title (#13)"
+
+[[step]]
+capture = "created"
+
+# The toasts go before the next captures, so they don't cover the sheet.
+[[step]]
+wait.gone = "Successfully created issue #13"
+
+# A long paste: the sheet grows to the screen less the footer and a margin row, then the body scrolls.
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["I"]
+
+[[step]]
+wait.text = "Describe the issue (markdown)"
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+paste = """
+1. Step 1: what I did, what happened, and what should have happened instead
+2. Step 2: what I did, what happened, and what should have happened instead
+3. Step 3: what I did, what happened, and what should have happened instead
+4. Step 4: what I did, what happened, and what should have happened instead
+5. Step 5: what I did, what happened, and what should have happened instead
+6. Step 6: what I did, what happened, and what should have happened instead
+7. Step 7: what I did, what happened, and what should have happened instead
+8. Step 8: what I did, what happened, and what should have happened instead
+9. Step 9: what I did, what happened, and what should have happened instead
+10. Step 10: what I did, what happened, and what should have happened instead
+11. Step 11: what I did, what happened, and what should have happened instead
+12. Step 12: what I did, what happened, and what should have happened instead
+13. Step 13: what I did, what happened, and what should have happened instead
+14. Step 14: what I did, what happened, and what should have happened instead
+15. Step 15: what I did, what happened, and what should have happened instead
+16. Step 16: what I did, what happened, and what should have happened instead
+17. Step 17: what I did, what happened, and what should have happened instead
+18. Step 18: what I did, what happened, and what should have happened instead
+19. Step 19: what I did, what happened, and what should have happened instead
+20. Step 20: what I did, what happened, and what should have happened instead
+21. Step 21: what I did, what happened, and what should have happened instead
+22. Step 22: what I did, what happened, and what should have happened instead
+23. Step 23: what I did, what happened, and what should have happened instead
+24. Step 24: what I did, what happened, and what should have happened instead
+25. Step 25: what I did, what happened, and what should have happened instead
+26. Step 26: what I did, what happened, and what should have happened instead
+27. Step 27: what I did, what happened, and what should have happened instead
+28. Step 28: what I did, what happened, and what should have happened instead
+29. Step 29: what I did, what happened, and what should have happened instead
+30. Step 30: what I did, what happened, and what should have happened instead
+31. Step 31: what I did, what happened, and what should have happened instead
+32. Step 32: what I did, what happened, and what should have happened instead
+33. Step 33: what I did, what happened, and what should have happened instead
+34. Step 34: what I did, what happened, and what should have happened instead
+35. Step 35: what I did, what happened, and what should have happened instead
+36. Step 36: what I did, what happened, and what should have happened instead
+37. Step 37: what I did, what happened, and what should have happened instead
+38. Step 38: what I did, what happened, and what should have happened instead
+39. Step 39: what I did, what happened, and what should have happened instead
+40. Step 40: what I did, what happened, and what should have happened instead
+41. Step 41: what I did, what happened, and what should have happened instead
+42. Step 42: what I did, what happened, and what should have happened instead
+43. Step 43: what I did, what happened, and what should have happened instead
+44. Step 44: what I did, what happened, and what should have happened instead
+45. Step 45: what I did, what happened, and what should have happened instead
+46. Step 46: what I did, what happened, and what should have happened instead
+47. Step 47: what I did, what happened, and what should have happened instead
+48. Step 48: what I did, what happened, and what should have happened instead
+49. Step 49: what I did, what happened, and what should have happened instead
+50. Step 50: what I did, what happened, and what should have happened instead
+"""
+
+[[step]]
+wait.text = "50. Step 50:"
+
+[[step]]
+capture = "long"
+
+[[step]]
+keys = ["escape", "q"]
+
+[[step]]
+wait.gone = "Description"
+
+# Edit issue on issue 13, the created one: its two-line body opens the sheet at the height that body needs.
+[[step]]
+keys = ["3"]
+
+[[step]]
+wait = { text = "O Lookup Issue" }
+
+[[step]]
+keys = ["E"]
+
+[[step]]
+wait.text = "Edit issue #13"
+
+[[step]]
+capture = "edit-open"
+
+[[step]]
+keys = ["tab", "enter"]
+
+[[step]]
+wait.text = "Dismiss menu"
+
+[[step]]
+capture = "edit-status-open"
+
+# escape closes the list first, then leaves the field, then closes.
+[[step]]
+keys = ["escape"]
+
+[[step]]
+wait.gone = "Dismiss menu"
+
+[[step]]
+capture = "edit-status-closed"
+
+[[step]]
+keys = ["escape", "escape"]
+
+[[step]]
+wait.gone = "Description"
+
+[[step]]
+capture = "edit-closed"
+
+[expect.open]
+contains = ["New issue · parity-bot/issue-fixture", "Title   Title", "Description  Write   Preview", "Describe the issue (markdown)"]
+footer = ["^s Save", "shift+⏎ Save", "^t Preview", "^o Expand", "esc Leave"]
+
+[expect.empty-title]
+contains = ["Must have a non-empty issue title!"]
+
+[expect.short]
+contains = ["Parity title", "1  First line", "2  Second line"]
+
+[expect.preview]
+contains = ["First line Second line"]
+footer = ["^s Save", "shift+⏎ Save", "^t Write", "^o Expand", "esc Leave"]
+
+[expect.expanded]
+contains = ["New issue · parity-bot/issue-fixture"]
+footer = ["^s Save", "shift+⏎ Save", "^t Preview", "^o Collapse", "esc Leave"]
+
+[expect.sheet]
+footer = ["^s Save", "shift+⏎ Save", "^t Preview", "^o Expand", "q Close"]
+
+[expect.saving]
+contains = ["Saving…", "Creating new issue..."]
+
+[expect.created]
+focused = ["[5] Issue #13 Details"]
+not_contains = ["Description", "Traceback"]
+
+[expect.long]
+contains = ["50. Step 50:"]
+not_contains = ["1. Step 1:"]
+
+[expect.edit-open]
+contains = ["Edit issue #13 · parity-bot/issue-fixture", "Parity title", "Open ▼", "1  First line", "2  Second line"]
+
+[expect.edit-status-open]
+contains = ["Open ▲", "Closed", "esc Dismiss menu"]
+
+[expect.edit-status-closed]
+contains = ["Open ▼"]
+footer = ["^s Save", "shift+⏎ Save", "^t Preview", "^o Expand", "q Leave"]
+
+[expect.edit-closed]
+not_contains = ["Description", "Traceback"]

@@ -10,36 +10,36 @@ cursor 0 0 hidden
 │ ☆  parity-bot  issue-fixture  ✘                              ││╸━━━━━━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
 │ ☆  parity-bot  dotfiles       ✘                              ││parity-bot/issue-fixture • Public                                                             │
 │ ☆  parity-bot  hello-world    ✘                              ││Owned by parity-bot                                                                           │
-│ ☆  parity-bot  lazy-demo    █▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
-│                             █▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  █                             │
-│                             █▊  Closed                                                                                   ▼  ▎  █                             │
-│                             █▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  █                             │
-│                             █                                                                                                  █─────────────────────────────│
-└─────────────────────────────█────────────────────────────────────────────────────────────────────────────────────────────────  █                             │
-┌─ [2] Pull Requests ─────────█                                                                                                ▂▂█                             │
-│ #  Status  Author      Title█Description                                                                                       █                             │
-│ 8  open    parity-bot  A pul█▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎  █                             │
-│                             █▊  1  ## Steps to reproduce                                                                    ▎  █                             │
-│                             █▊  2                                                                                           ▎  █                             │
-│                             █▊  3  1. Create an empty `config.json`                                                         ▎  █                             │
-│                             █▊  4  2. Run `lazy-github` and press `#5`                                                      ▎  █                             │
-│                             █▊  5                                                                                           ▎  █                             │
-│                             █▊  6  It fails the same way as #7, and parity-bot/dotfiles#3 has the same error. cc            ▎  █                             │
-│                             █▊     @parity-bot                                                                              ▎  █                             │
-│                             █▊  7                                                                                           ▎  █                             │
-└─────────────────────────────█▊  8  ```text                                                                                  ▎  █                             │
-┌─ [3] Issues ────────────────█▊  9  Error: the config file is empty (see #9)                                                 ▎  █                             │
-│ #   Status  Author         T█▊ 10  ```                                                                                      ▎  █                             │
-│ 12  open    parity-friend  C█▊ 11                                                                                           ▎  █                             │
-│ 11  closed  parity-bot     C█▊ 12  > Workaround: delete the file and start again.                                        ▇▇ ▎  █                             │
-│ 10  open    parity-bot     C█▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎  █                             │
-│ 9   open    parity-friend  C█                                                                                                  █                             │
-│                             █                                 ▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔                                 █                             │
-│                             █                                    Saving...         Cancel                                      █                             │
-│                             █                                 ▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁                                 █                             │
+│ ☆  parity-bot  lazy-demo      ✘                              ││Default branch: main                                                                          │
+│                                                              ││                                                                                              │
+│                                                              ││Issues with bodies and comments, for the issue details tabs.                                  │
+│                                                              ││                                                                                              │
+│                                                              ││──────────────────────────────────────────────────────────────────────────────────────────────│
+└─────────────────────────────█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█                             │
+┌─ [2] Pull Requests ─────────█ Edit issue #12 · parity-bot/issue-fixture                                                Saving… █                             │
+│ #  Status  Author      Title█                                                                                                  █                             │
+│ 8  open    parity-bot  A pul█ Title    Crash when the config file is blank                                                     █                             │
+│                             █ Status   Closed ▼                                                                                █                             │
 │                             █                                                                                                  █                             │
-│                             █                                                                                                  █                             │
+│                             █ Description  Write   Preview  ────────────────────────────────────────────────────────────────── █                             │
+│                             █   1  ## Steps to reproduce                                                                       █                             │
+│                             █   2                                                                                              █                             │
+│                             █   3  1. Create an empty `config.json`                                                            █                             │
+│                             █   4  2. Run `lazy-github` and press `#5`                                                         █                             │
+│                             █   5                                                                                              █                             │
+└─────────────────────────────█   6  It fails the same way as #7, and parity-bot/dotfiles#3 has the same error. cc @parity-bot   █                             │
+┌─ [3] Issues ────────────────█   7                                                                                              █                             │
+│ #   Status  Author         T█   8  ```text                                                                                     █                             │
+│ 12  open    parity-friend  C█   9  Error: the config file is empty (see #9)                                                    █                             │
+│ 11  closed  parity-bot     C█  10  ```                                                                                         █                             │
+│ 10  open    parity-bot     C█  11                                                                                              █                             │
+│ 9   open    parity-friend  C█  12  > Workaround: delete the file and start again.                                              █                             │
+│                             █  13                                                                                              █                             │
 │                             █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█                             │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
+│                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
 │                                                              ││                                                                                              │
@@ -49,7 +49,7 @@ cursor 0 0 hidden
 ┌─ [4] Workflows (empty) ──────────────────────────────────────┐│                                 ▌                                                            │
 │ Time  Result  Job Name  Run Name  Run #                      ││                                 ▌ Updating issue #12...                                      │
 └──────────────────────────────────────────────────────────────┘└─────────────────────────────────▌                                                           ─┘
- q Close  shift+⏎ Submit
+ ^s Save  shift+⏎ Save  ^t Preview  ^o Expand  q Leave
 --- styles
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 a..............bbbbbbbbbbbbbbbbbbbbbbbb........................................................................................................................a
@@ -59,46 +59,46 @@ cdeddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc...............
 cffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffccghhhhhhhhhhhhhggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggc
 ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiccjjjjjjjjjjjjjjjjjjjjjjjj...bbbbbb.............................................................c
 ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc.........kkkkkkkkkk...........................................................................c
-ciiiiiiiiiiiiiiiiiiiiiiiiiiiiillllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.............................c
-c.............................lmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnoppl.............................c
-c.............................lmqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqrqqoppl.............................c
-c.............................lmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnoppl.............................c
-c.............................lsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssspplaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
-cccccccccccccccccccccccccccccclttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttppl.............................c
-cccccccccccccccccccccccccccccclssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssuul.............................c
-cdddddddddddddddddddddddddddddlvvvvvvvvvvvssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssswwl.............................c
-cffffffffffffffffffffffffffffflmxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxowwlyyyyyyyyyyyyyyyyyyyyyyyyyyy..c
-c.............................lmzAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBCCzowwl.............................c
-c.............................lmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-c.............................lmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-c.............................lmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-c.............................lmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-c.............................lmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-c.............................lmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-c.............................lmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-cccccccccccccccccccccccccccccclmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFlmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-FGGGGGGGGGGGGGGGGGGGGGGGGGGGGGlmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-FHHHHHHHHHHHHHHHHHHHHHHHHHHHHHlmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEECCzowwl.............................c
-FIIIIIIIIIIIIIIIIIIIIIIIIIIIIIlmzDDDDEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEJJzowwl.............................c
-FIIIIIIIIIIIIIIIIIIIIIIIIIIIIIlmxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxowwl.............................c
-FIIIIIIIIIIIIIIIIIIIIIIIIIIIIIlssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssl.............................c
-FKKKKKKKKKKKKKKKKKKKKKKKKKKKKKlsssssssssssssssssssssssssssssssssLLLLLLLLLLLLLLLLMMMMMMMMMMMMMMMMsssssssssssssssssssssssssssssssssl.............................c
-F.............................lsssssssssssssssssssssssssssssssssNNOOOOOOOOOOONNNPPPPQQQQQQQQPPPPsssssssssssssssssssssssssssssssssl.............................c
-F.............................lsssssssssssssssssssssssssssssssssRRRRRRRRRRRRRRRRSSSSSSSSSSSSSSSSsssssssssssssssssssssssssssssssssl.............................c
-F.............................lssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssl.............................c
-F.............................lssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssl.............................c
-F.............................llllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllllll.............................c
-F..............................................................Fc..............................................................................................c
-F..............................................................Fc..............................................................................................c
-F..............................................................Fc..............................................................................................c
-F..............................................................Fc..............................................................................................c
-F..............................................................Fc..............................................................................................c
-FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFc..............................................................................................c
-cccccccccccccccccTTTTTTTccccccccccccccccccccccccccccccccccccccccc.................................UVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV.c
-cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc.................................UVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV.c
-ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccUVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVcc
-WWWXXXXXXWWWWWWWWWXXXXXXXYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+ciiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiicc................llll..........................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................cc..............................................................................................c
+c..............................................................ccaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaac
+ccccccccccccccccccccccccccccccmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.............................c
+ccccccccccccccccccccccccccccccmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnooooooonm.............................c
+cdddddddddddddddddddddddddddddmnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.............................c
+cfffffffffffffffffffffffffffffmnooooonnnppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppnmqqqqqqqqqqqqqqqqqqqqqqqqqqq..c
+c.............................mnrrrrrrnnsssssssstsnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.............................c
+c.............................mnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnm.............................c
+c.............................mnooooooooooonuuuuuuunooooooooonvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvnm.............................c
+c.............................mnwxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyywnm.............................c
+c.............................mnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+c.............................mnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+c.............................mnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+c.............................mnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+ccccccccccccccccccccccccccccccmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+BCCCCCCCCCCCCCCCCCCCCCCCCCCCCCmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+BDDDDDDDDDDDDDDDDDDDDDDDDDDDDDmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+BEEEEEEEEEEEEEEEEEEEEEEEEEEEEEmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+BFFFFFFFFFFFFFFFFFFFFFFFFFFFFFmnwzzzzAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwnm.............................c
+B.............................mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm.............................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+B..............................................................Bc..............................................................................................c
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBc..............................................................................................c
+cccccccccccccccccGGGGGGGccccccccccccccccccccccccccccccccccccccccc.................................HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII.c
+cddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddcc.................................HIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII.c
+ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccHIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIcc
+JJJJKKKKKJJJJJJJJJKKKKKLLLLMMMMMMMMLLLLMMMMMMMLLLMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
 --- legend
 . fg=#646464 bg=#121212
 a fg=#0a263a bg=#121212
@@ -112,43 +112,32 @@ h fg=#0b3a5f bg=#121212
 i fg=#646464 bg=#161616
 j fg=#646464 bg=#121212 bold underline
 k fg=#646464 bg=#121212 underline
-l fg=#121212 bg=#4f4f4f
-m fg=#191919 bg=#4f4f4f inverse
-n fg=#191919 bg=#1e1e1e
-o fg=#191919 bg=#4f4f4f
-p fg=#e0e0e0 bg=#000000
-q fg=#e0e0e0 bg=#1e1e1e
-r fg=#7f7f7f bg=#1e1e1e
-s fg=#e0e0e0 bg=#4f4f4f
-t fg=#004578 bg=#4f4f4f
-u fg=#003054 bg=#000000
-v fg=#e0e0e0 bg=#4f4f4f bold
-w fg=#003054 bg=#4f4f4f inverse
-x fg=#191919 bg=#272822
-y fg=#0b3a5f bg=#121212 bold
-z bg=#272822
-A fg=#c2c2bf bg=#3e3d32
-B fg=#f8f8f2 bg=#3e3d32
-C fg=#003054 bg=#272822 inverse
-D fg=#90908a bg=#272822
-E fg=#f8f8f2 bg=#272822
-F fg=#2a5738 bg=#121212
-G fg=#646464 bg=#1c2024 bold
-H fg=#63696e bg=#0b3a5f bold
-I fg=#646464 bg=#1a1a1a
-J fg=#003054 bg=#000000 inverse
-K fg=#0a1e2c bg=#1a1a1a inverse
-L fg=#7ae998 bg=#4ebf71
-M fg=#e76580 bg=#b93c5b
-N fg=#255b36 bg=#4ebf71
-O fg=#255b36 bg=#4ebf71 bold
-P fg=#f5e5e9 bg=#b93c5b
-Q fg=#f5e5e9 bg=#b93c5b bold
-R fg=#008139 bg=#4ebf71
-S fg=#780028 bg=#b93c5b
-T fg=#2a3c50 bg=#121212
-U fg=#4ebf71 bg=#343f49
-V fg=#e0e0e0 bg=#343f49
-W fg=#ffa62b bg=#242f38 bold
-X fg=#e0e0e0 bg=#242f38
-Y bg=#242f38
+l fg=#646464 bg=#121212 bold
+m fg=#121212 bg=#4f4f4f
+n fg=#e0e0e0 bg=#4f4f4f
+o fg=#b8b8b8 bg=#4f4f4f
+p fg=#e0e0e0 bg=#1e1e1e
+q fg=#0b3a5f bg=#121212 bold
+r fg=#ffc473 bg=#4f4f4f
+s fg=#e0e0e0 bg=#272727
+t fg=#838383 bg=#272727
+u fg=#e0e0e0 bg=#4f4f4f inverse
+v fg=#004578 bg=#4f4f4f
+w bg=#272822
+x fg=#c2c2bf bg=#3e3d32
+y fg=#f8f8f2 bg=#3e3d32
+z fg=#90908a bg=#272822
+A fg=#f8f8f2 bg=#272822
+B fg=#2a5738 bg=#121212
+C fg=#646464 bg=#1c2024 bold
+D fg=#63696e bg=#0b3a5f bold
+E fg=#646464 bg=#1a1a1a
+F fg=#0a1e2c bg=#1a1a1a inverse
+G fg=#2a3c50 bg=#121212
+H fg=#4ebf71 bg=#343f49
+I fg=#e0e0e0 bg=#343f49
+J fg=#b47d2f bg=#242f38 bold
+K fg=#a0a3a6 bg=#242f38
+L fg=#ffa62b bg=#242f38 bold
+M fg=#e0e0e0 bg=#242f38
+N bg=#242f38

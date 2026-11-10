@@ -1,0 +1,107 @@
+lazy-github-screen 1
+size 100x30
+cursor 0 0 hidden
+--- text
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│Current repo: parity-bot/issue-fixture                                                            │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+┌─ [1] Repositories ───────────────────┐┌─ [5] Issue #13 Details ──────────────────────────────────┐
+│ ★  Owner       Name           Priva  ││ Overview  Comments                                       │
+│ ☆  parity-bot  issue-fixture  ✘    ▁▁││╸━━━━━━━━╺━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ☆  parity-bot  dotfiles       ✘      ││Open Parity title (#13) by parity-bot                     │
+│                                 ▎    ││                                                          │
+└─█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█─│
+┌─█ Edit issue #13 · parity-bot/issue-fixture                                                    █ │
+│ █                                                                                              █ │
+│ █ Title    Parity title                                                                        █ │
+│ █ Status   Open ▼                                                                              █ │
+│ █                                                                                              █ │
+└─█ Description  Write   Preview  ────────────────────────────────────────────────────────────── █ │
+┌─█  1  First line                                                                               █ │
+│ █  2  Second line                                                                              █ │
+│ █                                                                                              █ │
+│ █                                                                                              █ │
+│ █                                                                                              █ │
+│ █▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█ │
+│ 9   open    parity-friend  Comments t││                                                          │
+│                      ▋               ││                                                          │
+│                                      ││                                                          │
+│                                      ││                                                          │
+└──────────────────────────────────────┘│                                                          │
+┌─ [4] Workflows (empty) ──────────────┐│                                                          │
+│                               ▋      ││                                                          │
+└──────────────────────────────────────┘└──────────────────────────────────────────────────────────┘
+ ^s Save  shift+⏎ Save  ^t Preview  ^o Expand  q Leave
+--- styles
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+a..............bbbbbbbbbbbbbbbbbbbbbbbb............................................................a
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+cdeddddddddddddddddddddddddddddddddddffcc...........gggggggg.......................................c
+chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhiiccjkkkkkkkkjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjc
+cllllllllllllllllllllllllllllllllllllmmccbbbb.nnnnnnnnnnnn.ooooo....oooooooooo.....................c
+cfffffffffffffffffffffffffffffffffpmmqqcc..........................................................c
+ccrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrac
+ccrssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssr.c
+cdrssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssr.c
+chrstttttsssuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuusr.c
+cfrsvvvvvvsswwwwwwxwsssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssr.c
+c.rssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssr.c
+ccrstttttttttttsyyyyyyystttttttttszzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzsr.c
+AArsBCCCDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDBsr.c
+AErsBFFFGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBsr.c
+AHrsBGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBsr.c
+AIrsBGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBsr.c
+AIrsBGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGGBsr.c
+AIrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr.c
+AIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIAc..........................................................c
+AJJJJJJJJJJJJJJJJJJJJJJpmmmmmmmmmmmmmmmAc..........................................................c
+A......................................Ac..........................................................c
+A......................................Ac..........................................................c
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAc..........................................................c
+cccccccccccccccccKKKKKKKccccccccccccccccc..........................................................c
+cfffffffffffffffffffffffffffffffpmmmmqqcc..........................................................c
+cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+LLLLMMMMMLLLLLLLLLMMMMMLLLLMMMMMMMMLLLLMMMMMMMLLLMMMMMMNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNNN
+--- legend
+. fg=#646464 bg=#121212
+a fg=#0a263a bg=#121212
+b fg=#50701d bg=#121212
+c fg=#365270 bg=#121212
+d fg=#646464 bg=#191d21 bold
+e fg=#476419 bg=#191d21 bold
+f fg=#0a1e2c bg=#161616 inverse
+g fg=#3b3b3b bg=#121212
+h fg=#646464 bg=#13212c
+i fg=#0a1e2c bg=#0a0a0a inverse
+j fg=#1a1a1a bg=#121212
+k fg=#0b3a5f bg=#121212
+l fg=#646464 bg=#161616
+m fg=#646464 bg=#0a0a0a
+n fg=#646464 bg=#121212 bold
+o fg=#646464 bg=#121212 underline
+p fg=#0a1e2c bg=#0a0a0a
+q bg=#0a0a0a
+r fg=#121212 bg=#4f4f4f
+s fg=#e0e0e0 bg=#4f4f4f
+t fg=#b8b8b8 bg=#4f4f4f
+u fg=#e0e0e0 bg=#1e1e1e
+v fg=#ffc473 bg=#4f4f4f
+w fg=#e0e0e0 bg=#272727
+x fg=#838383 bg=#272727
+y fg=#e0e0e0 bg=#4f4f4f inverse
+z fg=#004578 bg=#4f4f4f
+A fg=#2a5738 bg=#121212
+B bg=#272822
+C fg=#c2c2bf bg=#3e3d32
+D fg=#f8f8f2 bg=#3e3d32
+E fg=#646464 bg=#1c2024 bold
+F fg=#90908a bg=#272822
+G fg=#f8f8f2 bg=#272822
+H fg=#63696e bg=#0b3a5f bold
+I fg=#646464 bg=#1a1a1a
+J fg=#0a1e2c bg=#1a1a1a inverse
+K fg=#2a3c50 bg=#121212
+L fg=#ffa62b bg=#242f38 bold
+M fg=#e0e0e0 bg=#242f38
+N bg=#242f38

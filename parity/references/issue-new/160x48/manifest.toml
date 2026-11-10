@@ -4,11 +4,11 @@ size = "160x48"
 captures = ["no-repo", "open", "empty-title", "typed", "created", "cancelled"]
 
 [inputs]
-scenario = "17cf1aacc1359f8c7ea18bc7ca121471546629fc"
+scenario = "dc01793dc6c9f176e3c94ba7b7152833f567506e"
 fixtures = "fccbe25943780daae4f05f91b1daaf8db3e2e70e"
 python_app = "bddec37fad0e24b7e9bc4a69efcc3065e499965d"
 harness = "f06b852ef48102c8239fe5fe6a4e2255f4ad7e67"
 
 [recorded_with]
-python = "3.14.7"
+python = "3.14.8"
 os = "linux"

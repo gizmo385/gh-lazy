@@ -1,8 +1,12 @@
 version = 1
-description = "New issue modal (I): without a repo, the empty modal, an empty title, typing a title and a two-line description, submitting with shift+enter, and the created issue added to the Issues table and opened; then Cancel"
+description = "New issue modal (I): without a repo, the empty modal, an empty title, typing a title and a two-line description, submitting with shift+enter, and the created issue added to the Issues table and opened; then closed with escape"
 # The toast after `I` without a repo is titled "Cannot open new pull request" in Python and "Cannot open new issue"
 # in Rust (Py bug B14, answered), so [expect] only checks its message. The empty-body toast (Py bug B25) isn't
 # exercised: Rust follows B25's recommendation and creates an issue with an empty body.
+# Rust draws the modal as the compose sheet (decision compose-dialogs): its captures compare nothing across apps
+# (Python's 80% modal with labels above tall fields and Save / Cancel buttons hides the panes, Rust's sheet leaves them
+# in view, opens with the title focused and has footer keys), and [expect] checks the text both show. The sheet's own
+# texts (its heading, `^s Save`) are checked by the Rust-only compose-issue scenario. The write is compared as before.
 gate = true
 parity_rows = [
     "modals.new-issue",
@@ -56,43 +60,37 @@ keys = ["I"]
 [[step]]
 wait.text = "Description"
 
-# The modal's scroll area has focus, so the footer offers `q Close`.
 [[step]]
 capture = "open"
-checks = ["titles", "focus", "footer"]
+checks = []
 
-# Tab to the title, the description and Save, and press it with an empty title. Python moves focus a tick after
-# each tab (Py bug B121), so `enter` waits for Save to show it.
+# shift+enter with an empty title, in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read: from
+# Python's scroll area and from Rust's title.
 [[step]]
-keys = ["tab", "tab", "tab"]
-
-[[step]]
-wait = { focused = "Save" }
-
-[[step]]
-keys = ["enter"]
+type = "\u001b[13;2u"
 
 [[step]]
 wait.text = "Must have a non-empty issue title!"
 
 [[step]]
 capture = "empty-title"
-checks = ["titles", "focus", "footer"]
+checks = []
 
+# The title's input: the second "Title" on each screen is Python's placeholder (after its label) and Rust's label
+# (after the Pull Requests table's header, which Rust's sheet leaves in view). A click on either focuses the title.
 [[step]]
-keys = ["shift+tab", "shift+tab"]
-
-[[step]]
-wait = { focused = "Title" }
+click = { text = "Title", nth = 2 }
 
 [[step]]
 type = "Parity title"
 
 [[step]]
-keys = ["tab"]
+wait.text = "Parity title"
 
+# The description: two rows under its label, in Python's editor (under its top border) and in Rust's body (under the
+# tabs row the label is on).
 [[step]]
-wait = { focused = "Description" }
+click = { text = "Description", offset = [2, 2] }
 
 [[step]]
 type = "First line"
@@ -103,12 +101,13 @@ keys = ["enter"]
 [[step]]
 type = "Second line"
 
-# The description editor has focus: `q` would type, so the footer offers `esc Close`.
+[[step]]
+wait.text = "Second line"
+
 [[step]]
 capture = "typed"
-checks = ["titles", "focus", "footer"]
+checks = []
 
-# shift+enter, in the kitty keyboard protocol's encoding (CSI 13;2 u), which both apps read.
 [[step]]
 type = "\u001b[13;2u"
 
@@ -131,7 +130,9 @@ wait.text = "Parity title (#13)"
 capture = "created"
 checks = ["titles", "headers", "rows", "cursor", "focus"]
 
-# Open it again and cancel with the button.
+# Open it again and close it without saving: escape closes Python's modal. In Rust's sheet the first escape leaves the
+# title and the second closes; in Python the second reaches the main screen, where escape only clears a text
+# selection.
 [[step]]
 keys = ["3"]
 
@@ -145,13 +146,7 @@ keys = ["I"]
 wait.text = "Description"
 
 [[step]]
-keys = ["tab", "tab", "tab", "tab"]
-
-[[step]]
-wait = { focused = "Cancel" }
-
-[[step]]
-keys = ["enter"]
+keys = ["escape", "escape"]
 
 [[step]]
 wait.gone = "Description"
@@ -165,16 +160,13 @@ contains = ["Please select a repository first!"]
 not_contains = ["Description"]
 
 [expect.open]
-contains = ["Title", "Description", "Save", "Cancel"]
-footer = ["shift+⏎ Submit", "q Close"]
+contains = ["Title", "Description"]
 
 [expect.empty-title]
-contains = ["Must have a non-empty issue title!"]
-footer = ["shift+⏎ Submit", "q Close"]
+contains = ["Must have a non-empty issue title!", "Description"]
 
 [expect.typed]
 contains = ["Parity title", "First line", "Second line"]
-footer = ["shift+⏎ Submit", "esc Close"]
 
 [expect.created]
 focused = ["[5] Issue #13 Details"]

@@ -25,10 +25,7 @@ keys = ["I"]
 [[step]]
 wait = { text = "Description" }
 
-# The modal's scroll area has focus: tab to the title, then to the description.
-[[step]]
-keys = ["tab"]
-
+# The compose sheet opens with the title focused (decision compose-dialogs): type it, then tab to the description.
 [[step]]
 type = "Resize title"
 
@@ -77,11 +74,11 @@ capture = "restored"
 checks = ["titles", "focus", "footer"]
 
 [expect.typed]
-contains = ["Resize title", "Kept body"]
-footer = ["shift+⏎ Submit", "esc Close"]
+contains = ["New issue · parity-bot/dotfiles", "Resize title", "Kept body"]
+footer = ["^s Save", "shift+⏎ Save", "^t Preview", "^o Expand", "esc Leave"]
 
 [expect.small]
-contains = ["Resize title", "Kept body"]
+contains = ["New issue · parity-bot/dotfiles", "Resize title", "Kept body"]
 not_contains = ["Terminal too small"]
 
 [expect.too-small]
@@ -91,4 +88,4 @@ not_contains = ["Resize title", "Description"]
 [expect.restored]
 contains = ["Resize title", "Kept body", "Description"]
 not_contains = ["zzq", "Terminal too small"]
-footer = ["shift+⏎ Submit", "esc Close"]
+footer = ["^s Save", "shift+⏎ Save", "^t Preview", "^o Expand", "esc Leave"]

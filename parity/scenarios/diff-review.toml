@@ -1,5 +1,5 @@
 version = 1
-description = "Diff review on the continuous diff (#388): c on a line of the body opens Add Comment, an empty comment is refused, the comment goes to Pending Comments with the body keeping focus and its cursor, and the review posts it with the line's diff position"
+description = "Diff review on the continuous diff (#388): c on a line of the body opens Add Comment, an empty comment is refused, the comment shows under its line (#391) with the body keeping focus and its cursor, a second one is added and removed with x, and the review posts the one left with the line's diff position"
 # Rust-only: the line is reached the new way, `tab` into the body and `j` down to it (decision
 # diff-continuous-view), which Python's keys can't follow. `pr-review` keeps the review form's steps both apps share.
 # shift+enter is sent as CSI 13;2 u.
@@ -9,6 +9,7 @@ parity_rows = [
     "diff-viewer.add-comment",
     "diff-viewer.pending-comments",
     "keybindings.diff-add-comment",
+    "keybindings.diff-remove-comment",
 ]
 sizes = [[160, 48]]
 
@@ -89,9 +90,57 @@ wait = { text = "New comment added" }
 [[step]]
 wait = { gone = "Commenting on:" }
 
-# Focus is back on the body, its cursor on the same line.
+# Focus is back on the body, its cursor on the same line, and the comment shows under it (decision
+# diff-inline-comments).
 [[step]]
-capture = "pending"
+capture = "pending-inline"
+
+# Past the comment's two rows to the hunk's fifth line, and a second comment there.
+[[step]]
+keys = ["j", "j", "j"]
+
+[[step]]
+wait = { text = "Line: 5/6" }
+
+[[step]]
+keys = ["c"]
+
+[[step]]
+wait = { text = "Commenting on:" }
+
+[[step]]
+type = "Drop this blank line."
+
+[[step]]
+keys = ["tab"]
+
+[[step]]
+wait = { focused = "Add Comment" }
+
+[[step]]
+keys = ["enter"]
+
+[[step]]
+wait = { gone = "Commenting on:" }
+
+[[step]]
+capture = "two-pending"
+
+# Onto the second comment's title: x removes it, and the cursor goes back to its line.
+[[step]]
+keys = ["j"]
+
+[[step]]
+wait = { text = "x Remove Comment" }
+
+[[step]]
+keys = ["x"]
+
+[[step]]
+wait = { gone = "Drop this blank line." }
+
+[[step]]
+capture = "removed"
 
 # From the repos table, back around the ring: Submit Review, the summary, the status select. Approved, a summary,
 # then Submit Review.
@@ -158,16 +207,34 @@ contains = ["Add Comment", "Commenting on:", "+Run `viewer FILE`, then press `j`
 [expect.add-empty]
 contains = ["Comment cannot be empty!", "Commenting on:"]
 
-[expect.pending]
+[expect.pending-inline]
 focused = ["[5] PR #5 Details"]
-contains = ["New comment added", "►    5  │ Run `viewer FILE`, then press", "j Line down  k Line up  c Add Comment"]
-not_contains = ["Commenting on:", "Traceback"]
+contains = [
+    "New comment added",
+    "►    5● │ Run `viewer FILE`, then press",
+    "          ▎ Pending comment",
+    "          ▎ Mention the arrow keys too.",
+    "README.md (+3 -1) · 1 comment",
+    "j Line down  k Line up  c Add Comment",
+]
+not_contains = ["Commenting on:", "Pending Comments:", "Traceback"]
+
+[expect.two-pending]
+contains = [
+    "          ▎ Mention the arrow keys too.",
+    "►    6● │",
+    "          ▎ Drop this blank line.",
+    "README.md (+3 -1) · 2 comments",
+]
+not_contains = ["Commenting on:"]
+
+[expect.removed]
+contains = ["►    6  │", "          ▎ Mention the arrow keys too.", "README.md (+3 -1) · 1 comment", "c Add Comment"]
+not_contains = ["Drop this blank line.", "x Remove Comment"]
 
 [expect.status-focused]
 contains = [
-    "Pending Comments:",
-    "README.md:5 - +Run `viewer FILE`, then press `j` and `k` to move.",
-    "Mention the arrow keys too.",
+    "1 pending comment will be sent with the review",
     "Review Status:",
     "Commented",
     "Submit Review",

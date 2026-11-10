@@ -11,7 +11,7 @@ cursor 0 0 hidden
 │ ☆  parity-bot  dotfiles     ✘                                ││▊▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▔▎│
 │ ☆  parity-bot  hello-world  ✘                                ││▊  Filter files (press '/' to focus, ESC to clear)                                           ▎│
 │ ☆  parity-bot  lazy-demo    ✘                                ││▊▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▁▎│
-│                                                              ││▼ 📄 README.md (+3 -1)                                                                        │
+│                                                              ││▶ 🗑️  docs/old.md (deleted)                                                                   │
 │                                                              ││▼ 📄 src/viewer.rs (+5 -2) · 2 comments                                                       │
 │                                                              ││  Lines 1-8 (+2)                                                                              │
 │                                                              ││     1  │ use std::io;                                                                        │
@@ -60,17 +60,17 @@ chhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhcdiiiiiiiiiiijjjj
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlkkoooooooooooooooooooooooooooooooooooooooooooooookkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkknd
 ckkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkcdlmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmnd
-c..............................................................cdpppqpppppppppppprrpsspppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppttd
-c..............................................................cdpppqpppppppppppppppprrpsspppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppttd
-c..............................................................cduuuuuuuuuuuuuvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuttd
-c..............................................................cdkkkkkkkkkkwwwxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
-c..............................................................cdkkkkkkkkkkzzzAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBttd
-c..............................................................cdkkkkkkkkkkyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
-c..............................................................cdkkkkkkkkkkwwwxwwwwwwxCCCCCCxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
-c..............................................................cdkkkkkkkkkkxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
-c..............................................................cdkkkkkkDkkkAAAAAAAAAAAAzzzzzABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBttd
-c..............................................................cdkkkkkkkkkkEEFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEGGGGGGGGGGGEEEEEEEEEEEEEEEEEEEEEEEttd
-c..............................................................cdkkkkkkkkkkxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyttd
+c..............................................................cdpppqpppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppprrd
+c..............................................................cdpppqppppppppppppppppsspttppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppprrd
+c..............................................................cduuuuuuuuuuuuuvvuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuurrd
+c..............................................................cdkkkkkkkkkkwwwxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrrd
+c..............................................................cdkkkkkkkkkkzzzAAAAAAAAAABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBrrd
+c..............................................................cdkkkkkkkkkkyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrrd
+c..............................................................cdkkkkkkkkkkwwwxwwwwwwxCCCCCCxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrrd
+c..............................................................cdkkkkkkkkkkxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrrd
+c..............................................................cdkkkkkkDkkkAAAAAAAAAAAAzzzzzABBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBrrd
+c..............................................................cdkkkkkkkkkkEEFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEGGGGGGGGGGGEEEEEEEEEEEEEEEEEEEEEEErrd
+c..............................................................cdkkkkkkkkkkxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyrrd
 c..............................................................cdkkkkkkkkkkyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyHHd
 c..............................................................cduuuuuuuuuuuuuuuvvuIIuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuJJd
 c..............................................................cdkkkkkkkkkkxxxxwwwxwwxCCCCCCxKxxxxxxxxxxxxxxxxxxxxxxxxxyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyJJd
@@ -96,7 +96,7 @@ c..............................................................cdlmmmmmmmmmmmmmm
 c..............................................................cd............................................................................................JJd
 c..............................................................cd.XXXXXXXXXXXXXXXX...........................................................................JJd
 c..............................................................cd.YYYYYYYYYYYYYYYZ...........................................................................00d
-c..............................................................cd.1111111111111111...........................................................................ttd
+c..............................................................cd.1111111111111111...........................................................................rrd
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccdddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
 2223333333333222333333333333332223333333333333222233333333333222333333333333222333333333333333333333322233333222233333333333333332223333333332223333333333333333
 --- legend
@@ -118,9 +118,9 @@ n fg=#191919 bg=#121212
 o fg=#737373 bg=#1e1e1e
 p fg=#e2e2e2 bg=#262626 bold
 q default
-r fg=#98e024 bg=#262626 bold
-s fg=#f4005f bg=#262626 bold
-t fg=#e0e0e0 bg=#000000
+r fg=#e0e0e0 bg=#000000
+s fg=#98e024 bg=#262626 bold
+t fg=#f4005f bg=#262626 bold
 u fg=#a5a5a5 bg=#1e1e1e
 v fg=#98e024 bg=#1e1e1e
 w fg=#66d9ef bg=#272822
@@ -158,5 +158,5 @@ Z fg=#0a180e bg=#4ebf71
 2 fg=#ffa62b bg=#242f38 bold
 3 fg=#e0e0e0 bg=#242f38
 --- cells
-9 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","R","E","A","D","M","E",".","m","d"," ","(","+","3"," ","-","1",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
+9 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▶"," ","🗑️",""," "," ","d","o","c","s","/","o","l","d",".","m","d"," ","(","d","e","l","e","t","e","d",")"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]
 10 ["│"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│","│","▼"," ","📄",""," ","s","r","c","/","v","i","e","w","e","r",".","r","s"," ","(","+","5"," ","-","2",")"," ","·"," ","2"," ","c","o","m","m","e","n","t","s"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","│"]

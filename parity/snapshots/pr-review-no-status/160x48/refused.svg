@@ -279,12 +279,9 @@ text { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'DejaVu Sans 
 <text class="s3" x="0" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s4" x="640" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
-<text class="s13" x="650" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">▼ </text>
-<text class="s13" x="670" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">📄</text>
-<text class="s13" x="690" y="195" textLength="120" lengthAdjust="spacingAndGlyphs"> README.md (</text>
-<text class="s5" x="810" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">+3</text>
-<text class="s14" x="840" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">-1</text>
-<text class="s13" x="860" y="195" textLength="710" lengthAdjust="spacingAndGlyphs">)                                                                      </text>
+<text class="s13" x="650" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">▶ </text>
+<text class="s13" x="670" y="195" textLength="20" lengthAdjust="spacingAndGlyphs">🗑️</text>
+<text class="s13" x="690" y="195" textLength="880" lengthAdjust="spacingAndGlyphs">  docs/old.md (deleted)                                                                 </text>
 <text class="s4" x="1590" y="195" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="0" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>
 <text class="s3" x="630" y="215" textLength="10" lengthAdjust="spacingAndGlyphs">│</text>

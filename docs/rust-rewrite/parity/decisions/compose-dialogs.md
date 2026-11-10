@@ -4,13 +4,13 @@
   one compose sheet instead of Python's fixed layouts. The sheet is as wide as `min(100, screen - 4)` (Add comment 80)
   and as tall as its content, up to the screen less the footer and a row of margin: a one-row heading, a quote capped
   with "⋯ N more lines", one-row fields with their labels on the left, a `Write  Preview` tab row, and the body editor,
-  which grows from 3 (comments) or 5 (descriptions) rows with its wrapped text and then scrolls. Create/Edit PR's
+  which grows from 3 (comments) or 5 (descriptions) rows with its wrapped text and scrolls only once the sheet can't grow any taller; no scrollbar is drawn until the body overflows. Create/Edit PR's
   Reviewers collapse to a summary row until focused. There are no button rows: every compose dialog shows its footer
   (Create/Edit PR included) with `ctrl+s` (Rust-only `compose.submit`) and `shift+enter` (`modal.submit`) to submit,
   `ctrl+t` (`compose.toggle_preview`) to switch to a markdown preview in place, and `ctrl+o` (`compose.expand`) to
   make the sheet full-screen. `escape` in a field leaves it; `escape` or `q` on the sheet closes the dialog. What
   each dialog sends doesn't change.
-- Decided by: proposed by the design agent, 2026-11-09, on #419; pending Chris's answers to D1-D7 there.
+- Decided by: Chris, 2026-11-09 (#419: D1 b, D2 a, D3 a, D4 a, D5 a, D6 a, D7 a; the sheet grows to the screen less the footer margin before the body scrolls, with no scrollbar until it overflows)
 - Link: #419 (tracking), #420, #421, #422, #423
 - Rows: `modals.compose-sheet`, `modals.compose-preview`, `modals.compose-expand`, `keybindings.compose-submit`, `keybindings.compose-toggle-preview`, `keybindings.compose-expand`
 
